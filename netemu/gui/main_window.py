@@ -161,6 +161,10 @@ class MainWindow(QMainWindow):
         m = mb.addMenu(tr("&Инструменты"))
         for a in tools.actions():
             m.addAction(a)
+        m.addSeparator()
+        self.act_capture = self._act("Анализатор пакетов", self.show_capture, "Ctrl+Shift+W")
+        m.addAction(self.act_capture)
+        self.capture_dock = None
 
         m = mb.addMenu(tr("&Вид"))
         self.act_labels = self._act("Подписи портов", self._toggle_labels, checkable=True)
@@ -685,6 +689,20 @@ class MainWindow(QMainWindow):
         self._help.activateWindow()
         return self._help
 
+    # -- packet analyzer ---------------------------------------------------------------------------
+    def show_capture(self):
+        from .capture_panel import CapturePanel
+        if self.capture_dock is None:
+            self.capture_panel = CapturePanel(self)
+            self.capture_dock = QDockWidget(tr("Анализатор пакетов"), self)
+            self.capture_dock.setObjectName("capture")
+            self.capture_dock.setWidget(self.capture_panel)
+            self.addDockWidget(Qt.BottomDockWidgetArea, self.capture_dock)
+        self.capture_panel.refresh_links()
+        self.capture_dock.show()
+        self.capture_dock.raise_()
+        return self.capture_panel
+
     # -- classroom mode ---------------------------------------------------------------------------
     def class_open(self, port: int | None = None) -> bool:
         from .classroom import CLASS_PORT, RosterPanel, TeacherClass
@@ -893,6 +911,8 @@ class MainWindow(QMainWindow):
             self.collab.stop()
         if hasattr(self, "teacher_class"):
             self.class_leave()
+        if getattr(self, "capture_dock", None) is not None:
+            self.capture_panel.shutdown()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()
