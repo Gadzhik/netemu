@@ -73,6 +73,14 @@ jobs:
         run: python -m pytest -q tests
       - name: Build
         run: python tools/build.py
+      - name: Linux package installs its own dependencies (clean Ubuntu and Fedora)
+        if: runner.os == 'Linux'
+        run: |
+          tar -xzf release/NetEmu-*-linux-*.tar.gz -C /tmp
+          for img in ubuntu:24.04 fedora:41; do
+            echo "=== $img"
+            docker run --rm -v /tmp/NetEmu:/opt/NetEmu "$img" sh -c 'NETEMU_ASSUME_YES=1 /opt/NetEmu/netemu.sh --check-deps'
+          done
       - uses: actions/upload-artifact@v5
         with:
           name: NetEmu-${{ runner.os }}

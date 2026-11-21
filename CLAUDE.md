@@ -104,6 +104,24 @@ python -m venv .venv
   - Job `test`: every push/PR, on Windows, Ubuntu and macOS with Python 3.11 and 3.13.
   - Job `build`: tags `v*` or a manual run; builds zip/tar.gz/.app and the Windows setup.exe.
 
+## Installation and dependencies
+- **Windows**:
+  - PyInstaller bundles the MSVC runtime DLLs and the UCRT.
+  - `installer/netemu.iss` also checks the system-wide VC++ 2015–2022 runtime (registry
+    `HKLM\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64`). When it is missing, setup tells the
+    user, downloads it (`CreateDownloadPage`) and installs it.
+  - Test that path with `setup.exe /FORCEVC=1`.
+  - `MinVersion=10.0` (Qt 6).
+- **Linux**:
+  - `installer/linux/netemu.sh` is the launcher. It checks the X11/EGL libraries Qt needs and installs the
+    missing ones with apt, dnf, zypper or pacman after asking (`NETEMU_ASSUME_YES` / `NETEMU_SKIP_DEPS`).
+  - `installer/linux/install.sh` installs for the current user (menu entry, `.netemu` MIME type).
+  - `tools/build.py` copies both into the tarball.
+  - CI runs the dependency installer in clean `ubuntu:24.04` and `fedora:41` containers.
+- **macOS**: `build.py` ad-hoc signs `NetEmu.app` (`codesign -s -`). It is not notarized, so the first start
+  needs right-click → Open.
+- Running ISCC from Git Bash mangles `/Q` and `/D…` switches; call it from PowerShell.
+
 ## Gotchas learned the hard way
 - **Do not write Python through bash heredocs** on this Windows machine: `\n` escapes inside the code
   get mangled (unterminated strings). Write a script file with the Write tool and run it instead.

@@ -103,6 +103,27 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
   - scale 100–200 % for projectors;
   - built-in help (`F1`).
 
+## Installation
+
+Download the package for your system from the GitHub release / Actions artifacts.
+
+- **Windows 10/11**:
+  - Run `NetEmu-<version>-setup.exe`.
+  - The program ships with the libraries it needs. If the Microsoft Visual C++ 2015–2022 Redistributable
+    is missing from the system, setup says so, downloads it from Microsoft and installs it (you can skip
+    this step).
+  - A portable `NetEmu-<version>-windows-x64.zip` works without installation.
+- **Linux (x86_64)**:
+  - Unpack `NetEmu-<version>-linux-x86_64.tar.gz` and run `./NetEmu/install.sh`. It installs the program
+    for the current user, adds it to the applications menu and checks the X11/EGL libraries that Qt needs.
+  - Missing libraries are listed and installed with your package manager (apt, dnf, zypper or pacman),
+    after your confirmation and administrator password.
+  - The same check runs every time you start `netemu.sh`.
+  - Use `NETEMU_ASSUME_YES=1` for unattended installs and `NETEMU_SKIP_DEPS=1` to skip the check.
+- **macOS**:
+  - Unpack `NetEmu-<version>-macos.zip` and move `NetEmu.app` to Applications.
+  - The app is not notarized, so on first start right-click it and choose **Open**.
+
 ## Running from source
 
 ```bash

@@ -14,7 +14,7 @@ from netemu.core.cli.reference import DOC_VENDORS, refresh_doc  # noqa: E402
 def main() -> int:
     changed = 0
     for lang_dir in sorted((ROOT / "docs").iterdir()):
-        if not lang_dir.is_dir():
+        if not lang_dir.is_dir() or not (lang_dir / "guide.md").exists():   # language folders only
             continue
         for name, vendor in DOC_VENDORS.items():
             path = lang_dir / name

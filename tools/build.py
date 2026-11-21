@@ -58,12 +58,29 @@ def main() -> int:
         else:
             print("Inno Setup (ISCC.exe) not found: skipped the setup.exe. Install it from https://jrsoftware.org/isinfo.php")
     elif system == "Darwin":
+        app = ROOT / "dist" / "NetEmu.app"
+        # ad-hoc signature: Apple Silicon refuses to run unsigned code, and Gatekeeper then only asks
+        # once (right-click -> Open) instead of reporting the app as damaged
+        if shutil.which("codesign"):
+            run("codesign", "--force", "--deep", "--sign", "-", str(app))
         archive = shutil.make_archive(str(out / f"NetEmu-{version}-macos"), "zip", ROOT / "dist", "NetEmu.app")
         print("archive:", archive)
     else:
+        # launcher + per-user installer that check / install the X11 and EGL libraries Qt needs
+        dist = ROOT / "dist" / "NetEmu"
+        for script in ("netemu.sh", "install.sh"):
+            target = dist / script
+            target.write_bytes((ROOT / "installer" / "linux" / script).read_bytes().replace(b"\r\n", b"\n"))
+            target.chmod(0o755)
+        shutil.copy(ROOT / "netemu" / "resources" / "netemu.png", dist / "netemu.png")
         name = out / f"NetEmu-{version}-linux-{platform.machine() or 'x86_64'}.tar.gz"
+
+        def executable(info: tarfile.TarInfo) -> tarfile.TarInfo:
+            if info.name.endswith(("/NetEmu", ".sh")):
+                info.mode = 0o755
+            return info
         with tarfile.open(name, "w:gz") as tf:
-            tf.add(ROOT / "dist" / "NetEmu", arcname="NetEmu")
+            tf.add(dist, arcname="NetEmu", filter=executable)
         print("archive:", name)
     return 0
 
