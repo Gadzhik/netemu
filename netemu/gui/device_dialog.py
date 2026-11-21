@@ -567,6 +567,21 @@ class NetConfig(QWidget):
         self.load()
 
 
+def terminal_page(term) -> QWidget:
+    """The terminal with a one-line hint of what may come next (and Ctrl+F: command search)."""
+    page = QWidget()
+    v = QVBoxLayout(page)
+    v.setContentsMargins(0, 0, 0, 0)
+    v.setSpacing(2)
+    v.addWidget(term, 1)
+    hint = QLabel(tr("Подсказка появится при наборе. Ctrl+F — поиск команды, ? — справка, Tab — дополнение."))
+    hint.setStyleSheet("color: #78909c; padding: 2px 6px;")
+    hint.setWordWrap(True)
+    term.hintChanged.connect(lambda text: hint.setText(tr("Дальше: {items}", items=text) if text else ""))
+    v.addWidget(hint)
+    return page
+
+
 class DeviceDialog(QDialog):
     def __init__(self, device, topology, parent=None):
         super().__init__(parent)
@@ -586,7 +601,7 @@ class DeviceDialog(QDialog):
             self.config = HostConfig(self)
             self.tabs.addTab(self.config, tr("Настройка"))
             self.terminal = TerminalWidget(device.create_cli())
-            self.tabs.addTab(self.terminal, tr("Терминал (Linux)") if getattr(device, "os", "") == "linux"
+            self.tabs.addTab(terminal_page(self.terminal), tr("Терминал (Linux)") if getattr(device, "os", "") == "linux"
                              else tr("Командная строка"))
             self.browser = WebBrowser(self)
             self.tabs.addTab(self.browser, tr("Браузер"))
@@ -600,7 +615,7 @@ class DeviceDialog(QDialog):
             self.config = NetConfig(self)
             self.tabs.addTab(self.config, tr("Настройка"))
             self.terminal = TerminalWidget(device.create_cli())
-            self.tabs.addTab(self.terminal, tr(CLI_TITLES.get(device.vendor, "CLI")))
+            self.tabs.addTab(terminal_page(self.terminal), tr(CLI_TITLES.get(device.vendor, "CLI")))
         elif cat == "cloud":
             self.tabs.addTab(cloud_info(device), tr("Интернет"))
         elif cat == "iot":
@@ -649,7 +664,7 @@ class DeviceDialog(QDialog):
             self.destroyed.connect(lambda *_: engine.unsubscribe("console", on_console))
             self._console_sub = on_console
         if self.terminal is not None and cat in ("router", "switch"):
-            self.tabs.setCurrentWidget(self.terminal)
+            self.tabs.setCurrentWidget(self.terminal.parentWidget())
 
     help_hook = None   # set by the main window: opens this vendor's help page
 
@@ -666,7 +681,7 @@ class DeviceDialog(QDialog):
         w = self.tabs.widget(index)
         if w is self.config and self.config is not None:
             self.config.load()
-        if w is self.terminal and self.terminal is not None:
+        if self.terminal is not None and w is self.terminal.parentWidget():
             self.terminal.setFocus()
 
     def refresh(self) -> None:

@@ -131,7 +131,7 @@ def test_router_terminal_typing(qtbot, win):
     win.load_demo()
     dlg = win.open_device(win.topology.find("R1"))
     term = dlg.terminal
-    assert dlg.tabs.currentWidget() is term
+    assert dlg.tabs.currentWidget() is term.parentWidget()
     assert term.toPlainText().endswith("R1>")
     type_line(qtbot, term, "en")
     type_line(qtbot, term, "show ip interface brief")
@@ -269,7 +269,7 @@ def test_router_config_form(qtbot, win, monkeypatch):
     type_line(qtbot, dlg.terminal, "conf t")
     type_line(qtbot, dlg.terminal, "hostname FROMCLI")
     assert cfg.hostname.text() == "FROMCLI"
-    dlg.tabs.setCurrentWidget(dlg.terminal)
+    dlg.tabs.setCurrentWidget(dlg.terminal.parentWidget())
     type_line(qtbot, dlg.terminal, "int g0/1")
     type_line(qtbot, dlg.terminal, "description WAN")
     dlg.tabs.setCurrentWidget(cfg)
@@ -818,3 +818,23 @@ def test_classroom_hand_out_and_progress(win, qtbot, monkeypatch, tmp_path):
     finally:
         student.shutdown()
         win.class_leave()
+
+
+def test_terminal_hint_highlight_and_search(win, qtbot):
+    from netemu.gui.terminal_tools import TerminalHighlighter, all_commands, hint_for
+    r = win.topology.add_device("cisco-2911")
+    d = win.open_device(r)
+    term = d.terminal
+    assert isinstance(term.highlighter, TerminalHighlighter)
+    s = term.session
+    hint = hint_for(s, "")
+    assert "enable" in hint
+    cmds = all_commands(s)
+    assert any(c.startswith("show ip route") for c, _ in cmds) and len(cmds) > 200
+    from netemu.gui.terminal_tools import CommandSearch
+    cs = CommandSearch(term)
+    cs.query.setText("ospf neighbor")
+    assert cs.table.rowCount() >= 1
+    cs.insert(0)
+    assert "ospf" in term.current_input()
+    d.close()

@@ -58,7 +58,7 @@ def main() -> None:
     r1 = next(d for d in w.topology.devices.values() if d.name == "R1")
     dlg = w.open_device(r1)
     dlg.resize(820, 560)
-    dlg.tabs.setCurrentWidget(dlg.terminal)
+    dlg.tabs.setCurrentWidget(dlg.terminal.parentWidget())
     w.topology.engine.run(max_time=w.topology.engine.now + 60000)
     for line in ("enable", "show ip interface brief", "show ip route"):
         dlg.terminal.run_command(line)

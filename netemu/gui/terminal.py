@@ -8,12 +8,15 @@ from PySide6.QtWidgets import QPlainTextEdit
 
 class TerminalWidget(QPlainTextEdit):
     commandExecuted = Signal(str)
+    hintChanged = Signal(str)
 
     MAX_BLOCKS = 5000
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
+        from .terminal_tools import TerminalHighlighter
+        self.highlighter = TerminalHighlighter(self.document())
         self.history: list[str] = []
         self._hist_pos = 0
         self._input_start = 0
@@ -138,6 +141,12 @@ class TerminalWidget(QPlainTextEdit):
             self.run_command(self._pending_lines.pop(0))
 
     # -- keyboard -----------------------------------------------------------------------
+    def keyReleaseEvent(self, e):
+        super().keyReleaseEvent(e)
+        if not self.busy and not self.cur.secret_input():
+            from .terminal_tools import hint_for
+            self.hintChanged.emit(hint_for(self.cur, self.current_input()))
+
     def keyPressEvent(self, e):
         key, mods = e.key(), e.modifiers()
         if key == Qt.Key_F1:          # leave F1 (help) to the device window
@@ -146,6 +155,11 @@ class TerminalWidget(QPlainTextEdit):
         ctrl = bool(mods & Qt.ControlModifier)
         if ctrl and key == Qt.Key_C and self.textCursor().hasSelection():
             self.copy()
+            return
+        if ctrl and key == Qt.Key_F:
+            from .terminal_tools import CommandSearch
+            self.search = CommandSearch(self)
+            self.search.show()
             return
         if self.busy:
             if ctrl and key in (Qt.Key_C, Qt.Key_6, Qt.Key_X):

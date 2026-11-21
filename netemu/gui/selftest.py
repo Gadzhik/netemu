@@ -49,7 +49,7 @@ def run(app, out_dir: str) -> int:
             check("ping_across_vendors", "Received = 4" in text, text.strip().splitlines()[-1] if text else "")
             r1 = next(d for d in w.topology.devices.values() if d.name == "R1")
             dlg = w.open_device(r1)
-            dlg.tabs.setCurrentWidget(dlg.terminal)
+            dlg.tabs.setCurrentWidget(dlg.terminal.parentWidget())
             for line in ("enable", "show ip route"):
                 dlg.terminal.run_command(line)
             app.processEvents()
