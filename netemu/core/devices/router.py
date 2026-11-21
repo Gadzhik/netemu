@@ -566,10 +566,71 @@ class Router(IpStack, Ip6Stack, Device):
                 return False
         return _Ctx()
 
+    # -- MPLS L3VPN ---------------------------------------------------------------------------------
+    def vpn_label(self, vrf: str) -> int | None:
+        """The VPN label of a VRF (one per VRF), from the MPLS label space."""
+        m = getattr(self, "mpls", None)
+        if m is None:
+            return None
+        labels = self.__dict__.setdefault("_vpn_labels", {})
+        if vrf not in labels:
+            labels[vrf] = m._next_label
+            m._next_label += 1
+        return labels[vrf]
+
+    def vrf_for_label(self, label: int) -> str | None:
+        return next((v for v, lab in self.__dict__.get("_vpn_labels", {}).items() if lab == label), None)
+
+    def vpn_routes(self, vrf) -> list:
+        bgp = getattr(self, "bgp", None)
+        return list(bgp.vpn_routes.get(vrf, [])) if bgp is not None and vrf else []
+
+    def _vpn_route_for(self, dst):
+        """The VPN (MP-BGP) route a packet in the current VRF should follow, if it wins the lookup."""
+        best = None
+        for r in self.vpn_routes(self.vrf_ctx):
+            if dst in r.network and (best is None or r.network.prefixlen > best.network.prefixlen):
+                best = r
+        if best is None:
+            return None
+        for r in self.connected_routes():
+            if dst in r.network and r.network.prefixlen >= best.network.prefixlen:
+                return None
+        for s in self.static_routes:
+            if s.vrf == self.vrf_ctx and dst in s.network and s.network.prefixlen >= best.network.prefixlen:
+                return None
+        return best
+
+    def _send_vpn(self, pkt, route) -> bool:
+        from ..routing.mpls import IMPLICIT_NULL, MplsPacket
+        m = getattr(self, "mpls", None)
+        if m is None or not m.running:
+            return False
+        with self.in_vrf(None):
+            res = self._resolve(route.next_hop, 1, no_bgp=True)
+        if res is None:
+            return False
+        port, gw = res
+        peer = m.peer_for(gw)
+        if peer is None:
+            return False
+        outer = None
+        for net, lab in peer.bindings.items():
+            if route.next_hop in net and (outer is None or net.prefixlen > outer[0].prefixlen):
+                outer = (net, lab)
+        if outer is None:
+            return False
+        labels = (route.vpn_label,) if outer[1] == IMPLICIT_NULL else (outer[1], route.vpn_label)
+        return m._send_labelled(port, gw, MplsPacket(labels, pkt.ttl, pkt))
+
     def send_ip(self, pkt, in_port=None) -> bool:
         if in_port is not None and getattr(in_port, "vrf", None) != self.vrf_ctx:
             with self.in_vrf(in_port.vrf):
-                return super().send_ip(pkt, in_port)
+                return self.send_ip(pkt, in_port)
+        if self.vrf_ctx is not None and not self.owns_ip(pkt.dst):
+            vr = self._vpn_route_for(pkt.dst)
+            if vr is not None:
+                return self._send_vpn(pkt, vr)
         m = getattr(self, "mpls", None)
         if m is not None and m.running and self.vrf_ctx is None and not self.owns_ip(pkt.dst) \
                 and not pkt.dst.is_multicast:
@@ -607,7 +668,7 @@ class Router(IpStack, Ip6Stack, Device):
             candidates.append((s.network.prefixlen, s.distance,
                                Route(s.network, "S", None, s.next_hop, s.distance)))
             candidates[-1][2].static = s  # type: ignore[attr-defined]
-        for r in (self.dynamic_routes() if self.vrf_ctx is None else []):
+        for r in (self.dynamic_routes() if self.vrf_ctx is None else self.vpn_routes(self.vrf_ctx)):
             if dst in r.network and not (no_bgp and r.code == "B"):
                 candidates.append((r.network.prefixlen, r.distance, r))
         candidates.sort(key=lambda c: (-c[0], c[1]))
@@ -615,7 +676,11 @@ class Router(IpStack, Ip6Stack, Device):
             if r.code in ("C", "L"):
                 return r.port, dst
             if r.code == "B":
-                res = self._resolve(r.next_hop, depth + 1, no_bgp=True)
+                if getattr(r, "vpn_label", None) is not None:
+                    with self.in_vrf(None):
+                        res = self._resolve(r.next_hop, depth + 1, no_bgp=True)
+                else:
+                    res = self._resolve(r.next_hop, depth + 1, no_bgp=True)
                 if res is not None:
                     return res
                 continue
@@ -651,9 +716,13 @@ class Router(IpStack, Ip6Stack, Device):
                 if res is None:
                     continue
                 routes.append(Route(s.network, "S", res[0], s.next_hop, s.distance))
-        for r in (self.dynamic_routes() if self.vrf_ctx is None else []):
+        for r in (self.dynamic_routes() if self.vrf_ctx is None else self.vpn_routes(self.vrf_ctx)):
             if r.code == "B":
-                res = self._resolve(r.next_hop, 1, no_bgp=True)
+                if getattr(r, "vpn_label", None) is not None:
+                    with self.in_vrf(None):
+                        res = self._resolve(r.next_hop, 1, no_bgp=True)
+                else:
+                    res = self._resolve(r.next_hop, 1, no_bgp=True)
                 if res is None:
                     continue
                 r = Route(r.network, r.code, res[0], r.next_hop, r.distance, r.metric)

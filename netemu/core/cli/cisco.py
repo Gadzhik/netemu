@@ -15,6 +15,7 @@ PROMPTS = {"user": ">", "priv": "#", "config": "(config)#", "config-if": "(confi
            "config-subif": "(config-subif)#", "config-vlan": "(config-vlan)#",
            "config-router": "(config-router)#", "config-router-bgp": "(config-router)#",
            "config-router-af": "(config-router-af)#", "dhcp-config": "(dhcp-config)#",
+           "config-router-af-vpn": "(config-router-af)#", "config-router-af-vrf": "(config-router-af)#",
            "config-router-rip": "(config-router)#", "config-router-eigrp": "(config-router)#",
            "config-vrf": "(config-vrf)#", "config-router-isis": "(config-router)#",
            "config-server-tacacs": "(config-server-tacacs)#", "config-radius-server": "(config-radius-server)#",
@@ -80,6 +81,7 @@ class CiscoSession(TreeSession):
     shows_console = True        # %OSPF-5-ADJCHG and similar messages appear on the console
     negate_modes = ("config-line", "config", "config-if", "config-subif", "config-vlan", "config-router",
                     "config-router-bgp", "config-router-af", "dhcp-config", "config-router-rip",
+                    "config-router-af-vpn", "config-router-af-vrf",
                     "config-std-nacl", "config-ext-nacl", "config-router-eigrp", "config-cmap", "config-pmap",
                     "config-pmap-c", "config-telephony", "config-ephone-dn", "config-ephone", "config-isakmp",
                     "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf",
@@ -88,6 +90,7 @@ class CiscoSession(TreeSession):
     parent_modes = {"config-if": "config", "config-subif": "config", "config-vlan": "config",
                     "config-router": "config", "config-std-nacl": "config", "config-ext-nacl": "config",
                     "config-router-bgp": "config", "config-router-af": "config-router-bgp",
+                    "config-router-af-vpn": "config-router-bgp", "config-router-af-vrf": "config-router-bgp",
                     "dhcp-config": "config", "config-router-rip": "config", "config-line": "config",
                     "config-router-eigrp": "config", "config-vrf": "config", "config-router-isis": "config",
                     "config-server-tacacs": "config", "config-radius-server": "config",
@@ -326,6 +329,7 @@ class CiscoSession(TreeSession):
                     "Received DHCP packets may contain relay info option with zero giaddr",
                     handler=lambda s, a, n: s.relay_trust_all(n), negatable=True), negatable=True), negatable=True))
             self._add_vrf_trees(t)
+            self._add_vpn_trees(t)
             self._add_isis_trees(t)
             self._add_mpls_trees(t)
             de3 = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
@@ -3261,6 +3265,56 @@ class CiscoSession(TreeSession):
                          + isis_database_lines(self.device))
 
     # -- VRF-lite --------------------------------------------------------------------------------
+    def _add_vpn_trees(self, t):
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        exit_af = P.kw("exit-address-family", "Exit from Address Family configuration mode",
+                       handler=lambda s, a, n: s.set_mode("config-router-bgp"))
+        nb = P.arg(P.IpArg(), "Neighbor address",
+                   P.kw("activate", "Enable the Address Family for this Neighbor",
+                        handler=lambda s, a, n: s.bgp_vpn_activate(a[0], n), negatable=True),
+                   P.kw("send-community", "Send Community attribute to this neighbor",
+                        P.arg(P.LineArg(), "both | extended | standard", handler=lambda s, a, n: None, negatable=True),
+                        handler=lambda s, a, n: None, negatable=True),
+                   negatable=True)
+        t["config-router-af-vpn"] = sorted(de + [exit_af, P.kw("neighbor", "Specify a neighbor router", nb,
+                                                               negatable=True)], key=lambda x: x.word or "")
+        t["config-router-af-vrf"] = sorted(de + [
+            exit_af,
+            P.kw("redistribute", "Redistribute information from another routing protocol",
+                 P.kw("connected", "Connected", handler=lambda s, a, n: s.bgp_vrf_redist("connected", n), negatable=True),
+                 P.kw("static", "Static routes", handler=lambda s, a, n: s.bgp_vrf_redist("static", n), negatable=True),
+                 negatable=True),
+            P.kw("network", "Specify a network to announce via BGP",
+                 P.arg(P.IpArg(), "Network number", P.kw("mask", "Network mask",
+                       P.arg(P.MaskArg(), "Network mask", handler=lambda s, a, n: s.bgp_vrf_network(a[0], a[1], n),
+                             negatable=True))), negatable=True)], key=lambda x: x.word or "")
+        af = next((x for x in t["config-router-bgp"] if x.word == "address-family"), None)
+        if af is not None:
+            ipv4 = next(x for x in af.children if x.word == "ipv4")
+            ipv4.children.append(P.kw("vrf", "Specify parameters for a VPN Routing/Forwarding instance",
+                                      P.arg(P.WordArg("WORD"), "VPN Routing/Forwarding instance name",
+                                            handler=lambda s, a, n: s.bgp_af_vrf(a[0]))))
+            af.children.append(P.kw("vpnv4", "Address family",
+                                    P.kw("unicast", "Address Family modifier",
+                                         handler=lambda s, a, n: s.set_mode("config-router-af-vpn")),
+                                    handler=lambda s, a, n: s.set_mode("config-router-af-vpn")))
+        show = next(x for x in t["priv"] if x.word == "show")
+        vpn = P.kw("vpnv4", "Display VPNv4 NLRI specific information",
+                   P.kw("unicast", "Display VPNv4 unicast NLRI", P.kw("all", "Display information about all VPNv4 NLRIs",
+                                                                     handler=lambda s, a, n: s.show_bgp_vpnv4())),
+                   P.kw("all", "Display information about all VPNv4 NLRIs", handler=lambda s, a, n: s.show_bgp_vpnv4()))
+        bgp_show = next((x for x in show.children if x.word == "bgp"), None)
+        if bgp_show is None:
+            show.children.append(P.kw("bgp", "BGP information", vpn))
+        else:
+            bgp_show.children.append(vpn)
+        sip = next(x for x in show.children if x.word == "ip")
+        ipbgp = next((x for x in sip.children if x.word == "bgp"), None)
+        if ipbgp is not None:
+            ipbgp.children.append(P.kw("vpnv4", "Display VPNv4 NLRI specific information",
+                                       P.kw("all", "Display information about all VPNv4 NLRIs",
+                                            handler=lambda s, a, n: s.show_bgp_vpnv4())))
+
     def _add_vrf_trees(self, t):
         name = lambda h="VRF name": P.arg(P.WordArg("WORD"), h, handler=lambda s, a, n: s.vrf_define(a[0], n),
                                           negatable=True)
@@ -3287,7 +3341,12 @@ class CiscoSession(TreeSession):
                  handler=lambda s, a, n: s.vrf_attr("rd", a[0], n), negatable=True), negatable=True),
             P.kw("description", "VRF specific description", P.arg(P.LineArg(), "Up to 244 characters",
                  handler=lambda s, a, n: s.vrf_attr("description", a[0], n), negatable=True), negatable=True),
-            noop("route-target", "Specify Target VPN Extended Communities"),
+            P.kw("route-target", "Specify Target VPN Extended Communities",
+                 *[P.kw(w, h, P.arg(P.WordArg("ASN:nn or IP-address:nn"), "Target VPN Extended Community",
+                                    handler=lambda s, a, n, w=w: s.vrf_rt(w, a[0], n), negatable=True), negatable=True)
+                   for w, h in (("import", "Import Target-VPN community"), ("export", "Export Target-VPN community"),
+                                ("both", "Both import and export Target-VPN communities"))],
+                 negatable=True),
             noop("address-family", "Enter Address Family command mode"),
             noop("exit-address-family", "Exit from Address Family configuration mode")],
             key=lambda x: x.word or "")
@@ -3330,6 +3389,84 @@ class CiscoSession(TreeSession):
         v.setdefault(name, {})
         self._vrf, self.mode = name, "config-vrf"
         return None
+
+    def vrf_rt(self, which, value, negate):
+        d = self._vrfs()[self._vrf]
+        if ":" not in value:
+            return self.err_invalid(self.prompt, 0)
+        for key in (("rt_import", "rt_export") if which == "both" else ("rt_" + which,)):
+            lst = d.setdefault(key, [])
+            if negate and value in lst:
+                lst.remove(value)
+            elif not negate and value not in lst:
+                lst.append(value)
+        return None
+
+    # -- MP-BGP VPNv4 ----------------------------------------------------------------------------
+    def bgp_af_vrf(self, vrf):
+        if vrf not in self._vrfs():
+            return f"% VRF {vrf} does not exist"
+        if not self._vrfs()[vrf].get("rd"):
+            return f"% VRF {vrf} does not have an RD configured."
+        self.bcfg.vrfs.setdefault(vrf, {"redistribute": [], "networks": []})
+        self._bgp_vrf, self.mode = vrf, "config-router-af-vrf"
+        return None
+
+    def bgp_vpn_activate(self, ip, negate):
+        nb = self._nb(ip)
+        if nb is None:
+            return "% Specify remote-as or peer-group commands first"
+        if negate:
+            nb.pop("vpnv4", None)
+        else:
+            nb["vpnv4"] = True
+        b = self.device.bgp
+        if b is not None and b.peers.get(IPv4Address(str(ip))) is not None:
+            b.reset_peer(ip, "Capability changed")
+        return None
+
+    def bgp_vrf_redist(self, proto, negate):
+        lst = self.bcfg.vrfs[self._bgp_vrf].setdefault("redistribute", [])
+        if negate and proto in lst:
+            lst.remove(proto)
+        elif not negate and proto not in lst:
+            lst.append(proto)
+        return None
+
+    def bgp_vrf_network(self, ip, mask, negate):
+        try:
+            net = str(IPv4Network(f"{ip}/{mask}"))
+        except ValueError:
+            return "% Inconsistent address and mask"
+        lst = self.bcfg.vrfs[self._bgp_vrf].setdefault("networks", [])
+        if negate and net in lst:
+            lst.remove(net)
+        elif not negate and net not in lst:
+            lst.append(net)
+        return None
+
+    def show_bgp_vpnv4(self):
+        b = self.device.bgp
+        if b is None:
+            return "% BGP not active"
+        lines = [f"BGP table version is {b.table_version}, local router ID is {b.router_id}",
+                 "Status codes: s suppressed, d damped, h history, * valid, > best, i - internal",
+                 "Origin codes: i - IGP, e - EGP, ? - incomplete", "",
+                 "     Network          Next Hop            Metric LocPrf Weight Path"]
+        by_rd: dict = {}
+        for (rd, net), lst in b.vpn_paths.items():
+            by_rd.setdefault(rd, []).append((net, lst))
+        owner = {vd.get("rd"): v for v, vd in self._vrfs().items()}
+        for rd in sorted(by_rd):
+            lines.append(f"Route Distinguisher: {rd}" + (f" (default for vrf {owner[rd]})" if rd in owner else ""))
+            for net, lst in sorted(by_rd[rd], key=lambda x: (int(x[0].network_address), x[0].prefixlen)):
+                for i, (a, peer) in enumerate(lst):
+                    flag = (" *>" if i == 0 else " * ") + (" " if peer is None else "i") + " "
+                    nh = "0.0.0.0" if peer is None else str(a.next_hop)
+                    lp = "" if peer is None else str(a.local_pref or 100)
+                    w = 32768 if peer is None else 0
+                    lines.append(f"{flag}{str(net):<17}{nh:<20}{0:>6} {lp:>6} {w:>6} {a.origin}")
+        return "\n".join(lines)
 
     def vrf_attr(self, attr, value, negate):
         d = self._vrfs()[self._vrf]
@@ -4605,6 +4742,10 @@ def render_running(device, cfg: dict) -> str:
             lines.append(f" description {vd['description']}")
         if vd.get("rd"):
             lines.append(f" rd {vd['rd']}")
+        both = [x for x in vd.get("rt_export", []) if x in vd.get("rt_import", [])]
+        lines += [f" route-target both {x}" for x in both]
+        lines += [f" route-target export {x}" for x in vd.get("rt_export", []) if x not in both]
+        lines += [f" route-target import {x}" for x in vd.get("rt_import", []) if x not in both]
         lines.append("!")
     for name, ic in cfg.get("interfaces", {}).items():
         lines.append(f"interface {name}")
@@ -4836,6 +4977,19 @@ def render_running(device, cfg: dict) -> str:
                     lines.append(f" neighbor {ip} weight {nc['weight']}")
             for proto in bgp.get("redistribute", []):
                 lines.append(f" redistribute {proto}" + (" 1" if proto == "ospf" else ""))
+            vpn_nbs = [ip for ip, nc in bgp.get("neighbors", {}).items() if nc.get("vpnv4")]
+            if vpn_nbs:
+                lines += [" !", " address-family vpnv4"]
+                for ip in vpn_nbs:
+                    lines += [f"  neighbor {ip} activate", f"  neighbor {ip} send-community extended"]
+                lines.append(" exit-address-family")
+            for vname, af in sorted((bgp.get("vrfs") or {}).items()):
+                lines += [" !", f" address-family ipv4 vrf {vname}"]
+                lines += [f"  redistribute {p}" for p in af.get("redistribute", [])]
+                for net in af.get("networks", []):
+                    n = IPv4Network(net)
+                    lines.append(f"  network {n.network_address} mask {n.netmask}")
+                lines.append(" exit-address-family")
             lines.append("!")
         ospf = cfg.get("ospf")
         if ospf and ospf.get("enabled", True):

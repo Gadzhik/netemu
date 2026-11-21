@@ -247,6 +247,11 @@ class Mpls:
         if ttl <= 0:
             self._ttl_expired(m, port)
             return
+        vrf = self.r.vrf_for_label(top) if entry is None and hasattr(self.r, "vrf_for_label") else None
+        if vrf is not None and isinstance(m.inner, IPv4Packet):              # L3VPN egress: VPN label -> VRF
+            with self.r.in_vrf(vrf):
+                self.r.send_ip(replace(m.inner, ttl=ttl))
+            return
         if entry is None:
             if len(m.labels) == 1 and isinstance(m.inner, IPv4Packet):      # explicit/unknown: route the payload
                 self.r._handle_ip(replace(m.inner, ttl=ttl), port)

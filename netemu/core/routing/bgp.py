@@ -16,6 +16,16 @@ Modelled
     next-hop-self, next-hop reachability, network statements (exact RIB
     match), redistribution, default-originate.
 
+MPLS L3VPN (RFC 4364)
+  * VRFs carry a route distinguisher and import/export route targets.  ``address-family vpnv4`` +
+    ``neighbor X activate`` exchanges VPNv4 routes (RD:prefix, VPN label, route targets) over the
+    iBGP session between PEs; ``address-family ipv4 vrf NAME`` + ``redistribute connected|static`` /
+    ``network`` picks what a VRF exports.  A VPN route is imported into every local VRF whose import
+    targets match, as a ``B`` route whose next hop is the remote PE (resolved in the global table).
+  * One VPN label per VRF.  The ingress PE pushes the VPN label and, above it, the LDP label towards
+    the remote PE; the core switches the outer label, penultimate-hop popping removes it, and the
+    egress PE looks the packet up in the VRF that owns the VPN label.
+
 Simplified
   * No real TCP state machine (a single OPEN exchange instead of SYN/ACK).
   * No route maps / communities / aggregation.
@@ -53,6 +63,15 @@ class PathAttrs:
 
 
 @dataclass(frozen=True)
+class VpnAttrs:
+    next_hop: IPv4Address
+    label: int
+    rts: tuple = ()                 # export route targets ("65000:1", ...)
+    origin: str = "?"
+    local_pref: int | None = None
+
+
+@dataclass(frozen=True)
 class BgpMessage:
     kind: str                       # open | keepalive | update | notification
     asn: int = 0
@@ -61,11 +80,14 @@ class BgpMessage:
     announce: tuple = ()            # ((prefix str, PathAttrs), ...)
     withdraw: tuple = ()            # (prefix str, ...)
     error: str = ""
+    vpn: tuple = ()                 # (((rd, prefix str), VpnAttrs), ...)  MP_REACH_NLRI, AFI 1 / SAFI 128
+    vpn_withdraw: tuple = ()        # ((rd, prefix str), ...)
     label = "BGP"
 
     def summary(self) -> str:
         if self.kind == "update":
-            return f"UPDATE ({len(self.announce)} NLRI, {len(self.withdraw)} withdrawn)"
+            v = f", {len(self.vpn)} VPNv4" if self.vpn or self.vpn_withdraw else ""
+            return f"UPDATE ({len(self.announce)} NLRI, {len(self.withdraw)} withdrawn{v})"
         if self.kind == "open":
             return f"OPEN AS {self.asn} ID {self.router_id}"
         return self.kind.upper()
@@ -81,6 +103,11 @@ class BgpMessage:
                          + (f", LOCAL_PREF {a.local_pref}" if a.local_pref is not None else ""))
         for pfx in self.withdraw:
             lines.append(f"Withdrawn: {pfx}")
+        for (rd, pfx), a in self.vpn:
+            lines.append(f"VPNv4 NLRI RD {rd} {pfx}: next hop {a.next_hop}, label {a.label}, "
+                         f"route targets {' '.join('RT:' + x for x in a.rts) or '-'}")
+        for rd, pfx in self.vpn_withdraw:
+            lines.append(f"VPNv4 withdrawn: RD {rd} {pfx}")
         if self.error:
             lines.append(f"Error: {self.error}")
         return lines
@@ -94,6 +121,7 @@ class BgpConfig:
     networks: list[str] = field(default_factory=list)
     redistribute: list[str] = field(default_factory=list)       # connected | static | ospf
     enabled: bool = True
+    vrfs: dict[str, dict] = field(default_factory=dict)          # VRF -> {"redistribute": [], "networks": []}
 
     def to_dict(self) -> dict:
         return {k: (dict(v) if isinstance(v, dict) else list(v) if isinstance(v, list) else v)
@@ -106,6 +134,7 @@ class BgpConfig:
             if hasattr(c, k):
                 setattr(c, k, v)
         c.neighbors = {k: dict(v) for k, v in c.neighbors.items()}
+        c.vrfs = {k: {kk: list(vv) for kk, vv in v.items()} for k, v in (c.vrfs or {}).items()}
         return c
 
 
@@ -127,6 +156,8 @@ class Peer:
     msgs_tx: int = 0
     last_error: str = ""
     flaps: int = 0
+    vpn_in: dict = field(default_factory=dict)      # (rd, IPv4Network) -> VpnAttrs
+    vpn_out: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -154,6 +185,8 @@ class BgpProcess:
         self._timer = None
         self.table_version = 1
         self._sport = 11000
+        self.vpn_paths: dict = {}                    # (rd, net) -> [(VpnAttrs, peer ip | None)], best first
+        self.vpn_routes: dict[str, list[Route]] = {}  # VRF -> imported routes
 
     # -- identity ------------------------------------------------------------------------------
     @property
@@ -201,6 +234,8 @@ class BgpProcess:
         p.state, p.sent_open, p.got_open = "Idle", False, False
         p.adj_in.clear()
         p.adj_out.clear()
+        p.vpn_in.clear()
+        p.vpn_out.clear()
         p.last_attempt = self.engine.now
         self.decide()
 
@@ -333,12 +368,18 @@ class BgpProcess:
                 p.last_error = ""
                 self.r.console(f"%BGP-5-ADJCHANGE: neighbor {p.ip} Up")
                 p.adj_out.clear()
+                p.vpn_out.clear()
                 self.decide(force_send=True)
         elif msg.kind == "update" and p.state == "Established":
             for pfx in msg.withdraw:
                 p.adj_in.pop(IPv4Network(pfx), None)
             for pfx, attrs in msg.announce:
                 p.adj_in[IPv4Network(pfx)] = attrs
+            for rd, pfx in msg.vpn_withdraw:
+                p.vpn_in.pop((rd, IPv4Network(pfx)), None)
+            if self.ncfg(p.ip).get("vpnv4"):
+                for (rd, pfx), attrs in msg.vpn:
+                    p.vpn_in[(rd, IPv4Network(pfx))] = attrs
             self.decide()
         elif msg.kind == "notification":
             p.last_error = msg.error
@@ -348,6 +389,8 @@ class BgpProcess:
             p.state, p.sent_open, p.got_open = "Idle", False, False
             p.adj_in.clear()
             p.adj_out.clear()
+            p.vpn_in.clear()
+            p.vpn_out.clear()
             p.last_attempt = self.engine.now
             self.decide()
 
@@ -421,10 +464,79 @@ class BgpProcess:
         old = [(r.network, r.next_hop, r.distance) for r in self.routes]
         self.paths = paths
         self.routes = sorted(routes, key=lambda r: (int(r.network.network_address), r.network.prefixlen))
-        if [(r.network, r.next_hop, r.distance) for r in self.routes] != old:
+        vpn_changed = self._decide_vpn()
+        if [(r.network, r.next_hop, r.distance) for r in self.routes] != old or vpn_changed:
             self.table_version += 1
             self.r.routes_changed()
         self._advertise(force_send)
+
+    # -- MPLS L3VPN --------------------------------------------------------------------------------
+    def vrf_defs(self) -> dict:
+        return (getattr(self.r, "extra", None) or {}).get("vrfs", {})
+
+    def _vpn_local(self) -> dict:
+        """(rd, net) -> VpnAttrs for what the local VRFs export."""
+        out = {}
+        zero = IPv4Address("0.0.0.0")
+        for vrf, af in self.cfg.vrfs.items():
+            vd = self.vrf_defs().get(vrf)
+            if not vd or not vd.get("rd"):
+                continue
+            label = self.r.vpn_label(vrf)
+            if label is None:
+                continue
+            with self.r.in_vrf(vrf):
+                rib = [r for r in self.r.routing_table() if r.code != "L" and not r.code.startswith("B")]
+            nets = {IPv4Network(n) for n in af.get("networks", [])}
+            for r in rib:
+                code = r.code[:1]
+                if r.network in nets or ("connected" in af.get("redistribute", []) and code == "C") or \
+                        ("static" in af.get("redistribute", []) and code == "S"):
+                    out[(vd["rd"], r.network)] = VpnAttrs(zero, label, tuple(vd.get("rt_export", [])),
+                                                          "i" if r.network in nets else "?")
+        return out
+
+    def _decide_vpn(self) -> bool:
+        paths: dict = {}
+        for key, a in self._vpn_local().items():
+            paths.setdefault(key, []).append((a, None))
+        for p in self.peers.values():
+            if p.state != "Established" or not self.ncfg(p.ip).get("vpnv4"):
+                continue
+            for key, a in p.vpn_in.items():
+                if self._nh_metric(a.next_hop) is not None:
+                    paths.setdefault(key, []).append((a, p.ip))
+        for lst in paths.values():
+            lst.sort(key=lambda x: (0 if x[1] is None else 1, -(x[0].local_pref or 100), int(x[1] or 0)))
+        routes: dict[str, list[Route]] = {}
+        for vrf, vd in self.vrf_defs().items():
+            imports = set(vd.get("rt_import", []))
+            best: dict = {}
+            for (rd, net), lst in paths.items():
+                a, peer = lst[0]
+                if peer is None or not imports & set(a.rts) or net in best:
+                    continue
+                r = Route(net, "B", None, a.next_hop, 200, 0)
+                r.vpn_label = a.label                     # type: ignore[attr-defined]
+                best[net] = r
+            if best:
+                routes[vrf] = sorted(best.values(), key=lambda r: (int(r.network.network_address), r.network.prefixlen))
+        sig = lambda rs: {v: [(r.network, r.next_hop, r.vpn_label) for r in lst] for v, lst in rs.items()}
+        changed = sig(routes) != sig(self.vpn_routes)
+        self.vpn_paths = paths
+        self.vpn_routes = routes
+        return changed
+
+    def _vpn_advert(self, p: Peer, local: IPv4Address) -> tuple:
+        out = {}
+        for key, lst in self.vpn_paths.items():
+            a, peer = lst[0]
+            if peer is None:                               # PEs advertise their own VRF routes (full mesh)
+                out[key] = VpnAttrs(local, a.label, a.rts, a.origin, 100)
+        announce = tuple(((rd, str(n)), a) for (rd, n), a in out.items() if p.vpn_out.get((rd, n)) != a)
+        withdraw = tuple((rd, str(n)) for (rd, n) in p.vpn_out if (rd, n) not in out)
+        p.vpn_out = out
+        return announce, withdraw
 
     def _advertise(self, force: bool) -> None:
         asn = int(self.cfg.asn or 0)
@@ -457,8 +569,13 @@ class BgpProcess:
                                                           None if ebgp else 100)
             announce = tuple((str(n), a) for n, a in out.items() if force or p.adj_out.get(n) != a)
             withdraw = tuple(str(n) for n in p.adj_out if n not in out)
-            if announce or withdraw:
-                self._send(p, BgpMessage("update", announce=announce, withdraw=withdraw))
+            vpn, vpn_wd = (), ()
+            if nc.get("vpnv4") and not ebgp:
+                if force:
+                    p.vpn_out = {}
+                vpn, vpn_wd = self._vpn_advert(p, local)
+            if announce or withdraw or vpn or vpn_wd:
+                self._send(p, BgpMessage("update", announce=announce, withdraw=withdraw, vpn=vpn, vpn_withdraw=vpn_wd))
             p.adj_out = out
 
     # -- show helpers ---------------------------------------------------------------------------------

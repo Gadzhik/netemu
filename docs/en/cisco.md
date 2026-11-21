@@ -641,6 +641,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `show ip bgp summary` | Summary of BGP neighbor status |
 | `show ip bgp neighbors` | Detailed information on TCP and BGP neighbor connections |
 | `show ip bgp neighbors A.B.C.D` | Neighbor to display information about |
+| `show ip bgp vpnv4 all` | Display information about all VPNv4 NLRIs |
 | `show ip nat translations` | Translation entries |
 | `show ip nat translations verbose` | Show extra information |
 | `show ip nat statistics` | Translation statistics |
@@ -670,6 +671,8 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `show startup-config` | Contents of startup configuration |
 | `show version` | System hardware and software status |
 | `show users` | Display information about terminal lines |
+| `show bgp vpnv4 unicast all` | Display information about all VPNv4 NLRIs |
+| `show bgp vpnv4 all` | Display information about all VPNv4 NLRIs |
 | `show isis neighbors` | IS-IS neighbors |
 | `show isis database` | IS-IS link state database |
 | `show clns neighbors` | CLNS neighbor adjacencies |
