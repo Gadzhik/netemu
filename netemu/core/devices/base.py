@@ -222,6 +222,12 @@ class Device:
             d["dhcp_trust"] = True
         if p.voice_vlan is not None:
             d["voice_vlan"] = p.voice_vlan
+        if p.vrf:
+            d["vrf"] = p.vrf
+        if p.eigrp_bw:
+            d["bandwidth"] = p.eigrp_bw
+        if p.eigrp_delay:
+            d["delay"] = p.eigrp_delay
         if p.qos_in:
             d["qos_in"] = p.qos_in
         if p.qos_out:
@@ -310,6 +316,8 @@ class Device:
             p.dhcp_trust = bool(icfg.get("dhcp_trust"))
             p.qos_in, p.qos_out = icfg.get("qos_in"), icfg.get("qos_out")
             p.voice_vlan = icfg.get("voice_vlan")
+            p.eigrp_bw, p.eigrp_delay = icfg.get("bandwidth"), icfg.get("delay")
+            p.vrf = icfg.get("vrf")
             p.err_disabled = False
             tagged = icfg.get("tagged")
             p.tagged = None if tagged is None else frozenset(int(v) for v in tagged)

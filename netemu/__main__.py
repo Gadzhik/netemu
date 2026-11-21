@@ -36,6 +36,8 @@ def main(argv: list[str] | None = None) -> int:
         return self_test(app, out)
     theme.load_settings()
     win = MainWindow()
+    from .gui.updater import install as install_updater
+    win.updater = install_updater(win)               # start-up check for a newer release on GitHub
     if len(argv) > 1:
         win.open_file(argv[1])
     win.show()

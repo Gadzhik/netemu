@@ -66,6 +66,9 @@ class Port:
     err_disabled: bool = False             # shut down by a port-security violation
     dhcp_trust: bool = False               # DHCP snooping trusted port
     is_wireless: bool = False              # radio port / Wi-Fi NIC: never cabled by hand
+    vrf: str | None = None                 # VRF the interface belongs to (None: global table)
+    eigrp_bw: int | None = None            # "bandwidth" (kbit/s) override for EIGRP metrics
+    eigrp_delay: int | None = None         # "delay" (tens of microseconds) override
     voice_vlan: int | None = None          # switchport voice vlan (tagged for IP phones on an access port)
     qos_in: str | None = None              # service-policy input
     qos_out: str | None = None             # service-policy output

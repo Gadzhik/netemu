@@ -15,7 +15,8 @@ PROMPTS = {"user": ">", "priv": "#", "config": "(config)#", "config-if": "(confi
            "config-subif": "(config-subif)#", "config-vlan": "(config-vlan)#",
            "config-router": "(config-router)#", "config-router-bgp": "(config-router)#",
            "config-router-af": "(config-router-af)#", "dhcp-config": "(dhcp-config)#",
-           "config-router-rip": "(config-router)#",
+           "config-router-rip": "(config-router)#", "config-router-eigrp": "(config-router)#",
+           "config-vrf": "(config-vrf)#",
            "config-std-nacl": "(config-std-nacl)#", "config-ext-nacl": "(config-ext-nacl)#",
            "config-line": "(config-line)#", "config-rtr6": "(config-rtr)#",
            "config-dhcpv6": "(config-dhcpv6)#", "config-isakmp": "(config-isakmp)#",
@@ -75,11 +76,14 @@ class CiscoSession(TreeSession):
     shows_console = True        # %OSPF-5-ADJCHG and similar messages appear on the console
     negate_modes = ("config-line", "config", "config-if", "config-subif", "config-vlan", "config-router",
                     "config-router-bgp", "config-router-af", "dhcp-config", "config-router-rip",
-                    "config-std-nacl", "config-ext-nacl")
+                    "config-std-nacl", "config-ext-nacl", "config-router-eigrp", "config-cmap", "config-pmap",
+                    "config-pmap-c", "config-telephony", "config-ephone-dn", "config-ephone", "config-isakmp",
+                    "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf")
     parent_modes = {"config-if": "config", "config-subif": "config", "config-vlan": "config",
                     "config-router": "config", "config-std-nacl": "config", "config-ext-nacl": "config",
                     "config-router-bgp": "config", "config-router-af": "config-router-bgp",
                     "dhcp-config": "config", "config-router-rip": "config", "config-line": "config",
+                    "config-router-eigrp": "config", "config-vrf": "config",
                     "config-rtr6": "config", "config-dhcpv6": "config", "config-isakmp": "config",
                     "cfg-crypto-trans": "config", "ipsec-profile": "config", "config-cmap": "config",
                     "config-telephony": "config", "config-ephone-dn": "config", "config-ephone": "config",
@@ -291,6 +295,53 @@ class CiscoSession(TreeSession):
                 continue
             ik.children.insert(0, P.kw("range", "interface range command",
                 P.arg(P.LineArg("fa0/1 - 4 , gi0/1"), "Interface list", handler=lambda s, a, n: s.enter_range(a[0]))))
+        if self.is_router:
+            self._add_vrf_trees(t)
+            de3 = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+            t["config-router-eigrp"] = sorted(de3 + [
+                P.kw("exit", "Exit from routing protocol configuration mode", handler=lambda s, a, n: s.set_mode("config")),
+                P.kw("network", "Enable routing on an IP network",
+                     P.arg(P.IpArg(), "Network number",
+                           P.arg(P.IpArg("A.B.C.D"), "EIGRP wild card bits",
+                                 handler=lambda s, a, n: s.eigrp_network(a[0], a[1], n), negatable=True),
+                           handler=lambda s, a, n: s.eigrp_network(a[0], None, n), negatable=True), negatable=True),
+                P.kw("passive-interface", "Suppress routing updates on an interface",
+                     P.kw("default", "Suppress routing updates on all interfaces",
+                          handler=lambda s, a, n: s.eigrp_set("passive", "default", n), negatable=True),
+                     P.arg(P.IfaceArg(), "Interface", handler=lambda s, a, n: s.eigrp_set("passive", a[0].name, n),
+                           negatable=True), negatable=True),
+                P.kw("eigrp", "EIGRP specific commands", P.kw("router-id", "router-id for this EIGRP process",
+                     P.arg(P.IpArg(), "EIGRP Router-ID in IP address format",
+                           handler=lambda s, a, n: s.eigrp_set("router_id", a[0], n), negatable=True), negatable=True)),
+                P.kw("auto-summary", "Enable automatic network number summarization",
+                     handler=lambda s, a, n: None, negatable=True),
+                P.kw("redistribute", "Redistribute information from another routing protocol",
+                     *[P.kw(w, h, P.arg(P.LineArg(), "options", handler=lambda s, a, n, w=w: s.eigrp_set("redistribute", w, n)),
+                            handler=lambda s, a, n, w=w: s.eigrp_set("redistribute", w, n), negatable=True)
+                       for w, h in (("static", "Static routes"), ("connected", "Connected"), ("ospf", "Open Shortest Path First"),
+                                    ("rip", "Routing Information Protocol"))], negatable=True),
+            ], key=lambda x: x.word or "")
+            t["config-if"] = sorted(t["config-if"] + [
+                P.kw("bandwidth", "Set bandwidth informational parameter",
+                     P.arg(P.NumArg(1, 10000000, "<1-10000000>"), "Bandwidth in kilobits",
+                           handler=lambda s, a, n: s.if_metric("eigrp_bw", a[0], n), negatable=True),
+                     handler=lambda s, a, n: s.if_metric("eigrp_bw", None, True) if n else s.err_incomplete("", 0),
+                     negatable=True),
+                P.kw("delay", "Specify interface throughput delay",
+                     P.arg(P.NumArg(1, 16777215, "<1-16777215>"), "Throughput delay (tens of microseconds)",
+                           handler=lambda s, a, n: s.if_metric("eigrp_delay", a[0], n), negatable=True),
+                     handler=lambda s, a, n: s.if_metric("eigrp_delay", None, True) if n else s.err_incomplete("", 0),
+                     negatable=True)], key=lambda x: x.word or "")
+            show_e = next(x for x in t["priv"] if x.word == "show")
+            ipn = next(x for x in show_e.children if x.word == "ip")
+            ipn.children.append(P.kw("eigrp", "IP-EIGRP show commands",
+                P.kw("neighbors", "IP-EIGRP neighbors", handler=lambda s, a, n: s.show_eigrp("neighbors")),
+                P.kw("topology", "IP-EIGRP Topology Table", handler=lambda s, a, n: s.show_eigrp("topology")),
+                P.kw("interfaces", "IP-EIGRP interfaces", handler=lambda s, a, n: s.show_eigrp("interfaces"))))
+            route_n = next((x for x in ipn.children if x.word == "route"), None)
+            if route_n is not None:
+                route_n.children.append(P.kw("eigrp", "Enhanced Interior Gateway Routing Protocol (EIGRP)",
+                                             handler=lambda s, a, n: s.show_ip_route("D")))
         if not self.is_router:
             sp = next(x for x in t["config-if"] if x.word == "switchport")
             sp.children.append(P.kw("voice", "Voice appliance attributes",
@@ -906,6 +957,10 @@ class CiscoSession(TreeSession):
                                     negatable=True),
                                P.kw("rip", "Routing Information Protocol (RIP)",
                                     handler=lambda s, a, n: s.router_rip(n), negatable=True),
+                               P.kw("eigrp", "Enhanced Interior Gateway Routing Protocol (EIGRP)",
+                                    P.arg(P.NumArg(1, 65535, "<1-65535>"), "Autonomous System",
+                                          handler=lambda s, a, n: s.router_eigrp(a[0], n), negatable=True),
+                                    negatable=True),
                                P.kw("bgp", "Border Gateway Protocol (BGP)",
                                     P.arg(P.NumArg(1, 4294967295, "<1-4294967295>"), "Autonomous system number",
                                           handler=lambda s, a, n: s.router_bgp(a[0], n), negatable=True),
@@ -2441,6 +2496,255 @@ class CiscoSession(TreeSession):
         return "\n".join(lines)
 
     # -- RIP -------------------------------------------------------------------------------
+    # -- VRF-lite --------------------------------------------------------------------------------
+    def _add_vrf_trees(self, t):
+        name = lambda h="VRF name": P.arg(P.WordArg("WORD"), h, handler=lambda s, a, n: s.vrf_define(a[0], n),
+                                          negatable=True)
+        ipn = next(x for x in t["config"] if x.word == "ip")
+        ipn.children.append(P.kw("vrf", "Configure an IP VPN Routing/Forwarding instance", name(), negatable=True))
+        t["config"].append(P.kw("vrf", "VRF commands", P.kw("definition", "VRF definition", name(), negatable=True),
+                                negatable=True))
+        route = next(x for x in ipn.children if x.word == "route")
+        via_ip = P.arg(P.IpArg(), "Forwarding router's address",
+                       handler=lambda s, a, n: s.ip_route_vrf(a[0], a[1], a[2], a[3], None, n), negatable=True)
+        via_if = P.arg(P.IfaceArg(), "Exit interface",
+                       handler=lambda s, a, n: s.ip_route_vrf(a[0], a[1], a[2], None, a[3], n), negatable=True)
+        mask = P.arg(P.MaskArg(), "Destination prefix mask", via_ip, via_if)
+        vrf_name = P.arg(P.WordArg("WORD"), "VPN Routing/Forwarding instance name",
+                         P.arg(P.IpArg(), "Destination prefix", mask))
+        route.children.append(P.kw("vrf", "Configure static route for a VPN Routing/Forwarding instance", vrf_name,
+                                   negatable=True))
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        noop = lambda w, h: P.kw(w, h, P.arg(P.LineArg(), h, handler=lambda s, a, n: None, negatable=True),
+                                 handler=lambda s, a, n: None, negatable=True)
+        t["config-vrf"] = sorted(de + [
+            P.kw("exit", "Exit from VRF configuration mode", handler=lambda s, a, n: s.set_mode("config")),
+            P.kw("rd", "Specify Route Distinguisher", P.arg(P.WordArg("ASN:nn or IP-address:nn"), "VPN Route Distinguisher",
+                 handler=lambda s, a, n: s.vrf_attr("rd", a[0], n), negatable=True), negatable=True),
+            P.kw("description", "VRF specific description", P.arg(P.LineArg(), "Up to 244 characters",
+                 handler=lambda s, a, n: s.vrf_attr("description", a[0], n), negatable=True), negatable=True),
+            noop("route-target", "Specify Target VPN Extended Communities"),
+            noop("address-family", "Enter Address Family command mode"),
+            noop("exit-address-family", "Exit from Address Family configuration mode")],
+            key=lambda x: x.word or "")
+        ifip = next(x for x in t["config-if"] if x.word == "ip")
+        fwd = lambda: P.kw("forwarding", "Configure forwarding table",
+                           P.arg(P.WordArg("WORD"), "VRF name", handler=lambda s, a, n: s.if_vrf(a[0], n), negatable=True),
+                           handler=lambda s, a, n: s.if_vrf(None, True) if n else s.err_incomplete("", 0), negatable=True)
+        ifip.children.append(P.kw("vrf", "VPN Routing/Forwarding parameters on the interface", fwd(), negatable=True))
+        t["config-if"].append(P.kw("vrf", "VPN Routing/Forwarding parameters on the interface", fwd(), negatable=True))
+        show = next(x for x in t["priv"] if x.word == "show")
+        sip = next(x for x in show.children if x.word == "ip")
+        sip.children.append(P.kw("vrf", "VPN Routing/Forwarding instance information",
+                                 P.kw("brief", "Brief VPN Routing/Forwarding instance information",
+                                      handler=lambda s, a, n: s.show_vrf()),
+                                 handler=lambda s, a, n: s.show_vrf()))
+        sroute = next(x for x in sip.children if x.word == "route")
+        sroute.children.append(P.kw("vrf", "Display routes from a VPN Routing/Forwarding instance",
+                                    P.arg(P.WordArg("WORD"), "VPN Routing/Forwarding instance name",
+                                          handler=lambda s, a, n: s.show_route_vrf(a[0]))))
+        for word, fn in (("ping", "ping_vrf"), ("traceroute", "trace_vrf")):
+            node = next(x for x in t["priv"] if x.word == word)
+            node.children.append(P.kw("vrf", "Select VPN Routing/Forwarding instance",
+                                      P.arg(P.WordArg("WORD"), "VPN Routing/Forwarding instance name",
+                                            P.arg(P.IpArg(), "Destination address",
+                                                  handler=lambda s, a, n, fn=fn: getattr(s, fn)(a[0], a[1])))))
+
+    def _vrfs(self):
+        return self.device.extra.setdefault("vrfs", {})
+
+    def vrf_define(self, name, negate):
+        v = self._vrfs()
+        if negate:
+            v.pop(name, None)
+            for p in self.device.ports.values():
+                if p.vrf == name:
+                    p.vrf, p.ip = None, None
+            self.device.static_routes = [r for r in self.device.static_routes if r.vrf != name]
+            self.device.routes_changed()
+            return None
+        v.setdefault(name, {})
+        self._vrf, self.mode = name, "config-vrf"
+        return None
+
+    def vrf_attr(self, attr, value, negate):
+        d = self._vrfs()[self._vrf]
+        if negate:
+            d.pop(attr, None)
+        else:
+            d[attr] = value
+        return None
+
+    def if_vrf(self, name, negate):
+        p = self.iface
+        if negate:
+            name = None
+        elif name not in self._vrfs():
+            return f"% VRF {name} not configured."
+        if p.vrf == name:
+            return None
+        had_ip = p.ip is not None
+        p.vrf, p.ip = name, None
+        self.device.arp.flush_port(p) if hasattr(self.device.arp, "flush_port") else None
+        self.device.routes_changed()
+        if had_ip:
+            return (f"% Interface {p.name} IPv4 disabled and address(es) removed due to "
+                    + (f"enabling VRF {name}" if name else "disabling VRF"))
+        return None
+
+    def ip_route_vrf(self, vrf, net, mask, next_hop, port, negate):
+        if vrf not in self._vrfs():
+            return f"% VRF {vrf} does not exist"
+        try:
+            network = IPv4Network(f"{net}/{mask}")
+        except ValueError:
+            return "%Inconsistent address and mask"
+        nh = IPv4Address(next_hop) if next_hop else None
+        if negate:
+            self.device.remove_static_route(network, nh, port.name if port else None, vrf=vrf)
+        else:
+            self.device.add_static_route(network, nh, port.name if port else None, 1, vrf=vrf)
+        self.device.routes_changed()
+        return None
+
+    def show_vrf(self):
+        lines = ["  Name                             Default RD            Interfaces"]
+        for name, d in sorted(self._vrfs().items()):
+            ifs = [p.short for p in self.device.ports.values() if p.vrf == name]
+            lines.append(f"  {name:<33}{d.get('rd', '<not set>'):<22}{ifs[0] if ifs else ''}")
+            lines += [" " * 57 + i for i in ifs[1:]]
+        return "\n".join(lines)
+
+    def show_route_vrf(self, vrf):
+        if vrf not in self._vrfs():
+            return f"% IP routing table {vrf} does not exist"
+        with self.device.in_vrf(vrf):
+            out = self.show_ip_route()
+        return f"\nRouting Table: {vrf}\n" + out
+
+    def ping_vrf(self, vrf, ip):
+        if vrf not in self._vrfs():
+            return f"% VRF {vrf} does not have a valid routing table"
+        dev = self.device
+        prev = dev.vrf_ctx
+        dev.vrf_ctx = vrf
+        job = self.ping(ip)
+        if job is None:
+            dev.vrf_ctx = prev
+            return None
+        _orig_done = job.finish
+
+        def finish(*a, **k):
+            dev.vrf_ctx = prev
+            return _orig_done(*a, **k)
+        job.finish = finish
+        return job
+
+    def trace_vrf(self, vrf, ip):
+        if vrf not in self._vrfs():
+            return f"% VRF {vrf} does not have a valid routing table"
+        dev = self.device
+        prev = dev.vrf_ctx
+        dev.vrf_ctx = vrf
+        job = self.traceroute(ip)
+        _orig_done = job.finish
+
+        def finish(*a, **k):
+            dev.vrf_ctx = prev
+            return _orig_done(*a, **k)
+        job.finish = finish
+        return job
+
+    # -- EIGRP ---------------------------------------------------------------------------------
+    def router_eigrp(self, asn, negate):
+        from ..routing.eigrp import EigrpConfig
+        d = self.device
+        if negate:
+            if d.eigrp is not None and d.eigrp.cfg.asn == asn:
+                d.disable_eigrp()
+            return None
+        if d.eigrp is None:
+            d.enable_eigrp(EigrpConfig(asn=asn))
+        elif d.eigrp.cfg.asn != asn:
+            return "% EIGRP process already running with a different AS number"
+        self.mode = "config-router-eigrp"
+        return None
+
+    def eigrp_network(self, addr, wildcard, negate):
+        from ipaddress import IPv4Address as A
+        e = self.device.eigrp
+        if wildcard is None:                     # classful: 10.x -> /8, 172.16 -> /16, 192.168.x -> /24
+            first = int(str(addr).split(".")[0])
+            wildcard = "0.255.255.255" if first < 128 else ("0.0.255.255" if first < 192 else "0.0.0.255")
+        base = str(A(int(A(str(addr))) & ~int(A(wildcard)) & 0xFFFFFFFF))
+        entry = [base, str(wildcard)]
+        if negate:
+            e.cfg.networks = [n for n in e.cfg.networks if n != entry]
+        elif entry not in e.cfg.networks:
+            e.cfg.networks.append(entry)
+        e._recompute()
+        return None
+
+    def eigrp_set(self, attr, value, negate):
+        e = self.device.eigrp
+        if attr == "router_id":
+            e.cfg.router_id = None if negate else str(value)
+        else:
+            lst = getattr(e.cfg, attr)
+            if negate:
+                setattr(e.cfg, attr, [x for x in lst if x != value])
+            elif value not in lst:
+                lst.append(value)
+        e._recompute()
+        return None
+
+    def if_metric(self, attr, value, negate):
+        setattr(self.iface, attr, None if negate else value)
+        if self.device.eigrp is not None:
+            self.device.eigrp._recompute()
+        return None
+
+    def show_eigrp(self, what):
+        from ..routing.eigrp import port_bandwidth, port_delay
+        e = self.device.eigrp
+        if e is None:
+            return ""
+        asn = e.cfg.asn
+        if what == "neighbors":
+            lines = [f"EIGRP-IPv4 Neighbors for AS({asn})",
+                     "H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq",
+                     "                                                   (sec)         (ms)       Cnt Num"]
+            now = self.device.engine.now
+            for i, nb in enumerate(e.neighbors.values()):
+                up = int((now - nb.up_since) / 1000)
+                hold = max(0, 15 - int((now - nb.last_seen) / 1000))
+                lines.append(f"{i:<4}{str(nb.ip):<24}{nb.port.short:<23}{hold:<5}"
+                             f"{up // 3600:02d}:{up % 3600 // 60:02d}:{up % 60:02d} 1      100  0  {i + 3}")
+            return "\n".join(lines)
+        if what == "interfaces":
+            lines = [f"EIGRP-IPv4 Interfaces for AS({asn})",
+                     "                        Xmit Queue   PeerQ        Mean   Pacing Time   Multicast    Pending",
+                     "Interface        Peers  Un/Reliable  Un/Reliable  SRTT   Un/Reliable   Flow Timer   Routes"]
+            for p in self.device.ports.values():
+                if e.enabled_on(p) and not e.is_passive(p):
+                    peers = sum(1 for nb in e.neighbors.values() if nb.port is p)
+                    lines.append(f"{p.short:<17}{peers:<7}0/0          0/0          1      0/0           50           0")
+            return "\n".join(lines)
+        lines = [f"EIGRP-IPv4 Topology Table for AS({asn})/ID({e.router_id()})",
+                 "Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,",
+                 "       r - reply Status, s - sia Status", ""]
+        for net, fd, vias in e.topology():
+            succ = sum(1 for v in vias if v[4])
+            lines.append(f"P {net}, {succ} successors, FD is {fd}")
+            for ip, port, p_fd, rd, is_succ in vias:
+                if ip == "Connected":
+                    p = next((x for x in self.device.ports.values() if x.ip is not None and x.ip.network == net), None)
+                    lines.append(f"        via Connected, {p.name if p else ''}")
+                else:
+                    lines.append(f"        via {ip} ({p_fd}/{rd}), {port}")
+        _ = (port_bandwidth, port_delay)
+        return "\n".join(lines)
+
     def router_rip(self, negate):
         from ..routing.rip import RipConfig
         if negate:
@@ -2993,7 +3297,7 @@ class CiscoSession(TreeSession):
         if iface.ip == iface.network.network_address and iface.network.prefixlen < 31:
             return "Bad mask /%d for address %s" % (iface.network.prefixlen, ip)
         other = overlapping_port(self.device, p, iface)
-        if other is not None:
+        if other is not None and getattr(other, "vrf", None) == getattr(p, "vrf", None):   # VRFs may overlap
             return f"% {iface.network.network_address} overlaps with {other.name}"
         p.ip = iface
         self.device.arp.flush_port(p)
@@ -3447,7 +3751,7 @@ class CiscoSession(TreeSession):
                 pad = 8 if nested and major.prefixlen > 0 else 5
                 pad = max(pad, len(code) + 2)
                 head = f"{code:<{pad}}{r.network}"
-                if r.code.startswith(("O", "B", "R")):
+                if r.code.startswith(("O", "B", "R", "D")):
                     age = hms(d.engine.now / 1000 % 86400)
                     tail = f"[{r.distance}/{r.metric}] via {r.next_hop}, {age}, {r.port.name}"
                     if prev is not None and prev.network == r.network:
@@ -3531,10 +3835,19 @@ def render_running(device, cfg: dict) -> str:
         for vid, vname in sorted((int(k), v) for k, v in cfg.get("vlans", {}).items()):
             if vid != 1:
                 lines += [f"vlan {vid}", f" name {vname}", "!"]
+    for vname, vd in sorted((cfg.get("extra") or {}).get("vrfs", {}).items()):
+        lines.append(f"ip vrf {vname}")
+        if vd.get("description"):
+            lines.append(f" description {vd['description']}")
+        if vd.get("rd"):
+            lines.append(f" rd {vd['rd']}")
+        lines.append("!")
     for name, ic in cfg.get("interfaces", {}).items():
         lines.append(f"interface {name}")
         if ic.get("description"):
             lines.append(f" description {ic['description']}")
+        if ic.get("vrf"):
+            lines.append(f" ip vrf forwarding {ic['vrf']}")
         if ic.get("parent"):
             if ic.get("vlan") is not None:
                 lines.append(f" encapsulation dot1Q {ic['vlan']}" + (" native" if ic.get("native") else ""))
@@ -3548,6 +3861,10 @@ def render_running(device, cfg: dict) -> str:
         svi = bool(ic.get("svi")) or bool(ic.get("loopback"))
         if ic.get("voice_vlan"):
             lines.append(f" switchport voice vlan {ic['voice_vlan']}")
+        if ic.get("bandwidth"):
+            lines.append(f" bandwidth {ic['bandwidth']}")
+        if ic.get("delay"):
+            lines.append(f" delay {ic['delay']}")
         if ic.get("qos_in"):
             lines.append(f" service-policy input {ic['qos_in']}")
         if ic.get("qos_out"):
@@ -3660,6 +3977,18 @@ def render_running(device, cfg: dict) -> str:
         if cfg.get("ip_routing") or cfg.get("default_gateway"):
             lines.append("!")
     if True:
+        eg = cfg.get("eigrp")
+        if eg and eg.get("enabled", True):
+            lines.append(f"router eigrp {eg['asn']}")
+            if eg.get("router_id"):
+                lines.append(f" eigrp router-id {eg['router_id']}")
+            for x in eg.get("passive", []):
+                lines.append(f" passive-interface {x}")
+            for proto in eg.get("redistribute", []):
+                lines.append(f" redistribute {proto}")
+            for a, w in eg.get("networks", []):
+                lines.append(f" network {a} {w}")
+            lines += [" no auto-summary", "!"]
         rip = cfg.get("rip")
         if rip and rip.get("enabled", True):
             lines += ["router rip", f" version {rip.get('version', 2)}"]
@@ -3843,7 +4172,7 @@ def render_running(device, cfg: dict) -> str:
             lines.append("ip classless")
         for s in cfg.get("static_routes", []):
             n = IPv4Network(s["network"])
-            parts = [f"ip route {n.network_address} {n.netmask}"]
+            parts = [f"ip route{' vrf ' + s['vrf'] if s.get('vrf') else ''} {n.network_address} {n.netmask}"]
             if s.get("interface"):
                 parts.append(s["interface"])
             if s.get("next_hop"):

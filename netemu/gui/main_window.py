@@ -253,7 +253,15 @@ class MainWindow(QMainWindow):
         m = mb.addMenu(tr("&Справка"))
         self.act_help = self._act("Руководство и команды", lambda: self.show_help(), QKeySequence.HelpContents)
         m.addAction(self.act_help)
+        m.addSeparator()
+        from .updater import UpdateChecker
+        m.addAction(self._act("Проверить обновления…", self.check_updates))
+        self.act_auto_update = self._act("Проверять обновления при запуске", UpdateChecker.set_enabled, checkable=True)
+        self.act_auto_update.setChecked(UpdateChecker.enabled())
+        m.addAction(self.act_auto_update)
+        m.addSeparator()
         m.addAction(self._act("О программе", self.about))
+        self.updater = None
 
         tb = QToolBar(tr("Инструменты"))
         tb.setObjectName("tools")
@@ -630,6 +638,12 @@ class MainWindow(QMainWindow):
     def redo(self) -> None:
         if self.topology.undo.redo():
             self.statusBar().showMessage(tr("Повторено"), 3000)
+
+    def check_updates(self) -> None:
+        from .updater import install
+        if self.updater is None:
+            self.updater = install(self, auto=False)
+        self.updater.check(manual=True)
 
     def about(self) -> None:
         QMessageBox.about(self, tr("О программе"),

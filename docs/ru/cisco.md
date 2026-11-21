@@ -537,6 +537,7 @@ end
 | `ping ipv6 X:X:X:X::X` | Ping destination address |
 | `ping WORD` | Ping destination address |
 | `ping WORD repeat <1-2147483647>` | Repeat count |
+| `ping vrf WORD A.B.C.D` | Destination address |
 | `show access-lists` | List access lists |
 | `show access-lists <1-2699>/WORD` | Access list number or name |
 | `show arp` | Arp table |
@@ -580,6 +581,7 @@ end
 | `telnet A.B.C.D <1-65535>` | Port number |
 | `traceroute ipv6 X:X:X:X::X` | Trace route to destination address |
 | `traceroute WORD` | Trace route to destination address |
+| `traceroute vrf WORD A.B.C.D` | Destination address |
 
 #### Привилегированный режим (enable) — `Router#`
 
@@ -602,6 +604,7 @@ end
 | `ping ipv6 X:X:X:X::X` | Ping destination address |
 | `ping WORD` | Ping destination address |
 | `ping WORD repeat <1-2147483647>` | Repeat count |
+| `ping vrf WORD A.B.C.D` | Destination address |
 | `reload` | Halt and perform a cold restart |
 | `show access-lists` | List access lists |
 | `show access-lists <1-2699>/WORD` | Access list number or name |
@@ -616,6 +619,8 @@ end
 | `show ip route connected` | Connected networks |
 | `show ip route bgp` | Border Gateway Protocol (BGP) |
 | `show ip route rip` | Routing Information Protocol (RIP) |
+| `show ip route vrf WORD` | VPN Routing/Forwarding instance name |
+| `show ip route eigrp` | Enhanced Interior Gateway Routing Protocol (EIGRP) |
 | `show ip interface brief` | Brief summary of IP status and configuration |
 | `show ip ospf` | OSPF information |
 | `show ip ospf neighbor` | Neighbor list |
@@ -638,6 +643,11 @@ end
 | `show ip access-lists <1-2699>/WORD` | Access list number or name |
 | `show ip arp` | IP ARP table |
 | `show ip ssh` | Information on SSH |
+| `show ip vrf` | VPN Routing/Forwarding instance information |
+| `show ip vrf brief` | Brief VPN Routing/Forwarding instance information |
+| `show ip eigrp neighbors` | IP-EIGRP neighbors |
+| `show ip eigrp topology` | IP-EIGRP Topology Table |
+| `show ip eigrp interfaces` | IP-EIGRP interfaces |
 | `show ipv6 interface brief` | Brief summary of IPv6 status and configuration |
 | `show ipv6 route` | Show IPv6 route table entries |
 | `show ipv6 neighbors` | Show IPv6 neighbor cache entries |
@@ -673,6 +683,7 @@ end
 | `telnet A.B.C.D <1-65535>` | Port number |
 | `traceroute ipv6 X:X:X:X::X` | Trace route to destination address |
 | `traceroute WORD` | Trace route to destination address |
+| `traceroute vrf WORD A.B.C.D` | Destination address |
 | `write` | Write running configuration to memory |
 | `write memory` | Write to NV memory |
 | `write erase` | Erase NV memory |
@@ -733,10 +744,13 @@ end
 | `ip route A.B.C.D A.B.C.D IFACE` | Exit interface |
 | `ip route A.B.C.D A.B.C.D IFACE A.B.C.D` | Forwarding router's address |
 | `ip route A.B.C.D A.B.C.D IFACE <1-255>` | Distance metric for this route |
+| `ip route vrf WORD A.B.C.D A.B.C.D A.B.C.D` | Forwarding router's address |
+| `ip route vrf WORD A.B.C.D A.B.C.D IFACE` | Exit interface |
 | `ip routing` | Enable IP routing |
 | `ip classless` | Follow classless routing forwarding rules |
 | `ip domain-name WORD` | Default domain name |
 | `ip ssh version <1-2>` | Protocol version |
+| `ip vrf WORD` | VRF name |
 | `[no] ipv6 unicast-routing` | Enable unicast routing |
 | `[no] ipv6 route X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 route X:X:X:X::X/<0-128> X:X:X:X::X` | IPv6 address of next-hop |
@@ -768,6 +782,7 @@ end
 | `[no] policy-map WORD` | policy-map name |
 | `[no] router ospf <1-65535>` | Process ID |
 | `[no] router rip` | Routing Information Protocol (RIP) |
+| `[no] router eigrp <1-65535>` | Autonomous System |
 | `[no] router bgp <1-4294967295>` | Autonomous system number |
 | `[no] snmp-server community WORD` | SNMP community string |
 | `[no] snmp-server community WORD RO` | Read-only access with this community string |
@@ -783,11 +798,16 @@ end
 | `[no] username WORD privilege <0-15> password LINE` | The UNENCRYPTED (cleartext) user password |
 | `[no] username WORD secret LINE` | The UNENCRYPTED (cleartext) user secret |
 | `[no] username WORD password LINE` | The UNENCRYPTED (cleartext) user password |
+| `[no] vrf definition WORD` | VRF name |
 
 #### Конфигурация интерфейса (interface …) — `Router(config-if)#`
 
 | Команда | Описание |
 |---|---|
+| `[no] bandwidth` | Set bandwidth informational parameter |
+| `[no] bandwidth <1-10000000>` | Bandwidth in kilobits |
+| `[no] delay` | Specify interface throughput delay |
+| `[no] delay <1-16777215>` | Throughput delay (tens of microseconds) |
 | `[no] description` | Interface specific description |
 | `[no] description LINE` | Up to 240 characters describing this interface |
 | `do LINE` | Exec Command |
@@ -815,6 +835,8 @@ end
 | `ip ospf priority <0-255>` | Router priority |
 | `ip address` | Set the IP address of an interface |
 | `ip address A.B.C.D A.B.C.D` | IP subnet mask |
+| `ip vrf forwarding` | Configure forwarding table |
+| `ip vrf forwarding WORD` | VRF name |
 | `[no] ipv6 address X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 enable` | Enable IPv6 on interface |
 | `[no] ipv6 nd ra suppress` | Suppress IPv6 Router Advertisements |
@@ -837,6 +859,8 @@ end
 | `[no] tunnel mode gre` | generic route encapsulation protocol |
 | `[no] tunnel mode gre ip` | over IP |
 | `[no] tunnel protection ipsec profile WORD` | Name |
+| `[no] vrf forwarding` | Configure forwarding table |
+| `[no] vrf forwarding WORD` | VRF name |
 | `[no] vrrp <1-255>` | group number |
 | `[no] vrrp <1-255> ip A.B.C.D` | Virtual IP address |
 | `[no] vrrp <1-255> priority <0-255>` | Priority value |
@@ -1086,6 +1110,7 @@ end
 | `[no] ntp master <1-15>` | Stratum number |
 | `[no] router ospf <1-65535>` | Process ID |
 | `[no] router rip` | Routing Information Protocol (RIP) |
+| `[no] router eigrp <1-65535>` | Autonomous System |
 | `[no] router bgp <1-4294967295>` | Autonomous system number |
 | `[no] snmp-server community WORD` | SNMP community string |
 | `[no] snmp-server community WORD RO` | Read-only access with this community string |

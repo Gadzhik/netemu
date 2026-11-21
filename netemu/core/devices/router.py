@@ -17,17 +17,21 @@ class StaticRoute:
     next_hop: IPv4Address | None = None
     interface: str | None = None     # exit interface name
     distance: int = 1
+    vrf: str | None = None           # "ip route vrf NAME ..."
 
     def to_dict(self) -> dict:
-        return {"network": str(self.network),
-                "next_hop": str(self.next_hop) if self.next_hop else None,
-                "interface": self.interface, "distance": self.distance}
+        d = {"network": str(self.network),
+             "next_hop": str(self.next_hop) if self.next_hop else None,
+             "interface": self.interface, "distance": self.distance}
+        if self.vrf:
+            d["vrf"] = self.vrf
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> "StaticRoute":
         return cls(IPv4Network(d["network"]),
                    IPv4Address(d["next_hop"]) if d.get("next_hop") else None,
-                   d.get("interface"), int(d.get("distance", 1)))
+                   d.get("interface"), int(d.get("distance", 1)), d.get("vrf"))
 
 
 class Router(IpStack, Ip6Stack, Device):
@@ -46,6 +50,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.bgp = None             # BgpProcess when "router bgp" is configured
         self.dhcp_server = None     # services.dhcp.DhcpServer (ip dhcp pool ...)
         self.rip = None             # RipProcess when "router rip" is configured
+        self.eigrp = None           # EigrpProcess when "router eigrp" is configured
         self.global_router_id: str | None = None   # Junos "routing-options router-id"
         self.acls: dict = {}                        # name -> security.acl.Acl
         self.firewall: list = []                    # RouterOS /ip firewall filter rules (AclRule)
@@ -74,6 +79,8 @@ class Router(IpStack, Ip6Stack, Device):
             out += [r for r in self.ospf.routes if r.port is not None and r.port.is_up]
         if self.rip is not None:
             out += [r for r in self.rip.routes if r.port is not None and r.port.is_up]
+        if getattr(self, "eigrp", None) is not None:
+            out += [r for r in self.eigrp.routes if r.port is not None and r.port.is_up]
         if self.bgp is not None:
             out += self.bgp.routes          # recursive: resolved through the IGP at lookup time
         return out
@@ -91,6 +98,21 @@ class Router(IpStack, Ip6Stack, Device):
             self.rip.start()
             self.rip.trigger()
         return self.rip
+
+    def enable_eigrp(self, cfg=None):
+        from ..routing.eigrp import EigrpConfig, EigrpProcess
+        if self.eigrp is None:
+            self.eigrp = EigrpProcess(self, cfg or EigrpConfig())
+        elif cfg is not None:
+            self.eigrp.cfg = cfg
+        if self.eigrp.cfg.enabled:
+            self.eigrp.start()
+        return self.eigrp
+
+    def disable_eigrp(self) -> None:
+        if getattr(self, "eigrp", None) is not None:
+            self.eigrp.stop()
+            self.eigrp = None
 
     def disable_rip(self) -> None:
         if self.rip is not None:
@@ -221,6 +243,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.disable_ospf()
         self.disable_bgp()
         self.disable_rip()
+        self.disable_eigrp()
         self.dhcp_server = None
         self.global_router_id = None
         self.policies = {}
@@ -347,6 +370,8 @@ class Router(IpStack, Ip6Stack, Device):
             return True
         if self.rip is not None and self.rip.running and mac == RIP_MAC:
             return True
+        if getattr(self, "eigrp", None) is not None and self.eigrp.running and mac.value == 0x01005E00000A:
+            return True
         return self.ospf is not None and self.ospf.running and mac == OSPF_MAC
 
     def joined_group(self, ip) -> bool:
@@ -356,6 +381,8 @@ class Router(IpStack, Ip6Stack, Device):
         if self.fhrp.groups and ip in GROUPS.values():
             return True
         if self.rip is not None and self.rip.running and ip == RIP_GROUP:
+            return True
+        if getattr(self, "eigrp", None) is not None and self.eigrp.running and str(ip) == "224.0.0.10":
             return True
         return self.ospf is not None and self.ospf.running and ip == ALL_SPF_ROUTERS
 
@@ -367,7 +394,10 @@ class Router(IpStack, Ip6Stack, Device):
         if pkt.protocol == PROTO_VRRP or (isinstance(pkt.payload, UdpDatagram) and pkt.payload.dport == HSRP_PORT):
             self.fhrp.receive(pkt, port)
             return
-        if pkt.protocol == PROTO_OSPF and self.ospf is not None:
+        if pkt.protocol == 88:
+            if getattr(self, "eigrp", None) is not None:
+                self.eigrp.receive(pkt, port)
+        elif pkt.protocol == PROTO_OSPF and self.ospf is not None:
             self.ospf.receive(pkt, port)
         elif pkt.protocol == PROTO_TCP and isinstance(pkt.payload, TcpSegment) and self.bgp is not None \
                 and 179 in (pkt.payload.sport, pkt.payload.dport):
@@ -431,11 +461,43 @@ class Router(IpStack, Ip6Stack, Device):
                 proc._recompute_domain()
         if self.ospf is not None:
             self.ospf.link_changed(port)
+        if getattr(self, "eigrp", None) is not None:
+            self.eigrp.link_changed(port)
 
     # -- routing table ------------------------------------------------------
+    # -- VRF-lite: which routing table the current lookup uses ------------------------------
+    vrf_ctx: str | None = None
+
+    def in_vrf(self, vrf):
+        """Context manager: run lookups / sends in *vrf* (None = global table)."""
+        router = self
+
+        class _Ctx:
+            def __enter__(self_):
+                self_.prev = router.vrf_ctx
+                router.vrf_ctx = vrf
+                return router
+
+            def __exit__(self_, *exc):
+                router.vrf_ctx = self_.prev
+                return False
+        return _Ctx()
+
+    def send_ip(self, pkt, in_port=None) -> bool:
+        if in_port is not None and getattr(in_port, "vrf", None) != self.vrf_ctx:
+            with self.in_vrf(in_port.vrf):
+                return super().send_ip(pkt, in_port)
+        return super().send_ip(pkt, in_port)
+
+    def _deliver_local(self, pkt, port) -> None:
+        with self.in_vrf(getattr(port, "vrf", None) if port is not None else None):
+            super()._deliver_local(pkt, port)
+
     def connected_routes(self) -> list[Route]:
         out = []
         for p in self.ports.values():
+            if getattr(p, "vrf", None) != self.vrf_ctx:
+                continue
             if p.ip is not None and p.is_up:
                 out.append(Route(p.ip.network, "C", p))
                 if p.ip.network.prefixlen < 32:
@@ -451,12 +513,12 @@ class Router(IpStack, Ip6Stack, Device):
             if dst in r.network:
                 candidates.append((r.network.prefixlen, 0, r))
         for s in self.static_routes:
-            if s is exclude or dst not in s.network:
+            if s is exclude or dst not in s.network or s.vrf != self.vrf_ctx:
                 continue
             candidates.append((s.network.prefixlen, s.distance,
                                Route(s.network, "S", None, s.next_hop, s.distance)))
             candidates[-1][2].static = s  # type: ignore[attr-defined]
-        for r in self.dynamic_routes():
+        for r in (self.dynamic_routes() if self.vrf_ctx is None else []):
             if dst in r.network and not (no_bgp and r.code == "B"):
                 candidates.append((r.network.prefixlen, r.distance, r))
         candidates.sort(key=lambda c: (-c[0], c[1]))
@@ -488,6 +550,8 @@ class Router(IpStack, Ip6Stack, Device):
         """Active routes (what `show ip route` prints), sorted by network."""
         routes = self.connected_routes()
         for s in self.static_routes:
+            if s.vrf != self.vrf_ctx:
+                continue
             if s.interface:
                 p = self.get_port(s.interface)
                 if p is None or not p.is_up:
@@ -498,7 +562,7 @@ class Router(IpStack, Ip6Stack, Device):
                 if res is None:
                     continue
                 routes.append(Route(s.network, "S", res[0], s.next_hop, s.distance))
-        for r in self.dynamic_routes():
+        for r in (self.dynamic_routes() if self.vrf_ctx is None else []):
             if r.code == "B":
                 res = self._resolve(r.next_hop, 1, no_bgp=True)
                 if res is None:
@@ -525,23 +589,23 @@ class Router(IpStack, Ip6Stack, Device):
         return None
 
     def add_static_route(self, network: IPv4Network, next_hop: IPv4Address | None,
-                         interface: str | None = None, distance: int = 1) -> StaticRoute:
+                         interface: str | None = None, distance: int = 1, vrf: str | None = None) -> StaticRoute:
         for s in self.static_routes:
-            if s.network == network and s.next_hop == next_hop and s.interface == interface:
+            if s.network == network and s.next_hop == next_hop and s.interface == interface and s.vrf == vrf:
                 s.distance = distance
                 return s
-        s = StaticRoute(network, next_hop, interface, distance)
+        s = StaticRoute(network, next_hop, interface, distance, vrf)
         self.static_routes.append(s)
         if self.ospf is not None:
             self.ospf.originate()
         return s
 
     def remove_static_route(self, network: IPv4Network, next_hop: IPv4Address | None = None,
-                            interface: str | None = None) -> int:
+                            interface: str | None = None, vrf: str | None = None) -> int:
         before = len(self.static_routes)
         self.static_routes = [
             s for s in self.static_routes
-            if not (s.network == network
+            if not (s.network == network and s.vrf == vrf
                     and (next_hop is None or s.next_hop == next_hop)
                     and (interface is None or s.interface == interface))]
         return before - len(self.static_routes)
@@ -556,6 +620,8 @@ class Router(IpStack, Ip6Stack, Device):
             cfg["bgp"] = self.bgp.cfg.to_dict()
         if self.rip is not None:
             cfg["rip"] = self.rip.cfg.to_dict()
+        if getattr(self, "eigrp", None) is not None:
+            cfg["eigrp"] = self.eigrp.cfg.to_dict()
         if self.static_routes6:
             cfg["static_routes6"] = [s.to_dict() for s in self.static_routes6]
         if self.ipv6_routing is not None:
@@ -650,6 +716,10 @@ class Router(IpStack, Ip6Stack, Device):
         self.ipv6_routing = cfg.get("ipv6_routing")
         if any(p.ipv6 for p in self.ports.values()):
             self.engine.schedule(200.0, self.ipv6_changed)
+        self.disable_eigrp()
+        if cfg.get("eigrp") is not None:
+            from ..routing.eigrp import EigrpConfig
+            self.enable_eigrp(EigrpConfig.from_dict(cfg["eigrp"]))
         if cfg.get("rip") is not None:
             from ..routing.rip import RipConfig
             self.disable_rip()
