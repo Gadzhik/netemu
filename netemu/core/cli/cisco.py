@@ -305,6 +305,12 @@ class CiscoSession(TreeSession):
             ik.children.insert(0, P.kw("range", "interface range command",
                 P.arg(P.LineArg("fa0/1 - 4 , gi0/1"), "Interface list", handler=lambda s, a, n: s.enter_range(a[0]))))
         if self.is_router:
+            ipg2 = next(x for x in t["config"] if x.word == "ip")
+            dh2 = next(x for x in ipg2.children if x.word == "dhcp")
+            dh2.children.append(P.kw("relay", "DHCP relay agent parameters", P.kw("information",
+                "DHCP relay agent information option", P.kw("trust-all",
+                    "Received DHCP packets may contain relay info option with zero giaddr",
+                    handler=lambda s, a, n: s.relay_trust_all(n), negatable=True), negatable=True), negatable=True))
             self._add_vrf_trees(t)
             self._add_isis_trees(t)
             self._add_mpls_trees(t)
@@ -666,6 +672,10 @@ class CiscoSession(TreeSession):
             ipg = next(x for x in t["config"] if x.word == "ip")
             dh = next(x for x in ipg.children if x.word == "dhcp")
             dh.children.append(P.kw("snooping", "DHCP Snooping",
+                                    P.kw("information", "DHCP Snooping information", P.kw("option",
+                                         "DHCP Snooping information option (option 82)",
+                                         handler=lambda s, a, n: s.snoop_opt82(not n), negatable=True),
+                                         negatable=True),
                                     P.kw("vlan", "DHCP Snooping vlan",
                                          P.arg(P.VlanListArg(), "DHCP Snooping vlan range",
                                                handler=lambda s, a, n: s.snoop_vlan(a[0], n), negatable=True),
@@ -880,7 +890,17 @@ class CiscoSession(TreeSession):
             P.kw("copy", "Copy from one file to another",
                  P.kw("running-config", "Copy from current system configuration",
                       P.kw("startup-config", "Copy to startup configuration",
-                           handler=lambda s, a, n: s.write_mem(True)))),
+                           handler=lambda s, a, n: s.write_mem(True)),
+                      P.arg(P.WordArg("tftp: | ftp: | tftp://A.B.C.D/file | ftp://user:pass@A.B.C.D/file"),
+                            "Copy to a remote server", handler=lambda s, a, n: s.copy_out("running", a[0]))),
+                 P.kw("startup-config", "Copy from startup configuration",
+                      P.arg(P.WordArg("tftp: | ftp: | URL"), "Copy to a remote server",
+                            handler=lambda s, a, n: s.copy_out("startup", a[0]))),
+                 P.arg(P.WordArg("tftp: | ftp: | tftp://A.B.C.D/file"), "Copy from a remote server",
+                       P.kw("running-config", "Update (merge with) current system configuration",
+                            handler=lambda s, a, n: s.copy_in(a[0], "running")),
+                       P.kw("startup-config", "Copy to startup configuration",
+                            handler=lambda s, a, n: s.copy_in(a[0], "startup")))),
             P.kw("disable", "Turn off privileged commands",
                  handler=lambda s, a, n: s.set_mode("user")),
             P.kw("enable", "Turn on privileged commands", handler=lambda s, a, n: None),
@@ -2514,6 +2534,122 @@ class CiscoSession(TreeSession):
         return "\n".join(lines)
 
     # -- RIP -------------------------------------------------------------------------------
+    def snoop_opt82(self, on):
+        self.device.dhcp_snooping["option82"] = on
+        return None
+
+    def relay_trust_all(self, negate):
+        self.device.extra["dhcp_trust_all"] = not negate
+        return None
+
+    # -- copy to / from TFTP and FTP servers --------------------------------------------------------
+    @staticmethod
+    def _parse_url(url):
+        """'tftp://10.0.0.1/R1-confg' -> ('TFTP', ip, file, user, password); 'tftp:' -> ('TFTP', None, ...)."""
+        import re
+        m = re.match(r"^(tftp|ftp):(?://(?:([^:@/]+):([^@/]*)@)?([0-9.]+)(?:/(.*))?)?$", url, re.I)
+        if not m:
+            return None
+        return m.group(1).upper(), m.group(4), m.group(5), m.group(2) or "", m.group(3) or ""
+
+    def _ask_chain(self, questions, finish):
+        """Ask the IOS-style questions one after another; finish(answers) runs the transfer."""
+        answers = []
+
+        def step(i):
+            if i >= len(questions):
+                return finish(answers)
+            prompt, default = questions[i]
+
+            def got(line, i=i, default=default):
+                answers.append(line.strip() or default)
+                return step(i + 1)
+            self.ask(f"{prompt} [{default}]? ", got, secret=False)
+            return None
+        return step(0)
+
+    def copy_out(self, which, url):
+        from ..services.files import Transfer
+        p = self._parse_url(url)
+        if p is None:
+            return self.err_invalid(self.prompt, 0)
+        proto, ip, name, user, pw = p
+        d = self.device
+        if which == "running":
+            text = render_running(d, d.to_config())
+        else:
+            if d.startup_config is None:
+                return "%Error opening nvram:/startup-config (No such file or directory)"
+            text = render_running(d, d.startup_config)
+        default_name = f"{d.hostname.lower()}-confg"
+
+        def run(ans):
+            host = ans[0]
+            fname = ans[1] if len(ans) > 1 else default_name
+            if not host or not __import__("netemu.core.addresses", fromlist=["x"]).is_valid_ip(host):
+                return f"%Error parsing filename (Bad host address {host})"
+
+            def done(ok, data):
+                if ok:
+                    self.write(f"!!\n{len(text)} bytes copied in 0.084 secs ({len(text) * 12} bytes/sec)\n")
+                else:
+                    self.write(f"%Error opening {proto.lower()}://{host}/{fname} ({data})\n")
+            return Transfer(d, proto, host, "put", fname, done, text, user or "cisco", pw or "cisco").start()
+        if ip and name:
+            return run([ip, name])
+        qs = [("Address or name of remote host", ip or "")] + ([("Destination filename", default_name)] if not name
+                                                               else [])
+        if name:
+            return self._ask_chain(qs[:1], lambda a: run([a[0], name]))
+        return self._ask_chain(qs, run)
+
+    def copy_in(self, url, target):
+        from ..services.files import Transfer
+        p = self._parse_url(url)
+        if p is None:
+            return self.err_invalid(self.prompt, 0)
+        proto, ip, name, user, pw = p
+        d = self.device
+
+        def run(ans):
+            host, fname = ans[0], ans[1]
+
+            def done(ok, data):
+                if not ok:
+                    self.write(f"%Error opening {proto.lower()}://{host}/{fname} ({data})\n")
+                    return
+                text = str(data)
+                self.write(f"Accessing {proto.lower()}://{host}/{fname}...\nLoading {fname} from {host}: !\n"
+                           f"[OK - {len(text)} bytes]\n")
+                if target == "startup":
+                    s2 = CiscoSession(d)
+                    s2.mode = "config"
+                    self._apply_text(s2, text)
+                    d.save_startup()
+                    self.write(f"{len(text)} bytes copied\n")
+                    return
+                s2 = CiscoSession(d)
+                s2.mode = "config"
+                self._apply_text(s2, text)
+                self.write(f"{len(text)} bytes copied in 0.112 secs\n")
+            return Transfer(d, proto, host, "get", fname, done, None, user or "cisco", pw or "cisco").start()
+        if ip and name:
+            return run([ip, name])
+        return self._ask_chain([("Address or name of remote host", ip or ""), ("Source filename", name or ""),
+                                ("Destination filename", "running-config" if target == "running" else "startup-config")],
+                               run)
+
+    @staticmethod
+    def _apply_text(session, text):
+        for line in text.splitlines():
+            st = line.rstrip()
+            if not st or st.startswith("!") or st.split()[0] in ("version", "end", "Building", "Current"):
+                if st.startswith("!") and session.mode not in ("config",):
+                    session.mode = "config"
+                    session.iface = None
+                continue
+            session.execute(st.strip(), lambda x: None)
+
     # -- AAA: RADIUS / TACACS+ servers, login authentication, 802.1X ----------------------------
     def _add_aaa_trees(self, t):
         de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]

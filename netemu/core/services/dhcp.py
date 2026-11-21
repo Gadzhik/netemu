@@ -35,6 +35,7 @@ class DhcpMessage:
     lease: int = 86400
     hostname: str = ""
     tftp: str | None = None         # option 150 (Cisco IP phones: call manager / TFTP server)
+    option82: tuple | None = None   # relay agent information: (circuit-id, remote-id)
     label = "DHCP"
 
     def summary(self) -> str:
@@ -44,7 +45,8 @@ class DhcpMessage:
     def layer_lines(self) -> list[str]:
         lines = [f"Message type: DHCP {self.kind}", f"Transaction ID: 0x{self.xid:08x}",
                  f"Client MAC: {self.chaddr}", f"Your IP (yiaddr): {self.yiaddr}",
-                 f"Relay agent (giaddr): {self.giaddr}"]
+                 f"Relay agent (giaddr): {self.giaddr}"] + \
+            ([f"Option 82: circuit-id {self.option82[0]}, remote-id {self.option82[1]}"] if self.option82 else [])
         if self.siaddr != ZERO:
             lines.append(f"Server identifier: {self.siaddr}")
         if self.mask:
@@ -180,6 +182,14 @@ class DhcpServer:
         ifs = self.cfg.interfaces
         if ifs is not None and m.giaddr == ZERO and (port is None or port.name not in ifs):
             return
+        if m.option82 and m.giaddr == ZERO and getattr(self.dev, "category", "") == "router" \
+                and not (getattr(self.dev, "extra", {}) or {}).get("dhcp_trust_all") \
+                and not getattr(port, "dhcp_relay_trusted", False):
+            self.dropped82 = getattr(self, "dropped82", 0) + 1     # IOS: inconsistent relay information
+            return
+        if m.option82:
+            self.option82 = getattr(self, "option82", {})
+            self.option82[str(m.chaddr)] = m.option82
         pool = self._pool_for(m.giaddr, port)
         if m.kind == "DISCOVER":
             if pool is None:

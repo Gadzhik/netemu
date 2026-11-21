@@ -590,6 +590,9 @@ class DeviceDialog(QDialog):
                              else tr("Командная строка"))
             self.browser = WebBrowser(self)
             self.tabs.addTab(self.browser, tr("Браузер"))
+            from .mail_panel import MailPanel
+            self.mail = MailPanel(self)
+            self.tabs.addTab(self.mail, tr("Почта"))
             if cat == "server":
                 self.services = ServicesPanel(self)
                 self.tabs.addTab(self.services, tr("Службы"))

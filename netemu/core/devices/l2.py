@@ -186,6 +186,8 @@ class Switch(Router):
             return
         if self.dhcp_snooping["enabled"] and not self._dhcp_snoop(frame, port, vlan):
             return
+        if self.dhcp_snooping["enabled"] and self.dhcp_snooping.get("option82", True):
+            frame = self._insert_option82(frame, port, vlan)
         now = self.engine.now
         if not frame.src.is_broadcast:
             self.mac_table[(vlan, frame.src)] = MacEntry(frame.src, port, now, vlan)
@@ -239,6 +241,19 @@ class Switch(Router):
             self.console(f"%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address "
                          f"{src} on port {port.name}.")
         return False
+
+    def _insert_option82(self, frame, port, vlan):
+        """Snooping switches add relay agent information to client requests (IOS default)."""
+        from ..packets import IPv4Packet, UdpDatagram
+        from ..services.dhcp import DhcpMessage
+        pkt = frame.payload
+        if not isinstance(pkt, IPv4Packet) or not isinstance(pkt.payload, UdpDatagram) or pkt.payload.dport != 67:
+            return frame
+        m = pkt.payload.data
+        if not isinstance(m, DhcpMessage) or m.option82 or m.kind not in ("DISCOVER", "REQUEST"):
+            return frame
+        m2 = replace(m, option82=(f"vlan{vlan}-{port.short}", self.hostname))
+        return replace(frame, payload=replace(pkt, payload=replace(pkt.payload, data=m2)))
 
     def _dhcp_snoop(self, frame: EthernetFrame, port: Port, vlan: int) -> bool:
         from ..packets import IPv4Packet, UdpDatagram
@@ -300,6 +315,8 @@ class Switch(Router):
         if self.dhcp_snooping["enabled"] or self.dhcp_snooping.get("vlans"):
             cfg["dhcp_snooping"] = {"enabled": self.dhcp_snooping["enabled"],
                                     "vlans": sorted(self.dhcp_snooping.get("vlans") or [])}
+            if not self.dhcp_snooping.get("option82", True):
+                cfg["dhcp_snooping"]["option82"] = False
         if self.default_gateway is not None:
             cfg["default_gateway"] = str(self.default_gateway)
         if self.vlans != {1: "default"}:
@@ -324,7 +341,8 @@ class Switch(Router):
         self.stp.apply_config(cfg.get("stp", {}))
         self.ip_routing = cfg.get("ip_routing")
         ds = cfg.get("dhcp_snooping") or {}
-        self.dhcp_snooping = {"enabled": bool(ds.get("enabled")), "vlans": list(ds.get("vlans", []))}
+        self.dhcp_snooping = {"enabled": bool(ds.get("enabled")), "vlans": list(ds.get("vlans", [])),
+                              "option82": ds.get("option82", True)}
         from ..addresses import IPv4Address
         self.default_gateway = IPv4Address(cfg["default_gateway"]) if cfg.get("default_gateway") else None
         super().apply_config(cfg)

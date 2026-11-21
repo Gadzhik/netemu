@@ -229,6 +229,10 @@ class Host(IpStack, Ip6Stack, Device):
             cfg["dhcp"] = True
         if self.dot1x:
             cfg["dot1x"] = dict(self.dot1x)
+        if getattr(self, "mail", None):
+            cfg["mail"] = dict(self.mail)
+        if getattr(self, "inbox", None):
+            cfg["inbox"] = list(self.inbox)
         if self.gateway6:
             cfg["gateway6"] = str(self.gateway6)
         if getattr(self.nic, "is_wireless", False):
@@ -245,6 +249,8 @@ class Host(IpStack, Ip6Stack, Device):
         self.dns = IPv4Address(cfg["dns"]) if cfg.get("dns") else None
         self.dhcp_enabled = bool(cfg.get("dhcp"))
         self.dot1x = dict(cfg["dot1x"]) if cfg.get("dot1x") else None
+        self.mail = dict(cfg["mail"]) if cfg.get("mail") else None
+        self.inbox = list(cfg.get("inbox", []))
         self.set_gateway6(cfg.get("gateway6"))
         if getattr(self.nic, "is_wireless", False):
             self.wifi = dict(cfg.get("wifi") or {"ssid": None, "key": None})
@@ -274,6 +280,8 @@ class Server(Host):
         self.http_server = HttpServer(self, enabled=True)
         from ..services.aaa import AaaServer
         self.aaa_server = AaaServer()
+        from ..services.files import FileServer
+        self.file_server = FileServer()
         from ..services.mgmt import NtpServer, SyslogServer
         self.syslog_server = SyslogServer(self, enabled=True)
         self.ntp_server = NtpServer(self, enabled=True)
@@ -282,6 +290,12 @@ class Server(Host):
         out = []
         if self.syslog_server.enabled:
             out.append(("UDP", 514))
+        if self.file_server.tftp:
+            out.append(("UDP", 69))
+        if self.file_server.ftp:
+            out.append(("TCP", 21))
+        if self.file_server.mail:
+            out += [("TCP", 25), ("TCP", 110)]
         if self.aaa_server.radius:
             out.append(("UDP", 1812))
         if self.aaa_server.tacacs:
@@ -305,6 +319,9 @@ class Server(Host):
             self.dns_server.handle(pkt, port)
         elif isinstance(l4, TcpSegment) and l4.dport == 80:
             self.http_server.handle(pkt, port)
+        elif (isinstance(l4, UdpDatagram) and l4.dport == 69) or \
+                (isinstance(l4, TcpSegment) and l4.dport in (21, 25, 110)):
+            self.file_server.handle(self, pkt)
         elif (isinstance(l4, UdpDatagram) and l4.dport == 1812) or (isinstance(l4, TcpSegment) and l4.dport == 49):
             self.aaa_server.handle(self, pkt)
         elif isinstance(l4, UdpDatagram) and l4.dport == 514:
@@ -321,7 +338,7 @@ class Server(Host):
                            "http": {"enabled": self.http_server.enabled, "pages": dict(self.http_server.pages)},
                            "syslog": {"enabled": self.syslog_server.enabled},
                            "ntp": {"enabled": self.ntp_server.enabled},
-                           "aaa": self.aaa_server.to_dict()}
+                           "aaa": self.aaa_server.to_dict(), "files": self.file_server.to_dict()}
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -341,6 +358,8 @@ class Server(Host):
         self.ntp_server.enabled = sv.get("ntp", {}).get("enabled", True)
         from ..services.aaa import AaaServer
         self.aaa_server = AaaServer.from_dict(sv.get("aaa"))
+        from ..services.files import FileServer
+        self.file_server = FileServer.from_dict(sv.get("files"))
 
 
 __all__ = ["Host", "Server", "IPv4Interface"]

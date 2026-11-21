@@ -596,6 +596,10 @@ end
 | `configure` | Enter configuration mode |
 | `configure terminal` | Configure from the terminal |
 | `copy running-config startup-config` | Copy to startup configuration |
+| `copy running-config tftp: / ftp: / tftp://A.B.C.D/file / ftp://user:pass@A.B.C.D/file` | Copy to a remote server |
+| `copy startup-config tftp: / ftp: / URL` | Copy to a remote server |
+| `copy tftp: / ftp: / tftp://A.B.C.D/file running-config` | Update (merge with) current system configuration |
+| `copy tftp: / ftp: / tftp://A.B.C.D/file startup-config` | Copy to startup configuration |
 | `disable` | Turn off privileged commands |
 | `enable` | Turn on privileged commands |
 | `erase startup-config` | Erase contents of configuration memory |
@@ -742,6 +746,7 @@ end
 | `ip dhcp pool WORD` | Pool name |
 | `ip dhcp excluded-address A.B.C.D` | Low IP address |
 | `ip dhcp excluded-address A.B.C.D A.B.C.D` | High IP address |
+| `ip dhcp relay information trust-all` | Received DHCP packets may contain relay info option with zero giaddr |
 | `ip access-list standard <1-99>/WORD` | Access-list name |
 | `ip access-list extended <100-199>/WORD` | Access-list name |
 | `ip nat inside source list <1-2699>/WORD interface IFACE` | Interface name |
@@ -989,6 +994,10 @@ end
 | `configure` | Enter configuration mode |
 | `configure terminal` | Configure from the terminal |
 | `copy running-config startup-config` | Copy to startup configuration |
+| `copy running-config tftp: / ftp: / tftp://A.B.C.D/file / ftp://user:pass@A.B.C.D/file` | Copy to a remote server |
+| `copy startup-config tftp: / ftp: / URL` | Copy to a remote server |
+| `copy tftp: / ftp: / tftp://A.B.C.D/file running-config` | Update (merge with) current system configuration |
+| `copy tftp: / ftp: / tftp://A.B.C.D/file startup-config` | Copy to startup configuration |
 | `disable` | Turn off privileged commands |
 | `enable` | Turn on privileged commands |
 | `erase startup-config` | Erase contents of configuration memory |
@@ -1108,6 +1117,7 @@ end
 | `ip dhcp excluded-address A.B.C.D` | Low IP address |
 | `ip dhcp excluded-address A.B.C.D A.B.C.D` | High IP address |
 | `ip dhcp snooping` | DHCP Snooping |
+| `ip dhcp snooping information option` | DHCP Snooping information option (option 82) |
 | `ip dhcp snooping vlan WORD` | DHCP Snooping vlan range |
 | `ip access-list standard <1-99>/WORD` | Access-list name |
 | `ip access-list extended <100-199>/WORD` | Access-list name |

@@ -87,6 +87,29 @@ class ServicesPanel(QWidget):
         fa.addRow(tr("Журнал:"), self.aaa_log)
         lay.addWidget(aa)
 
+        fs = QGroupBox(tr("Файлы и почта: TFTP, FTP, SMTP/POP3"))
+        ff = QFormLayout(fs)
+        row = QHBoxLayout()
+        self.tftp_on = QCheckBox("TFTP (UDP 69)")
+        self.ftp_on = QCheckBox("FTP (TCP 21)")
+        self.mail_on = QCheckBox(tr("Почта (SMTP 25, POP3 110)"))
+        for w in (self.tftp_on, self.ftp_on, self.mail_on):
+            row.addWidget(w)
+        row.addStretch(1)
+        ff.addRow(row)
+        self.ftp_users = QLineEdit()
+        self.ftp_users.setPlaceholderText("cisco:cisco")
+        ff.addRow(tr("Пользователи FTP:"), self.ftp_users)
+        self.mail_domain = QLineEdit()
+        ff.addRow(tr("Почтовый домен:"), self.mail_domain)
+        self.mail_users = QLineEdit()
+        self.mail_users.setPlaceholderText("alice:pass1, bob:pass2")
+        ff.addRow(tr("Почтовые ящики:"), self.mail_users)
+        self.files_list = QLabel()
+        self.files_list.setWordWrap(True)
+        ff.addRow(tr("Файлы:"), self.files_list)
+        lay.addWidget(fs)
+
         sl = QGroupBox("Syslog / NTP")
         v = QVBoxLayout(sl)
         row = QHBoxLayout()
@@ -140,6 +163,14 @@ class ServicesPanel(QWidget):
         self._load_records()
         self.http_on.setChecked(d.http_server.enabled)
         self.page.setPlainText(d.http_server.page("/")[1])
+        fsv = d.file_server
+        self.tftp_on.setChecked(fsv.tftp)
+        self.ftp_on.setChecked(fsv.ftp)
+        self.mail_on.setChecked(fsv.mail)
+        self.ftp_users.setText(", ".join(f"{u}:{p}" for u, p in fsv.ftp_users.items()))
+        self.mail_domain.setText(fsv.domain)
+        self.mail_users.setText(", ".join(f"{u}:{p}" for u, p in fsv.mail_users.items()))
+        self.files_list.setText(", ".join(f"{n} ({len(t)} B)" for n, t in sorted(fsv.files.items())) or "—")
         a = d.aaa_server
         self.radius_on.setChecked(a.radius)
         self.tacacs_on.setChecked(a.tacacs)
@@ -217,6 +248,19 @@ class ServicesPanel(QWidget):
         d.dns_server.enabled = self.dns_on.isChecked()
         d.http_server.enabled = self.http_on.isChecked()
         d.http_server.pages["index.html"] = self.page.toPlainText()
+        fsv = d.file_server
+        fsv.tftp, fsv.ftp, fsv.mail = self.tftp_on.isChecked(), self.ftp_on.isChecked(), self.mail_on.isChecked()
+
+        def pairs(text):
+            out = {}
+            for item in text.split(","):
+                u, sep, pw = item.strip().partition(":")
+                if u and sep:
+                    out[u.strip()] = pw
+            return out
+        fsv.ftp_users = pairs(self.ftp_users.text())
+        fsv.mail_users = pairs(self.mail_users.text())
+        fsv.domain = self.mail_domain.text().strip() or "netemu.lab"
         a = d.aaa_server
         a.radius, a.tacacs = self.radius_on.isChecked(), self.tacacs_on.isChecked()
         a.secret = self.aaa_secret.text()
