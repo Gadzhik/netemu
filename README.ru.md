@@ -1,6 +1,6 @@
 # NetEmu
 
-*English: [README.md](README.md).*
+[English version](README.md) · **Русский**
 
 Учебный симулятор компьютерных сетей в духе Cisco Packet Tracer. Устройства разных производителей
 настраиваются через их «родной» CLI: Cisco IOS, MikroTik RouterOS, Juniper Junos, Huawei VRP.

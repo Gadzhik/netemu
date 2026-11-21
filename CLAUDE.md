@@ -27,6 +27,11 @@ Current version: **0.3.0** (`netemu/__init__.py`, `pyproject.toml`, `installer/n
   - Do not install software without asking. Inno Setup 6 and GitHub CLI were already approved and installed.
   - Commit and push only when asked.
   - Never kill all python processes; stop only what you started.
+  - Never commit secrets, real passwords, tokens or personal data. This includes local paths with the
+    Windows user name and the owner's real email.
+    - Before every commit, scan the staged files (`git grep` for tokens, keys, user paths and emails).
+    - Passwords in the docs, examples and labs (`netemu123`, `cisco`, `Cisco123`, `S3cret!`, `mt123`, …)
+      are deliberately fictional training values. Keep new examples fictional too.
   - Commits are authored as `Gadzhik <28716956+Gadzhik@users.noreply.github.com>`. Never put a real email
     into commits or anything sent to outside services.
 - **GitHub.** Account `Gadzhik`, private repository `netemu`.

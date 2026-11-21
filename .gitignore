@@ -6,3 +6,14 @@ dist/
 .pytest_cache/
 *.egg-info/
 release/
+
+# never commit secrets or machine-local settings
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa*
+.claude/settings.local.json
+*.local.json
