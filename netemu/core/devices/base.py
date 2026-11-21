@@ -224,6 +224,8 @@ class Device:
             d["voice_vlan"] = p.voice_vlan
         if p.vrf:
             d["vrf"] = p.vrf
+        if p.dot1x:
+            d["dot1x"] = True
         if p.eigrp_bw:
             d["bandwidth"] = p.eigrp_bw
         if p.eigrp_delay:
@@ -318,6 +320,7 @@ class Device:
             p.voice_vlan = icfg.get("voice_vlan")
             p.eigrp_bw, p.eigrp_delay = icfg.get("bandwidth"), icfg.get("delay")
             p.vrf = icfg.get("vrf")
+            p.dot1x = bool(icfg.get("dot1x"))
             p.err_disabled = False
             tagged = icfg.get("tagged")
             p.tagged = None if tagged is None else frozenset(int(v) for v in tagged)

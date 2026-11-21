@@ -159,6 +159,13 @@ class Switch(Router):
             return                                     # BPDUs are consumed by the STP process
         if frame.ethertype == "LACP":
             return                                     # LACP/PAgP negotiation frames stop here
+        if port.dot1x and not port.dot1x_ok:              # 802.1X: only EAPOL until authorized
+            if frame.ethertype == "EAPOL":
+                from ..services.aaa import dot1x_receive
+                dot1x_receive(self, frame, port)
+            else:
+                port.drops += 1
+            return
         if port.channel_group is not None:
             po = self.channel_for_group(port.channel_group)
             if po is not None:
@@ -353,6 +360,7 @@ class Switch(Router):
                 if port.is_up and port.channel_mode not in (None, "on"):
                     self._send_lacpdu(port)
         if not port.is_up:
+            port.dot1x_ok = False                          # 802.1X: re-authenticate after a link flap
             for key in [k for k, e in self.mac_table.items() if e.port is port]:
                 del self.mac_table[key]
         for svi in self.svis():

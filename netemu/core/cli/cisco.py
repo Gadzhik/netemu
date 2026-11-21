@@ -17,6 +17,10 @@ PROMPTS = {"user": ">", "priv": "#", "config": "(config)#", "config-if": "(confi
            "config-router-af": "(config-router-af)#", "dhcp-config": "(dhcp-config)#",
            "config-router-rip": "(config-router)#", "config-router-eigrp": "(config-router)#",
            "config-vrf": "(config-vrf)#", "config-router-isis": "(config-router)#",
+           "config-server-tacacs": "(config-server-tacacs)#", "config-radius-server": "(config-radius-server)#",
+           "config-sec-zone": "(config-sec-zone)#", "config-sec-zone-pair": "(config-sec-zone-pair)#",
+           "config-cmap-insp": "(config-cmap)#", "config-pmap-insp": "(config-pmap)#",
+           "config-pmap-c-insp": "(config-pmap-c)#",
            "config-std-nacl": "(config-std-nacl)#", "config-ext-nacl": "(config-ext-nacl)#",
            "config-line": "(config-line)#", "config-rtr6": "(config-rtr)#",
            "config-dhcpv6": "(config-dhcpv6)#", "config-isakmp": "(config-isakmp)#",
@@ -79,12 +83,16 @@ class CiscoSession(TreeSession):
                     "config-std-nacl", "config-ext-nacl", "config-router-eigrp", "config-cmap", "config-pmap",
                     "config-pmap-c", "config-telephony", "config-ephone-dn", "config-ephone", "config-isakmp",
                     "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf",
-                    "config-router-isis")
+                    "config-router-isis", "config-sec-zone", "config-sec-zone-pair", "config-cmap-insp",
+                    "config-pmap-insp", "config-pmap-c-insp", "config-server-tacacs", "config-radius-server")
     parent_modes = {"config-if": "config", "config-subif": "config", "config-vlan": "config",
                     "config-router": "config", "config-std-nacl": "config", "config-ext-nacl": "config",
                     "config-router-bgp": "config", "config-router-af": "config-router-bgp",
                     "dhcp-config": "config", "config-router-rip": "config", "config-line": "config",
                     "config-router-eigrp": "config", "config-vrf": "config", "config-router-isis": "config",
+                    "config-server-tacacs": "config", "config-radius-server": "config",
+                    "config-sec-zone": "config", "config-sec-zone-pair": "config", "config-cmap-insp": "config",
+                    "config-pmap-insp": "config", "config-pmap-c-insp": "config-pmap-insp",
                     "config-rtr6": "config", "config-dhcpv6": "config", "config-isakmp": "config",
                     "cfg-crypto-trans": "config", "ipsec-profile": "config", "config-cmap": "config",
                     "config-telephony": "config", "config-ephone-dn": "config", "config-ephone": "config",
@@ -700,6 +708,9 @@ class CiscoSession(TreeSession):
                 iface.children.append(P.arg(P.VlanIfArg("Port-channel <1-48>", word="port-channel", min_prefix=2),
                                             "Ethernet Channel of interfaces",
                                             handler=lambda s, a, n: s.enter_po(a[0], n), negatable=True))
+        if self.is_router:
+            self._add_zbf_trees(t)          # after the QoS class-map / policy-map nodes exist
+        self._add_aaa_trees(t)
 
     def _build_trees_base(self) -> None:
         iface = lambda: P.IfaceArg()
@@ -2503,6 +2514,375 @@ class CiscoSession(TreeSession):
         return "\n".join(lines)
 
     # -- RIP -------------------------------------------------------------------------------
+    # -- AAA: RADIUS / TACACS+ servers, login authentication, 802.1X ----------------------------
+    def _add_aaa_trees(self, t):
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        methods = P.arg(P.LineArg("group tacacs+ | group radius | local ..."), "Method list",
+                        handler=lambda s, a, n: s.aaa_login(a[0], n), negatable=True)
+        t["config"] += [
+            P.kw("aaa", "Authentication, Authorization and Accounting",
+                 P.kw("new-model", "Enable NEW access control commands and functions",
+                      handler=lambda s, a, n: s.aaa_new_model(n), negatable=True),
+                 P.kw("authentication", "Authentication configurations parameters",
+                      P.kw("login", "Set authentication lists for logins",
+                           P.kw("default", "The default authentication list", methods), negatable=True),
+                      P.kw("dot1x", "Set authentication lists for IEEE 802.1x",
+                           P.kw("default", "The default authentication list",
+                                P.arg(P.LineArg("group radius"), "Method list", handler=lambda s, a, n: None,
+                                      negatable=True)), negatable=True), negatable=True),
+                 negatable=True),
+            P.kw("tacacs", "Modify TACACS query parameters", P.kw("server", "Server configuration",
+                 P.arg(P.WordArg("WORD"), "Name for the tacacs server configuration",
+                       handler=lambda s, a, n: s.aaa_server("tacacs+", a[0], n), negatable=True), negatable=True),
+                 negatable=True),
+            P.kw("radius", "Server configuration", P.kw("server", "Server configuration",
+                 P.arg(P.WordArg("WORD"), "Name for the radius server configuration",
+                       handler=lambda s, a, n: s.aaa_server("radius", a[0], n), negatable=True), negatable=True),
+                 negatable=True),
+            P.kw("tacacs-server", "Modify TACACS query parameters", P.kw("host", "Specify a TACACS server",
+                 P.arg(P.IpArg(), "IP address", P.kw("key", "per-server encryption key",
+                       P.arg(P.WordArg("LINE"), "The UNENCRYPTED server key",
+                             handler=lambda s, a, n: s.aaa_legacy("tacacs+", a[0], a[1], n))),
+                       handler=lambda s, a, n: s.aaa_legacy("tacacs+", a[0], "", n), negatable=True),
+                 negatable=True), negatable=True),
+            P.kw("radius-server", "Modify RADIUS query parameters", P.kw("host", "Specify a RADIUS server",
+                 P.arg(P.IpArg(), "IP address", P.kw("key", "per-server encryption key",
+                       P.arg(P.WordArg("LINE"), "The UNENCRYPTED server key",
+                             handler=lambda s, a, n: s.aaa_legacy("radius", a[0], a[1], n))),
+                       P.arg(P.LineArg("auth-port 1812 acct-port 1813 key K"), "options",
+                             handler=lambda s, a, n: s.aaa_legacy("radius", a[0], a[1].split("key")[-1].strip()
+                                                                  if "key" in a[1] else "", n)),
+                       handler=lambda s, a, n: s.aaa_legacy("radius", a[0], "", n), negatable=True),
+                 negatable=True), negatable=True),
+            P.kw("dot1x", "IEEE 802.1X Global Configuration Commands",
+                 P.kw("system-auth-control", "Enable or Disable SysAuthControl",
+                      handler=lambda s, a, n: s.aaa_flag("dot1x", n), negatable=True), negatable=True)]
+        srv = lambda mode: sorted(de + [
+            P.kw("exit", "Exit from server configuration mode", handler=lambda s, a, n: s.set_mode("config")),
+            P.kw("address", "Server address", P.kw("ipv4", "IPv4 address", P.arg(P.IpArg(), "IP address",
+                 P.arg(P.LineArg("auth-port 1812 acct-port 1813"), "ports", handler=lambda s, a, n: s.aaa_attr("ip", a[0])),
+                 handler=lambda s, a, n: s.aaa_attr("ip", a[0])))),
+            P.kw("key", "Per-server encryption key", P.arg(P.LineArg(), "The UNENCRYPTED server key",
+                 handler=lambda s, a, n: s.aaa_attr("key", a[0].split()[-1]), negatable=True), negatable=True)],
+            key=lambda x: x.word or "")
+        t["config-server-tacacs"] = srv("tacacs")
+        t["config-radius-server"] = srv("radius")
+        if not self.is_router:
+            t["config-if"] += [
+                P.kw("authentication", "Auth Manager Interface Configuration Commands",
+                     P.kw("port-control", "set the port-control value",
+                          P.kw("auto", "PortState will be set to AUTO", handler=lambda s, a, n: s.if_dot1x(n), negatable=True),
+                          P.kw("force-authorized", "PortState set to Authorized",
+                               handler=lambda s, a, n: s.if_dot1x(True)), negatable=True), negatable=True),
+                P.kw("dot1x", "Interface Config Commands for IEEE 802.1X",
+                     P.kw("pae", "Set 802.1x interface pae type", P.kw("authenticator", "Set pae type as Authenticator",
+                          handler=lambda s, a, n: None, negatable=True)), negatable=True)]
+        show = next(x for x in t["priv"] if x.word == "show")
+        if not self.is_router:
+            show.children += [
+                P.kw("dot1x", "Dot1x information", P.kw("all", "Show Dot1x information for all interfaces",
+                     handler=lambda s, a, n: s.show_dot1x())),
+                P.kw("authentication", "Shows Auth Manager registrations or sessions",
+                     P.kw("sessions", "Display sessions", handler=lambda s, a, n: s.show_dot1x(True)))]
+        show.children.append(P.kw("aaa", "Show AAA values", P.kw("servers", "Server information",
+                                                                handler=lambda s, a, n: s.show_aaa())))
+
+    def _aaa(self):
+        return self.device.extra.setdefault("aaa", {"new_model": False, "login": [], "radius": {}, "tacacs+": {}})
+
+    def aaa_new_model(self, negate):
+        from ..services.remote import access
+        a = self._aaa()
+        a["new_model"] = not negate
+        acc = access(self.device)
+        if not negate and acc.get("login") == "line":
+            acc["login"] = "local"                      # vty lines now use the default login list
+        return None
+
+    def aaa_login(self, text, negate):
+        a = self._aaa()
+        if negate:
+            a["login"] = []
+            return None
+        if not a["new_model"]:
+            return "% AAA must be enabled first: aaa new-model"
+        words = text.split()
+        methods, i = [], 0
+        while i < len(words):
+            if words[i] == "group" and i + 1 < len(words) and words[i + 1] in ("tacacs+", "radius"):
+                methods.append(f"group {words[i + 1]}")
+                i += 2
+            elif words[i] in ("local", "none", "enable"):
+                methods.append(words[i])
+                i += 1
+            else:
+                return self.err_invalid(self.prompt, 0)
+        a["login"] = methods
+        return None
+
+    def aaa_server(self, group, name, negate):
+        a = self._aaa()
+        if negate:
+            a[group].pop(name, None)
+            return None
+        a[group].setdefault(name, {"ip": None, "key": ""})
+        self._aaa_srv = (group, name)
+        self.mode = "config-server-tacacs" if group == "tacacs+" else "config-radius-server"
+        return None
+
+    def aaa_attr(self, attr, value):
+        group, name = self._aaa_srv
+        self._aaa()[group][name][attr] = str(value)
+        return None
+
+    def aaa_legacy(self, group, ip, key, negate):
+        a = self._aaa()
+        name = f"host-{ip}"
+        if negate:
+            a[group].pop(name, None)
+        else:
+            a[group][name] = {"ip": str(ip), "key": key}
+        return None
+
+    def aaa_flag(self, flag, negate):
+        self._aaa()[flag] = not negate
+        return None
+
+    def if_dot1x(self, negate):
+        p = self.iface
+        p.dot1x = not negate
+        p.dot1x_ok = False
+        peer = p.peer
+        if p.dot1x and peer is not None and getattr(peer.device, "dot1x", None):
+            peer.device.engine.schedule(50.0, peer.device._eapol_start)
+        return None
+
+    def show_dot1x(self, sessions=False):
+        ports = [p for p in self.device.ports.values() if p.dot1x]
+        if sessions:
+            lines = ["Interface    MAC Address    Method  Domain  Status  Fg  Session ID"]
+            for p in ports:
+                mac = p.peer.mac.cisco() if p.peer is not None else "-"
+                lines.append(f"{p.short:<13}{mac:<15}dot1x   DATA    {'Auth' if p.dot1x_ok else 'Unauth':<8}    "
+                             f"0A00000{len(lines)}00000001")
+            return "\n".join(lines)
+        out = [f"Sysauthcontrol              {'Enabled' if self._aaa().get('dot1x') else 'Disabled'}",
+               "Dot1x Protocol Version            3", ""]
+        for p in ports:
+            out += [f"Dot1x Info for {p.name}", "-" * 37, "PAE                       = AUTHENTICATOR",
+                    "PortControl               = AUTO", f"Status                    = "
+                    f"{'AUTHORIZED' if p.dot1x_ok else 'UNAUTHORIZED'}", f"User                      = {p.dot1x_user or '-'}", ""]
+        return "\n".join(out)
+
+    def show_aaa(self):
+        a = self._aaa()
+        out = []
+        for group in ("radius", "tacacs+"):
+            for name, srv in a[group].items():
+                out.append(f"{'RADIUS' if group == 'radius' else 'TACACS+'}: id {len(out) + 1}, priority 1, host {srv['ip']}, "
+                           f"auth-port {1812 if group == 'radius' else 49}")
+                out.append(f"     State: current UP, duration 0s, previous duration 0s ({name})")
+        out.append(f"Login method list: {' '.join(a['login']) or 'not set'}")
+        return "\n".join(out)
+
+    # -- Zone-Based Policy Firewall ---------------------------------------------------------------
+    def _add_zbf_trees(self, t):
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        ex = lambda m="config": P.kw("exit", "Exit", handler=lambda s, a, n: s.set_mode(m))
+        t["config"].append(P.kw("zone", "FW with zoning", P.kw("security", "Security zone",
+            P.arg(P.WordArg("WORD"), "Zone name", handler=lambda s, a, n: s.zbf_zone(a[0], n), negatable=True),
+            negatable=True), negatable=True))
+        t["config"].append(P.kw("zone-pair", "Zone pair command", P.kw("security", "Zone-pair name",
+            P.arg(P.WordArg("WORD"), "Zone-pair name", P.kw("source", "Source zone", P.arg(P.WordArg("WORD"), "Source zone",
+                  P.kw("destination", "Destination zone", P.arg(P.WordArg("WORD"), "Destination zone",
+                       handler=lambda s, a, n: s.zbf_pair(a[0], a[1], a[2], n), negatable=True)))),
+                  handler=lambda s, a, n: s.zbf_pair(a[0], None, None, n) if n else s.err_incomplete("", 0),
+                  negatable=True), negatable=True), negatable=True))
+        cm = next(x for x in t["config"] if x.word == "class-map")
+        pm = next(x for x in t["config"] if x.word == "policy-map")
+        cname = lambda: P.arg(P.WordArg("WORD"), "class-map name", handler=lambda s, a, n: s.zbf_cmap(a[-1], n),
+                              negatable=True)
+        cm.children.append(P.kw("type", "Configure CPL Class Map", P.kw("inspect", "Configure Firewall Class Map",
+            P.kw("match-any", "Logical-OR all matching statements", cname()),
+            P.kw("match-all", "Logical-AND all matching statements", cname()), cname())))
+        pm.children.append(P.kw("type", "Configure CPL Policy Map", P.kw("inspect", "Configure Firewall Policy Map",
+            P.arg(P.WordArg("WORD"), "policy-map name", handler=lambda s, a, n: s.zbf_pmap(a[0], n), negatable=True))))
+        t["config-sec-zone"] = sorted(de + [ex(), P.kw("description", "Zone description",
+                                                     P.arg(P.LineArg(), "Description", handler=lambda s, a, n: None))],
+                                      key=lambda x: x.word or "")
+        t["config-sec-zone-pair"] = sorted(de + [ex(), P.kw("service-policy", "Configure CPL Service Policy",
+            P.kw("type", "Service policy type", P.kw("inspect", "Configure Firewall Policy",
+                 P.arg(P.WordArg("WORD"), "policy-map name", handler=lambda s, a, n: s.zbf_service(a[0], n),
+                       negatable=True))), negatable=True)], key=lambda x: x.word or "")
+        t["config-cmap-insp"] = sorted(de + [ex(), P.kw("match", "Configure classification criteria",
+            P.kw("protocol", "Protocol", P.arg(P.WordArg("icmp|tcp|udp|http|https|ssh|dns|telnet"), "Protocol",
+                 handler=lambda s, a, n: s.zbf_match("protocol", a[0], n), negatable=True)),
+            P.kw("access-group", "Access group", P.kw("name", "Named access list", P.arg(P.WordArg("WORD"), "ACL",
+                 handler=lambda s, a, n: s.zbf_match("acl", a[0], n), negatable=True))), negatable=True)],
+            key=lambda x: x.word or "")
+        t["config-pmap-insp"] = sorted(de + [ex(), P.kw("class", "policy criteria",
+            P.kw("type", "class type", P.kw("inspect", "inspect class", P.arg(P.WordArg("WORD"), "class-map name",
+                 handler=lambda s, a, n: s.zbf_pclass(a[0], n), negatable=True))),
+            P.kw("class-default", "System default class", handler=lambda s, a, n: s.zbf_pclass("class-default", n),
+                 negatable=True), negatable=True)], key=lambda x: x.word or "")
+        t["config-pmap-c-insp"] = sorted(de + [ex("config-pmap-insp")] + [
+            P.kw(w, h, handler=lambda s, a, n, w=w: s.zbf_action(w)) for w, h in
+            (("inspect", "Context-based Access Control Engine"), ("pass", "Pass packet"), ("drop", "Drop packet"))],
+            key=lambda x: x.word or "")
+        t["config-if"].append(P.kw("zone-member", "Apply zone name", P.kw("security", "Security zone",
+            P.arg(P.WordArg("WORD"), "Zone name", handler=lambda s, a, n: s.zbf_member(a[0], n), negatable=True),
+            handler=lambda s, a, n: s.zbf_member(None, True) if n else s.err_incomplete("", 0), negatable=True),
+            negatable=True))
+        show = next(x for x in t["priv"] if x.word == "show")
+        show.children += [
+            P.kw("zone", "Zone information", P.kw("security", "Security zone", handler=lambda s, a, n: s.show_zbf("zones"))),
+            P.kw("zone-pair", "Zone pair information", P.kw("security", "Security zone-pair",
+                 handler=lambda s, a, n: s.show_zbf("pairs")))]
+        pmshow = next(x for x in show.children if x.word == "policy-map")
+        pmshow.children.append(P.kw("type", "type", P.kw("inspect", "inspect", P.kw("zone-pair", "zone-pair",
+            P.kw("sessions", "Inspect sessions", handler=lambda s, a, n: s.show_zbf("sessions")),
+            handler=lambda s, a, n: s.show_zbf("sessions")))))
+
+    def _zbf(self):
+        return self.device.extra.setdefault("zbf", {"zones": {}, "members": {}, "classes": {}, "policies": {},
+                                                    "pairs": {}})
+
+    def _zbf_sync(self):
+        from ..security.stateful import ZoneRule, ZoneFirewall
+        z = self._zbf()
+        zf = ZoneFirewall()
+        for zone in z["zones"]:
+            zf.zones[zone] = [i for i, m in z["members"].items() if m == zone]
+        for pname, pr in z["pairs"].items():
+            pol = z["policies"].get(pr.get("policy") or "", [])
+            rules = []
+            for cname, action in pol:
+                action = {"inspect": "inspect", "pass": "pass"}.get(action, "drop")
+                if cname == "class-default":
+                    rules.append(ZoneRule(cname, action))
+                    continue
+                for kind, val in z["classes"].get(cname, []):
+                    if kind == "protocol":
+                        rules.append(ZoneRule(cname, action, val))
+                    else:
+                        acl = self.device.acls.get(val)
+                        for r in (acl.rules if acl else []):
+                            if r.action == "permit":
+                                rules.append(ZoneRule(cname, action, r.proto if r.proto != "ip" else "any",
+                                                      str(r.src), str(r.dst)))
+            if not any(r.name == "class-default" for r in rules):
+                rules.append(ZoneRule("class-default", "drop"))
+            zf.pairs[f"{pr['src']}>{pr['dst']}"] = rules
+        self.device.zfw = zf
+
+    def zbf_zone(self, name, negate):
+        z = self._zbf()
+        if negate:
+            z["zones"].pop(name, None)
+            z["members"] = {i: m for i, m in z["members"].items() if m != name}
+        else:
+            z["zones"].setdefault(name, "")
+            self.mode = "config-sec-zone"
+        self._zbf_sync()
+        return None
+
+    def zbf_pair(self, name, src, dst, negate):
+        z = self._zbf()
+        if negate:
+            z["pairs"].pop(name, None)
+        else:
+            for zone in (src, dst):
+                if zone != "self" and zone not in z["zones"]:
+                    return f"% Zone {zone} doesn't exist"
+            z["pairs"][name] = {"src": src, "dst": dst, "policy": None}
+            self._zpair, self.mode = name, "config-sec-zone-pair"
+        self._zbf_sync()
+        return None
+
+    def zbf_service(self, policy, negate):
+        self._zbf()["pairs"][self._zpair]["policy"] = None if negate else policy
+        self._zbf_sync()
+        return None
+
+    def zbf_cmap(self, name, negate):
+        z = self._zbf()
+        if negate:
+            z["classes"].pop(name, None)
+        else:
+            z["classes"].setdefault(name, [])
+            self._zcls, self.mode = name, "config-cmap-insp"
+        self._zbf_sync()
+        return None
+
+    def zbf_match(self, kind, value, negate):
+        lst = self._zbf()["classes"][self._zcls]
+        item = [kind, value.lower() if kind == "protocol" else value]
+        if negate:
+            self._zbf()["classes"][self._zcls] = [x for x in lst if x != item]
+        elif item not in lst:
+            lst.append(item)
+        self._zbf_sync()
+        return None
+
+    def zbf_pmap(self, name, negate):
+        z = self._zbf()
+        if negate:
+            z["policies"].pop(name, None)
+        else:
+            z["policies"].setdefault(name, [])
+            self._zpol, self.mode = name, "config-pmap-insp"
+        self._zbf_sync()
+        return None
+
+    def zbf_pclass(self, cname, negate):
+        pol = self._zbf()["policies"][self._zpol]
+        pol[:] = [x for x in pol if x[0] != cname]
+        if not negate:
+            pol.append([cname, "drop"])
+            self._zpcls, self.mode = cname, "config-pmap-c-insp"
+        self._zbf_sync()
+        return None
+
+    def zbf_action(self, action):
+        for x in self._zbf()["policies"][self._zpol]:
+            if x[0] == self._zpcls:
+                x[1] = action
+        self._zbf_sync()
+        return None
+
+    def zbf_member(self, zone, negate):
+        z = self._zbf()
+        if negate:
+            z["members"].pop(self.iface.name, None)
+        else:
+            if zone not in z["zones"]:
+                return f"% Zone {zone} doesn't exist"
+            z["members"][self.iface.name] = zone
+        self._zbf_sync()
+        return None
+
+    def show_zbf(self, what):
+        z = self._zbf()
+        if what == "zones":
+            out = ["zone self", "  Description: System Defined Zone"]
+            for zone in z["zones"]:
+                out += [f"zone {zone}", "  Member Interfaces:"]
+                out += [f"    {i}" for i, m in z["members"].items() if m == zone]
+            return "\n".join(out)
+        if what == "pairs":
+            out = []
+            for name, pr in z["pairs"].items():
+                out += [f"Zone-pair name {name}", f"    Source-Zone {pr['src']}  Destination-Zone {pr['dst']}",
+                        f"    service-policy {pr.get('policy') or 'not configured'}"]
+            return "\n".join(out)
+        out = []
+        for f in self.device.conntrack.active():
+            proto, src, dst, sp, dp = f.key
+            name = {1: "icmp", 6: "tcp", 17: "udp"}.get(proto, str(proto))
+            out.append(f"  Session {abs(hash(f.key)) % 0xFFFFFFFF:08X} ({src}:{sp})=>({dst}:{dp}) {name} SIS_OPEN"
+                       f"  [{f.zone_pair}]")
+        return "\n".join([" Established Sessions"] + out) if out else " No sessions"
+
     # -- MPLS / LDP ------------------------------------------------------------------------------
     def _add_mpls_trees(self, t):
         t["config-if"].append(P.kw("mpls", "Configure MPLS interface parameters",
@@ -4052,6 +4432,8 @@ def render_running(device, cfg: dict) -> str:
         svi = bool(ic.get("svi")) or bool(ic.get("loopback"))
         if ic.get("voice_vlan"):
             lines.append(f" switchport voice vlan {ic['voice_vlan']}")
+        if ic.get("dot1x"):
+            lines += [" authentication port-control auto", " dot1x pae authenticator"]
         if name in (cfg.get("mpls") or {}).get("interfaces", []):
             lines.append(" mpls ip")
         _isis = cfg.get("isis") or {}
@@ -4175,6 +4557,22 @@ def render_running(device, cfg: dict) -> str:
         if cfg.get("ip_routing") or cfg.get("default_gateway"):
             lines.append("!")
     if True:
+        aaa = (cfg.get("extra") or {}).get("aaa") or {}
+        if aaa.get("new_model"):
+            lines.append("aaa new-model")
+            if aaa.get("login"):
+                lines.append("aaa authentication login default " + " ".join(aaa["login"]))
+            if aaa.get("dot1x"):
+                lines.append("aaa authentication dot1x default group radius")
+            lines.append("!")
+        for group, word in (("tacacs+", "tacacs"), ("radius", "radius")):
+            for name, srv in (aaa.get(group) or {}).items():
+                lines += [f"{word} server {name}", f" address ipv4 {srv.get('ip')}"]
+                if srv.get("key"):
+                    lines.append(f" key {srv['key']}")
+                lines.append("!")
+        if aaa.get("dot1x"):
+            lines += ["dot1x system-auth-control", "!"]
         mp = cfg.get("mpls") or {}
         if mp.get("interfaces"):
             lines.append("mpls label protocol ldp")

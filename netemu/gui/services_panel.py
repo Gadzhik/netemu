@@ -66,6 +66,27 @@ class ServicesPanel(QWidget):
         v.addWidget(self.page)
         lay.addWidget(ht)
 
+        aa = QGroupBox(tr("AAA: RADIUS и TACACS+"))
+        fa = QFormLayout(aa)
+        row = QHBoxLayout()
+        self.radius_on = QCheckBox("RADIUS (UDP 1812)")
+        self.tacacs_on = QCheckBox("TACACS+ (TCP 49)")
+        row.addWidget(self.radius_on)
+        row.addWidget(self.tacacs_on)
+        row.addStretch(1)
+        fa.addRow(row)
+        self.aaa_secret = QLineEdit()
+        fa.addRow(tr("Общий ключ (secret):"), self.aaa_secret)
+        self.aaa_users = QPlainTextEdit()
+        self.aaa_users.setPlaceholderText(tr("пользователь:пароль, по одному в строке"))
+        self.aaa_users.setMaximumHeight(70)
+        fa.addRow(tr("Пользователи:"), self.aaa_users)
+        self.aaa_log = QPlainTextEdit()
+        self.aaa_log.setReadOnly(True)
+        self.aaa_log.setMaximumHeight(60)
+        fa.addRow(tr("Журнал:"), self.aaa_log)
+        lay.addWidget(aa)
+
         sl = QGroupBox("Syslog / NTP")
         v = QVBoxLayout(sl)
         row = QHBoxLayout()
@@ -119,6 +140,12 @@ class ServicesPanel(QWidget):
         self._load_records()
         self.http_on.setChecked(d.http_server.enabled)
         self.page.setPlainText(d.http_server.page("/")[1])
+        a = d.aaa_server
+        self.radius_on.setChecked(a.radius)
+        self.tacacs_on.setChecked(a.tacacs)
+        self.aaa_secret.setText(a.secret)
+        self.aaa_users.setPlainText("\n".join(f"{u}:{p}" for u, p in a.users.items()))
+        self.aaa_log.setPlainText("\n".join(a.log[-20:]))
         self.syslog_on.setChecked(d.syslog_server.enabled)
         self.ntp_on.setChecked(d.ntp_server.enabled)
         self._load_log()
@@ -190,6 +217,14 @@ class ServicesPanel(QWidget):
         d.dns_server.enabled = self.dns_on.isChecked()
         d.http_server.enabled = self.http_on.isChecked()
         d.http_server.pages["index.html"] = self.page.toPlainText()
+        a = d.aaa_server
+        a.radius, a.tacacs = self.radius_on.isChecked(), self.tacacs_on.isChecked()
+        a.secret = self.aaa_secret.text()
+        a.users = {}
+        for line in self.aaa_users.toPlainText().splitlines():
+            u, sep, pw = line.strip().partition(":")
+            if u and sep:
+                a.users[u.strip()] = pw
         d.syslog_server.enabled = self.syslog_on.isChecked()
         d.ntp_server.enabled = self.ntp_on.isChecked()
         d.engine.emit("device_changed", d)

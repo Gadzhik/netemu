@@ -353,6 +353,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `show security nat source summary` | Display source NAT summary |
 | `show security nat static rule all` | All rules |
 | `show security nat destination summary` | Display destination NAT summary |
+| `show security zones` | Show security zone information |
+| `show security policies` | Show security policies |
 | `show security flow session` | Show session information |
 | `show system uptime` | Show time since system and processes started |
 | `show version` | Show software process revision levels |
@@ -435,6 +437,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `delete routing-options router-id` | Router identifier |
 | `delete routing-options autonomous-system` | Autonomous system number |
+| `delete security zones` | Zone configuration |
+| `delete security policies` | Configure Network Security Policies |
 | `delete security ike` | IKE configuration |
 | `delete security ipsec` | IPsec configuration |
 | `delete security nat` | Configure Network Address Translation |
@@ -504,6 +508,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set routing-options static route <destination> qualified-next-hop <next-hop> preference <preference>` | Preference of this next hop |
 | `set routing-options router-id <router-id>` | Router identifier |
 | `set routing-options autonomous-system <as-number>` | Autonomous system number |
+| `set security zones security-zone <name> interfaces <ifl> ...` | Zone configuration |
+| `set security policies from-zone A to-zone B policy P match/then ...` | Configure Network Security Policies |
 | `set security ike policy/gateway/proposal ...` | IKE statement |
 | `set security ipsec vpn/policy/proposal ...` | IPsec statement |
 | `set security nat source/static/destination ...` | NAT statement |

@@ -203,7 +203,7 @@ class MikrotikSession(CliSession):
                                             "add": ("Create a new item", lambda a: self.fw_add(a, "nat")),
                                             "remove": ("Remove item", lambda a: self.fw_remove(a, "nat"))},
                 ("ip", "firewall", "connection"): {"print": ("Print values of item properties",
-                                                             lambda a: self.conn_print())},
+                                                             lambda a: self.conn_print() + "\n" + self.conn_tracking())},
                 ("ip", "firewall", "address-list"): {"print": ("Print values of item properties",
                                                                lambda a: self.addrlist_print()),
                                                      "add": ("Create a new item", self.addrlist_add),
@@ -1353,7 +1353,8 @@ class MikrotikSession(CliSession):
                                  port_cond(kv.get("src-port")), port_cond(kv.get("dst-port")), itype,
                                  extra={"chain": kv["chain"], "in": self._pname(kv.get("in-interface")),
                                         "out": self._pname(kv.get("out-interface")),
-                                        "reject": kv["action"] == "reject"}))
+                                        "reject": kv["action"] == "reject",
+                                        "state": [x for x in kv.get("connection-state", "").split(",") if x]}))
         d.firewall = rules
         nat_rules = []
         for kv in self._fw_raw("nat"):
@@ -1421,6 +1422,16 @@ class MikrotikSession(CliSession):
                                                  "REPLY-SRC-ADDRESS", "REPLY-DST-ADDRESS", "TIMEOUT"], rows, gap=1)
 
     # -- /routing rip (v7) ---------------------------------------------------------------------
+
+    def conn_tracking(self):
+        rows = []
+        for i, f in enumerate(self.device.conntrack.active()):
+            proto, src, dst, sp, dp = f.key
+            name = {1: "icmp", 6: "tcp", 17: "udp"}.get(proto, str(proto))
+            rows.append([str(i), name, f"{src}:{sp}" if proto != 1 else str(src), f"{dst}:{dp}" if proto != 1 else str(dst),
+                         "established" if f.packets > 1 else "new"])
+        return "Columns: PROTOCOL, SRC-ADDRESS, DST-ADDRESS, TCP-STATE\n" + table(
+            ["#", "PROTOCOL", "SRC-ADDRESS", "DST-ADDRESS", "STATE"], rows, gap=1)
     def _rip_inst_add_v2(self, args):
         kv, _ = self._kv(args, {"name", "redistribute", "originate-default", "comment", "disabled"})
         kv.setdefault("name", "rip1")

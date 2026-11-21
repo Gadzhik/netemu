@@ -35,7 +35,36 @@ class Host(IpStack, Ip6Stack, Device):
         self.dns_cache: dict[str, tuple[IPv4Address, float]] = {}
 
     def receive(self, frame: EthernetFrame, port: Port) -> None:
+        if frame.ethertype == "EAPOL":
+            self._eapol_rx(frame)
+            return
         self.handle_l3_frame(frame, port)
+
+    # -- 802.1X supplicant -------------------------------------------------------------------
+    dot1x: dict | None = None                     # {"user", "password"} when 802.1X is turned on
+    dot1x_state = "off"                           # off | connecting | authenticated | failed
+
+    def _eapol_start(self) -> None:
+        from ..addresses import MacAddress
+        from ..services.aaa import EAPOL_MAC, EapolMsg
+        if not self.dot1x or not self.nic.is_up:
+            return
+        self.dot1x_state = "connecting"
+        dst = MacAddress(EAPOL_MAC)
+        self.nic.send(EthernetFrame(self.nic.mac, dst, "EAPOL", EapolMsg("start")))
+        self.nic.send(EthernetFrame(self.nic.mac, dst, "EAPOL",
+                                    EapolMsg("response", self.dot1x.get("user", ""), self.dot1x.get("password", ""))))
+
+    def _eapol_rx(self, frame) -> None:
+        m = frame.payload
+        kind = getattr(m, "kind", "")
+        if kind == "success":
+            self.dot1x_state = "authenticated"
+            if self.dhcp_enabled and (self.nic.ip is None or self.dhcp_info.get("apipa")):
+                self.engine.schedule(100.0, self.start_dhcp)
+        elif kind == "failure":
+            self.dot1x_state = "failed"
+        self.engine.emit("device_changed", self)
 
     # -- DHCP client ------------------------------------------------------------------
     def start_dhcp(self, on_result=None):
@@ -160,6 +189,8 @@ class Host(IpStack, Ip6Stack, Device):
 
     def link_state_changed(self, port) -> None:
         super().link_state_changed(port)
+        if self.dot1x and port.is_up:
+            self.engine.schedule(50.0, self._eapol_start)
         if port.ipv6_auto and port.is_up:
             self.engine.schedule(150.0, self.start_slaac)
         if self.dhcp_enabled and port.is_up and (self.dhcp_job is None or self.dhcp_job.done) \
@@ -196,6 +227,8 @@ class Host(IpStack, Ip6Stack, Device):
         cfg["dns"] = str(self.dns) if self.dns else None
         if self.dhcp_enabled:
             cfg["dhcp"] = True
+        if self.dot1x:
+            cfg["dot1x"] = dict(self.dot1x)
         if self.gateway6:
             cfg["gateway6"] = str(self.gateway6)
         if getattr(self.nic, "is_wireless", False):
@@ -211,6 +244,7 @@ class Host(IpStack, Ip6Stack, Device):
         self.set_gateway(cfg.get("gateway"))
         self.dns = IPv4Address(cfg["dns"]) if cfg.get("dns") else None
         self.dhcp_enabled = bool(cfg.get("dhcp"))
+        self.dot1x = dict(cfg["dot1x"]) if cfg.get("dot1x") else None
         self.set_gateway6(cfg.get("gateway6"))
         if getattr(self.nic, "is_wireless", False):
             self.wifi = dict(cfg.get("wifi") or {"ssid": None, "key": None})
@@ -238,6 +272,8 @@ class Server(Host):
         self.dhcp_server = DhcpServer(self, DhcpServerConfig(enabled=False))
         self.dns_server = DnsServer(self, enabled=False)
         self.http_server = HttpServer(self, enabled=True)
+        from ..services.aaa import AaaServer
+        self.aaa_server = AaaServer()
         from ..services.mgmt import NtpServer, SyslogServer
         self.syslog_server = SyslogServer(self, enabled=True)
         self.ntp_server = NtpServer(self, enabled=True)
@@ -246,6 +282,10 @@ class Server(Host):
         out = []
         if self.syslog_server.enabled:
             out.append(("UDP", 514))
+        if self.aaa_server.radius:
+            out.append(("UDP", 1812))
+        if self.aaa_server.tacacs:
+            out.append(("TCP", 49))
         if self.ntp_server.enabled:
             out.append(("UDP", 123))
         if self.http_server.enabled:
@@ -265,6 +305,8 @@ class Server(Host):
             self.dns_server.handle(pkt, port)
         elif isinstance(l4, TcpSegment) and l4.dport == 80:
             self.http_server.handle(pkt, port)
+        elif (isinstance(l4, UdpDatagram) and l4.dport == 1812) or (isinstance(l4, TcpSegment) and l4.dport == 49):
+            self.aaa_server.handle(self, pkt)
         elif isinstance(l4, UdpDatagram) and l4.dport == 514:
             self.syslog_server.handle(pkt, port)
         elif isinstance(l4, UdpDatagram) and l4.dport == 123:
@@ -278,7 +320,8 @@ class Server(Host):
                            "dns": {"enabled": self.dns_server.enabled, "records": dict(self.dns_server.records)},
                            "http": {"enabled": self.http_server.enabled, "pages": dict(self.http_server.pages)},
                            "syslog": {"enabled": self.syslog_server.enabled},
-                           "ntp": {"enabled": self.ntp_server.enabled}}
+                           "ntp": {"enabled": self.ntp_server.enabled},
+                           "aaa": self.aaa_server.to_dict()}
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -296,6 +339,8 @@ class Server(Host):
         self.syslog_server.enabled = sv.get("syslog", {}).get("enabled", True)
         self.syslog_server.messages.clear()
         self.ntp_server.enabled = sv.get("ntp", {}).get("enabled", True)
+        from ..services.aaa import AaaServer
+        self.aaa_server = AaaServer.from_dict(sv.get("aaa"))
 
 
 __all__ = ["Host", "Server", "IPv4Interface"]

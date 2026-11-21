@@ -74,6 +74,9 @@ class Router(IpStack, Ip6Stack, Device):
         self.qos_global: list = []                  # policies applied to every forwarded packet (RouterOS queues)
         from ..routing.mpls import Mpls
         self.mpls = Mpls(self)                      # MPLS / LDP ("mpls ip" on interfaces)
+        from ..security.stateful import ConnTrack, ZoneFirewall
+        self.conntrack = ConnTrack(self.engine)     # flows for stateful filtering
+        self.zfw = ZoneFirewall()                   # Cisco ZBF / Junos security zones
 
     # -- dynamic routing ------------------------------------------------------------
     def dynamic_routes(self) -> list[Route]:
@@ -258,6 +261,9 @@ class Router(IpStack, Ip6Stack, Device):
         self.mgmt.apply(None)
         self.cme.apply(None)
         self.mpls.apply(None)
+        from ..security.stateful import ZoneFirewall
+        self.zfw = ZoneFirewall()
+        self.conntrack.flows.clear()
         self.fhrp.groups.clear()
         self.static_routes6 = []
         self.ipv6_routing = None
@@ -339,13 +345,17 @@ class Router(IpStack, Ip6Stack, Device):
                 continue
             if x.get("out") and (out_port is None or out_port.name != x["out"]):
                 continue
+            if x.get("state") and self.conntrack.state(pkt) not in x["state"]:
+                continue
             if r.matches(pkt):
                 r.hits += 1
                 if r.action == "deny":
                     if x.get("reject") and in_port is not None:
                         self._acl_reject(pkt, in_port)
                     return False
+                self.conntrack.add(pkt)
                 return True
+        self.conntrack.add(pkt)                              # RouterOS tracks every accepted packet
         return True
 
     def ingress_filter(self, pkt, port):
@@ -369,6 +379,9 @@ class Router(IpStack, Ip6Stack, Device):
         return pkt
 
     def egress_filter(self, pkt, in_port, out_port):
+        zfw = getattr(self, "zfw", None)
+        if zfw is not None and zfw.active and not zfw.check(self.conntrack, pkt, in_port, out_port):
+            return None
         if self.firewall and not self._fw("forward", pkt, in_port, out_port):
             return None
         if self.nat is not None:
@@ -711,6 +724,9 @@ class Router(IpStack, Ip6Stack, Device):
         mp = self.mpls.to_dict()
         if mp:
             cfg["mpls"] = mp
+        zf = self.zfw.to_dict()
+        if zf:
+            cfg["zfw"] = zf
         if self.qos or self.qos_classes:
             cfg["qos"] = {"policies": [p.to_dict() for p in self.qos.values()],
                           "classes": {k: dict(v) for k, v in self.qos_classes.items()}}
@@ -761,6 +777,8 @@ class Router(IpStack, Ip6Stack, Device):
         self.mgmt.apply(cfg.get("mgmt"))
         self.cme.apply(cfg.get("cme"))
         self.mpls.apply(cfg.get("mpls"))
+        from ..security.stateful import ZoneFirewall
+        self.zfw = ZoneFirewall.from_dict(cfg.get("zfw"))
         from ..routing.fhrp import FhrpGroup
         self.fhrp.groups.clear()
         for d in cfg.get("fhrp", []):

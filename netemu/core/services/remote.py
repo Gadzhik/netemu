@@ -212,9 +212,35 @@ class _Conn:
             self.send("done", "", "Password: " if self.dev.vendor != "huawei" else "Password:", True)
             return
         if self.state == "password":
+            methods = ((getattr(self.dev, "extra", {}) or {}).get("aaa") or {}).get("login") or []
+            groups = [m.split()[-1] for m in methods if m.startswith("group ")]
+            if groups and self.dev.vendor == "cisco" and (getattr(self.dev, "extra", {}) or {}).get("aaa", {}).get("new_model"):
+                from .aaa import AuthJob, servers_for
+                servers = [s for g in groups for s in servers_for(self.dev, g)]
+                pw = line
+                self.state = "aaa-wait"
+
+                def done(ok):
+                    if ok is None and "local" in methods:
+                        ok = self.check(self.user, pw)
+                    if ok:
+                        self.open_shell()
+                    else:
+                        self.state = "password"
+                        self._login_failed(a)
+                AuthJob(self.dev, servers, self.user, pw, done).start()
+                return
             if self.check(self.user, line):
                 self.open_shell()
                 return
+            self._login_failed(a)
+            return
+        if self.state == "aaa-wait":
+            return
+        self.run_line(line)
+
+    def _login_failed(self, a):
+        if True:
             self.tries += 1
             if self.tries >= 3:
                 self.close({"cisco": "% Bad passwords\n", "huawei": "Error: Failed to log in.\n"}.get(
@@ -236,7 +262,6 @@ class _Conn:
                       "extreme": "login: "}.get(self.dev.vendor, f"{self.dev.hostname} login: ")
             self.send("done", msg, prompt, False)
             return
-        self.run_line(line)
 
     def open_shell(self):
         self.state = "shell"

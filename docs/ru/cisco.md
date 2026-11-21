@@ -676,6 +676,8 @@ end
 | `show policy-map` | Show QoS Policy Map |
 | `show policy-map interface` | Show Qos Policy Map on interfaces |
 | `show policy-map interface IFACE` | Interface |
+| `show policy-map type inspect zone-pair` | zone-pair |
+| `show policy-map type inspect zone-pair sessions` | Inspect sessions |
 | `show nat64 translations` | Translations |
 | `show logging` | Show the contents of logging buffers |
 | `show ntp status` | NTP status |
@@ -686,6 +688,9 @@ end
 | `show standby brief` | Brief output |
 | `show vrrp` | VRRP information |
 | `show vrrp brief` | Brief output |
+| `show zone security` | Security zone |
+| `show zone-pair security` | Security zone-pair |
+| `show aaa servers` | Server information |
 | `ssh -l WORD A.B.C.D` | IP address of a remote system |
 | `telnet A.B.C.D` | IP address of a remote system |
 | `telnet A.B.C.D <1-65535>` | Port number |
@@ -707,6 +712,9 @@ end
 | `[no] class-map match-any WORD` | class-map name |
 | `[no] class-map match-all WORD` | class-map name |
 | `[no] class-map WORD` | class-map name |
+| `[no] class-map type inspect match-any WORD` | class-map name |
+| `[no] class-map type inspect match-all WORD` | class-map name |
+| `[no] class-map type inspect WORD` | class-map name |
 | `[no] crypto key generate rsa` | Generate RSA keys |
 | `[no] crypto key generate rsa general-keys` | Generate a general purpose RSA key pair |
 | `[no] crypto key generate rsa general-keys modulus <360-4096>` | size of the key modulus |
@@ -792,6 +800,7 @@ end
 | `[no] ntp master` | Act as NTP master clock |
 | `[no] ntp master <1-15>` | Stratum number |
 | `[no] policy-map WORD` | policy-map name |
+| `[no] policy-map type inspect WORD` | policy-map name |
 | `[no] router ospf <1-65535>` | Process ID |
 | `[no] router rip` | Routing Information Protocol (RIP) |
 | `[no] router isis` | ISO IS-IS |
@@ -813,6 +822,20 @@ end
 | `[no] username WORD secret LINE` | The UNENCRYPTED (cleartext) user secret |
 | `[no] username WORD password LINE` | The UNENCRYPTED (cleartext) user password |
 | `[no] vrf definition WORD` | VRF name |
+| `[no] zone security WORD` | Zone name |
+| `[no] zone-pair security WORD` | Zone-pair name |
+| `[no] zone-pair security WORD source WORD destination WORD` | Destination zone |
+| `[no] aaa new-model` | Enable NEW access control commands and functions |
+| `[no] aaa authentication login default group tacacs+ / group radius / local ...` | Method list |
+| `[no] aaa authentication dot1x default group radius` | Method list |
+| `[no] tacacs server WORD` | Name for the tacacs server configuration |
+| `[no] radius server WORD` | Name for the radius server configuration |
+| `[no] tacacs-server host A.B.C.D` | IP address |
+| `[no] tacacs-server host A.B.C.D key LINE` | The UNENCRYPTED server key |
+| `[no] radius-server host A.B.C.D` | IP address |
+| `[no] radius-server host A.B.C.D key LINE` | The UNENCRYPTED server key |
+| `[no] radius-server host A.B.C.D auth-port 1812 acct-port 1813 key K` | options |
+| `[no] dot1x system-auth-control` | Enable or Disable SysAuthControl |
 
 #### Конфигурация интерфейса (interface …) — `Router(config-if)#`
 
@@ -887,6 +910,8 @@ end
 | `[no] vrrp <1-255> ip A.B.C.D` | Virtual IP address |
 | `[no] vrrp <1-255> priority <0-255>` | Priority value |
 | `[no] vrrp <1-255> preempt` | Overthrow lower priority Active routers |
+| `[no] zone-member security` | Security zone |
+| `[no] zone-member security WORD` | Zone name |
 <!-- END GENERATED COMMANDS -->
 
 ## Полный список команд: коммутатор Cisco 2960
@@ -1041,6 +1066,9 @@ end
 | `show port-security interface IFACE` | Interface |
 | `show port-security address` | Show secure address |
 | `show etherchannel summary` | One-line summary per channel-group |
+| `show dot1x all` | Show Dot1x information for all interfaces |
+| `show authentication sessions` | Display sessions |
+| `show aaa servers` | Server information |
 | `ssh -l WORD A.B.C.D` | IP address of a remote system |
 | `telnet A.B.C.D` | IP address of a remote system |
 | `telnet A.B.C.D <1-65535>` | Port number |
@@ -1156,6 +1184,17 @@ end
 | `[no] username WORD secret LINE` | The UNENCRYPTED (cleartext) user secret |
 | `[no] username WORD password LINE` | The UNENCRYPTED (cleartext) user password |
 | `[no] vlan <1-4094>` | ISL VLAN IDs 1-1005 |
+| `[no] aaa new-model` | Enable NEW access control commands and functions |
+| `[no] aaa authentication login default group tacacs+ / group radius / local ...` | Method list |
+| `[no] aaa authentication dot1x default group radius` | Method list |
+| `[no] tacacs server WORD` | Name for the tacacs server configuration |
+| `[no] radius server WORD` | Name for the radius server configuration |
+| `[no] tacacs-server host A.B.C.D` | IP address |
+| `[no] tacacs-server host A.B.C.D key LINE` | The UNENCRYPTED server key |
+| `[no] radius-server host A.B.C.D` | IP address |
+| `[no] radius-server host A.B.C.D key LINE` | The UNENCRYPTED server key |
+| `[no] radius-server host A.B.C.D auth-port 1812 acct-port 1813 key K` | options |
+| `[no] dot1x system-auth-control` | Enable or Disable SysAuthControl |
 
 #### Конфигурация интерфейса (interface …) — `Switch(config-if)#`
 
@@ -1240,4 +1279,7 @@ end
 | `[no] vrrp <1-255> ip A.B.C.D` | Virtual IP address |
 | `[no] vrrp <1-255> priority <0-255>` | Priority value |
 | `[no] vrrp <1-255> preempt` | Overthrow lower priority Active routers |
+| `[no] authentication port-control auto` | PortState will be set to AUTO |
+| `[no] authentication port-control force-authorized` | PortState set to Authorized |
+| `[no] dot1x pae authenticator` | Set pae type as Authenticator |
 <!-- END GENERATED COMMANDS -->

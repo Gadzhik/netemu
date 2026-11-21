@@ -66,6 +66,9 @@ class Port:
     err_disabled: bool = False             # shut down by a port-security violation
     dhcp_trust: bool = False               # DHCP snooping trusted port
     is_wireless: bool = False              # radio port / Wi-Fi NIC: never cabled by hand
+    dot1x: bool = False                    # authentication port-control auto (802.1X authenticator)
+    dot1x_ok: bool = False                 # runtime: supplicant authorized
+    dot1x_user: str = ""
     vrf: str | None = None                 # VRF the interface belongs to (None: global table)
     eigrp_bw: int | None = None            # "bandwidth" (kbit/s) override for EIGRP metrics
     eigrp_delay: int | None = None         # "delay" (tens of microseconds) override

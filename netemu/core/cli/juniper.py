@@ -212,6 +212,16 @@ class JunosSession(TreeSession):
                              handler=lambda s, a, n: s.cfg_address(a[0], a[2], False, unit=a[1]) or s.cfg_vrrp(a[0], a[3], a[4])))))
         show = next(x for x in t["oper"] if x.word == "show")
         if self.is_router:
+            sec = next((x for x in show.children if x.word == "security"), None)
+            nodes = [P.kw("zones", "Show security zone information", handler=lambda s, a, n: s.show_security("zones")),
+                     P.kw("policies", "Show security policies", handler=lambda s, a, n: s.show_security("policies")),
+                     P.kw("flow", "Show flow information", P.kw("session", "Show session information",
+                          handler=lambda s, a, n: s.show_security("flow")))]
+            if sec is None:
+                show.children.append(P.kw("security", "Show security information", *nodes))
+            else:
+                words = {x.word for x in nodes}
+                sec.children[:] = [c for c in sec.children if c.word not in words] + nodes
             show.children.append(P.kw("isis", "Show IS-IS information",
                 P.kw("adjacency", "Show IS-IS adjacencies", handler=lambda s, a, n: s.show_isis("adjacency")),
                 P.kw("database", "Show IS-IS link-state database", handler=lambda s, a, n: s.show_isis("database"))))
@@ -644,6 +654,14 @@ class JunosSession(TreeSession):
                                                        handler=(lambda s, a, n: s.cfg_fw_delete(a[0], None)) if delete else None))))))
                 if self.is_router:
                     paths.append(P.kw("security", "Security configuration",
+                                      P.kw("zones", "Zone configuration",
+                                           *([] if delete else [P.arg(P.LineArg("security-zone <name> interfaces <ifl> ..."), "",
+                                                                      handler=lambda s, a, n: s.cfg_srx("zones", a[0], False))]),
+                                           handler=(lambda s, a, n: s.cfg_srx("zones", "", True)) if delete else None),
+                                      P.kw("policies", "Configure Network Security Policies",
+                                           *([] if delete else [P.arg(P.LineArg("from-zone A to-zone B policy P match|then ..."), "",
+                                                                      handler=lambda s, a, n: s.cfg_srx("policies", a[0], False))]),
+                                           handler=(lambda s, a, n: s.cfg_srx("policies", "", True)) if delete else None),
                                       P.kw("ike", "IKE configuration",
                                            *([] if delete else [P.arg(P.LineArg("policy|gateway|proposal ..."), "IKE statement",
                                                                       handler=lambda s, a, n: s.cfg_vpn("ike", a[0], False))]),
@@ -1520,6 +1538,103 @@ class JunosSession(TreeSession):
             return self.err_invalid(self.prompt, 0)
         return None
 
+    def cfg_srx(self, section, text, delete):
+        ex = self._extra()
+        if delete:
+            ex.pop("srx_" + section, None)
+            return None
+        w = [x.strip('"') for x in text.split()]
+        try:
+            if section == "zones":
+                if w[0] != "security-zone":
+                    raise IndexError
+                z = ex.setdefault("srx_zones", {}).setdefault(w[1], [])
+                if len(w) > 2:
+                    if w[2] != "interfaces":
+                        raise IndexError
+                    port = self.device.get_port(w[3].split(".")[0])
+                    if port is None:
+                        return f"error: interface {w[3]} not found"
+                    if port.name not in z:
+                        z.append(port.name)
+                return None
+            if w[0] != "from-zone" or w[2] != "to-zone" or w[4] != "policy":
+                raise IndexError
+            pol = ex.setdefault("srx_policies", {}).setdefault(f"{w[1]}>{w[3]}", {}).setdefault(
+                w[5], {"src": "any", "dst": "any", "app": "any", "then": None})
+            rest = w[6:]
+            if rest[0] == "match":
+                key = {"source-address": "src", "destination-address": "dst", "application": "app"}[rest[1]]
+                pol[key] = rest[2]
+            elif rest[0] == "then" and rest[1] in ("permit", "deny", "reject"):
+                pol["then"] = rest[1]
+            else:
+                raise IndexError
+        except (IndexError, KeyError):
+            return self.err_invalid(self.prompt, 0)
+        return None
+
+    def _resolve_zones(self, cfg) -> str | None:
+        from ..security.stateful import APPS, ZoneFirewall, ZoneRule
+        ex = cfg.get("extra", {})
+        zones = ex.get("srx_zones") or {}
+        if not zones:
+            cfg.pop("zfw", None)
+            return None
+        zf = ZoneFirewall({k: list(v) for k, v in zones.items()})
+        for pair, pols in (ex.get("srx_policies") or {}).items():
+            a, b = pair.split(">")
+            for z in (a, b):
+                if z not in zones:
+                    return (f"[edit security policies from-zone {a} to-zone {b}]\n  Security zone '{z}' is not defined\n"
+                            "error: configuration check-out failed")
+            rules = []
+            for name, pol in pols.items():
+                if pol["then"] is None:
+                    continue
+                app = pol["app"]
+                if app != "any" and app not in APPS:
+                    return f"error: application '{app}' is not defined\nerror: configuration check-out failed"
+                rules.append(ZoneRule(name, "permit" if pol["then"] == "permit" else "drop",
+                                      "any" if app == "any" else app,
+                                      "0.0.0.0/0" if pol["src"] == "any" else pol["src"],
+                                      "0.0.0.0/0" if pol["dst"] == "any" else pol["dst"]))
+            zf.pairs[pair] = rules
+        cfg["zfw"] = zf.to_dict()
+        return None
+
+    def show_security(self, what):
+        d = self.device
+        ex = d.extra
+        if what == "zones":
+            out = []
+            for z, ifs in (ex.get("srx_zones") or {}).items():
+                out += ["", f"Security zone: {z}", "  Send reset for non-SYN session TCP packets: Off",
+                        f"  Interfaces bound: {len(ifs)}", "  Interfaces:"] + [f"    {i}.0" for i in ifs]
+            return "\n".join(out)
+        if what == "policies":
+            out = []
+            for pair, pols in (ex.get("srx_policies") or {}).items():
+                a, b = pair.split(">")
+                out.append(f"From zone: {a}, To zone: {b}")
+                for i, (name, pol) in enumerate(pols.items(), 4):
+                    out += [f"  Policy: {name}, State: enabled, Index: {i}, Scope Policy: 0, Sequence number: {i - 3}",
+                            f"    Source addresses: {pol['src']}", f"    Destination addresses: {pol['dst']}",
+                            f"    Applications: {pol['app']}", f"    Action: {pol['then']}"]
+            out.append("Default policy: deny-all")
+            return "\n".join(out)
+        if not (ex.get("srx_zones") or {}):
+            return self.show_flow_sessions()                 # packet mode: the NAT sessions
+        out = []
+        for i, f in enumerate(d.conntrack.active(), 1):
+            proto, src, dst, sp, dp = f.key
+            name = {1: "icmp", 6: "tcp", 17: "udp"}.get(proto, str(proto))
+            out += [f"Session ID: {1000 + i}, Policy name: {f.zone_pair}, Timeout: 60, Valid",
+                    f"  In: {src}/{sp} --> {dst}/{dp};{name}, Pkts: {f.packets}",
+                    f"  Out: {dst}/{dp} --> {src}/{sp};{name}"]
+        out.append(f"Total sessions: {len(d.conntrack.active())}")
+        return "\n".join(out)
+
     def _resolve_vpn(self, cfg) -> str | None:
         vpn = cfg.get("extra", {}).get("vpn") or {}
         for name, ic in cfg["interfaces"].items():
@@ -2201,7 +2316,7 @@ class JunosSession(TreeSession):
         if err:
             return err
         cfg = copy.deepcopy(self.candidate)
-        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_vpn(cfg) or self._resolve_security(cfg)
+        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_vpn(cfg) or self._resolve_zones(cfg) or self._resolve_security(cfg)
                or self._resolve_bgp(cfg) or self._resolve_dhcp(cfg) or self._resolve_rip(cfg)
                or self._resolve_stp(cfg) or self._resolve_irb(cfg) or self._resolve_lag(cfg)
                or self._resolve_dhcp6(cfg))

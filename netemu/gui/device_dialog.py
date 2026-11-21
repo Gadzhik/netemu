@@ -182,6 +182,18 @@ class HostConfig(QWidget):
             fw.addRow(tr("Пароль:"), self.wifi_key)
             fw.addRow(tr("Состояние:"), self.wifi_state)
             lay.addWidget(boxw)
+        box8 = QGroupBox(tr("Аутентификация 802.1X"))
+        f8 = QFormLayout(box8)
+        self.x_on = QCheckBox(tr("Включить 802.1X (EAP)"))
+        self.x_user = QLineEdit()
+        self.x_pass = QLineEdit()
+        self.x_pass.setEchoMode(QLineEdit.Password)
+        self.x_state = QLabel()
+        f8.addRow(self.x_on)
+        f8.addRow(tr("Пользователь:"), self.x_user)
+        f8.addRow(tr("Пароль:"), self.x_pass)
+        f8.addRow(tr("Состояние:"), self.x_state)
+        lay.addWidget(box8)
         self.mac = QLabel()
         self.mac.setTextInteractionFlags(Qt.TextSelectableByMouse)
         lay.addWidget(self.mac)
@@ -243,6 +255,12 @@ class HostConfig(QWidget):
         self.dhcp.blockSignals(False)
         self._dhcp_toggled(d.dhcp_enabled)
         self.mac.setText(tr("MAC-адрес {port}: {mac}", port=d.nic.name, mac=d.nic.mac.cisco()))
+        x = getattr(d, "dot1x", None) or {}
+        self.x_on.setChecked(bool(x))
+        self.x_user.setText(x.get("user", ""))
+        self.x_pass.setText(x.get("password", ""))
+        self.x_state.setText(tr({"off": "выключено", "connecting": "проверка…", "authenticated": "доступ разрешён",
+                                 "failed": "отказано"}.get(getattr(d, "dot1x_state", "off"), "выключено")))
         self.slaac.blockSignals(True)
         self.slaac.setChecked(d.nic.ipv6_auto)
         self.slaac.blockSignals(False)
@@ -267,6 +285,12 @@ class HostConfig(QWidget):
             return False
         if self.wifi_ssid is not None:
             d.wifi = {"ssid": self.wifi_ssid.text().strip() or None, "key": self.wifi_key.text() or None}
+        new_x = {"user": self.x_user.text().strip(), "password": self.x_pass.text()} if self.x_on.isChecked() else None
+        if new_x != getattr(d, "dot1x", None):
+            d.dot1x = new_x
+            d.dot1x_state = "off"
+            if new_x and d.nic.is_up:
+                d._eapol_start()
         if self.dhcp.isChecked():
             dns = self.dns.text().strip()
             if dns and not is_valid_ip(dns):
