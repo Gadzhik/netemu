@@ -22,6 +22,7 @@ VENDOR_NAMES = {
     "juniper": "Juniper",
     "huawei": "Huawei",
     "extreme": "Extreme",
+    "fortinet": "Fortinet",
     "linux": "Linux",
     "isp": "ISP",
     "generic": "Generic",
@@ -40,6 +41,8 @@ class DeviceModel:
     ports_admin_up: bool = True
     ttl: int | None = None
     factory: Callable | None = field(default=None, compare=False)
+    group: str | None = None             # palette group when it differs from the category (security, iot ...)
+    dialect: str | None = None           # CLI dialect when it differs from the vendor's usual one
 
 
 def _seq(fmt_full: str, fmt_short: str, numbers) -> tuple[tuple[str, str], ...]:
@@ -81,17 +84,45 @@ _register(DeviceModel("pc", "pc", "generic", "PC", "PC", "PC"))
 _register(DeviceModel("server", "server", "generic", "Server", "Server", "Server"))
 _register(DeviceModel("internet", "cloud", "isp", "Internet (ISP)", "Internet", "Internet"))
 _register(DeviceModel("access-point", "wireless", "generic", "Access Point", "AP", "AP"))
+_register(DeviceModel("lap-1142", "wireless", "cisco", "Lightweight AP 1142", "LAP", "LAP"))
+for _k, _t, _n in (("temperature", "Temperature sensor", "Temp"), ("motion", "Motion sensor", "Motion"),
+                   ("smoke", "Smoke detector", "Smoke"), ("lamp", "Smart lamp", "Lamp"), ("fan", "Smart fan", "Fan"),
+                   ("door", "Smart door", "Door")):
+    _register(DeviceModel(f"iot-{_k}", "iot", "generic", _t, _n, _n))
+_register(DeviceModel("wlc-2504", "wlc", "cisco", "Cisco WLC 2504", "WLC", "WLC", group="wireless"))
 _register(DeviceModel("laptop", "pc", "generic", "Laptop (Wi-Fi)", "Laptop", "Laptop"))
 _register(DeviceModel("laptop-linux", "pc", "linux", "Laptop (Linux, Wi-Fi)", "LinuxLaptop", "laptop"))
 _register(DeviceModel("pc-linux", "pc", "linux", "PC (Linux)", "Linux", "linux"))
 _register(DeviceModel("server-linux", "server", "linux", "Server (Linux)", "LinuxSrv", "linuxsrv"))
 _register(DeviceModel("ip-phone", "phone", "cisco", "IP Phone 7960", "Phone", "IPPhone"))
+_register(DeviceModel("fortigate-60f", "router", "fortinet", "FortiGate 60F", "FGT", "FortiGate-60F",
+                      _seq("port{}", "port{}", range(1, 8)), ports_admin_up=True, ttl=255,
+                      group="security", dialect="fortios"))
+_register(DeviceModel("cisco-asa5506", "router", "cisco", "Cisco ASA 5506-X", "ASA", "ciscoasa",
+                      _seq("GigabitEthernet1/{}", "Gi1/{}", range(1, 9)), ports_admin_up=False, ttl=255,
+                      group="security", dialect="asa"))
 
 _CLASSES = {"router": Router, "switch": Switch, "hub": Hub, "pc": Host, "server": Server, "phone": IPPhone}
 
 
 def create_device(engine, model_key: str, name: str, device_id: str | None = None) -> Device:
     m = MODELS[model_key]
+    if m.category == "iot":
+        from .iot import IotDevice
+        dev = IotDevice(engine, name, device_id, dtype=m.key.split("-", 1)[1])
+        dev.model_key, dev.vendor, dev.model = m.key, m.vendor, m.title
+        return dev
+    if m.category == "wlc":
+        from .wlc import WirelessController
+        dev = WirelessController(engine, name, device_id)
+        dev.model_key, dev.vendor, dev.model = m.key, m.vendor, m.title
+        return dev
+    if m.key == "lap-1142":
+        from .wlc import LightweightAP
+        dev = LightweightAP(engine, name, device_id)
+        dev.model_key, dev.vendor, dev.model = m.key, m.vendor, m.title
+        dev.add_port("Ethernet0", "Eth0")
+        return dev
     if m.category == "wireless":
         dev = AccessPoint(engine, name, device_id)
         dev.model_key = m.key
@@ -128,6 +159,7 @@ def create_device(engine, model_key: str, name: str, device_id: str | None = Non
     dev.model_key = m.key
     dev.vendor = m.vendor
     dev.model = m.title
+    dev.dialect = m.dialect
     if m.category in ("router", "switch"):
         dev.hostname = m.hostname
         dev.default_hostname = m.hostname

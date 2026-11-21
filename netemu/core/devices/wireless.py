@@ -61,7 +61,7 @@ def visible_networks(client, devices) -> list[tuple]:
     """[(ssid, security, channel, signal %, ap)] the client can hear, strongest first."""
     out = []
     for ap in devices:
-        if isinstance(ap, AccessPoint) and ap.powered:
+        if isinstance(ap, AccessPoint) and ap.powered and ap.wifi.get("ssid"):
             s = signal(ap, client)
             if s > 0:
                 out.append((ap.wifi["ssid"], ap.wifi["security"], ap.wifi["channel"], s, ap))

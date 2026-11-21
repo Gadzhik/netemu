@@ -282,6 +282,8 @@ class Server(Host):
         self.aaa_server = AaaServer()
         from ..services.files import FileServer
         self.file_server = FileServer()
+        from .iot import IotService
+        self.iot_service = IotService()
         from ..services.mgmt import NtpServer, SyslogServer
         self.syslog_server = SyslogServer(self, enabled=True)
         self.ntp_server = NtpServer(self, enabled=True)
@@ -319,6 +321,8 @@ class Server(Host):
             self.dns_server.handle(pkt, port)
         elif isinstance(l4, TcpSegment) and l4.dport == 80:
             self.http_server.handle(pkt, port)
+        elif isinstance(l4, UdpDatagram) and l4.dport == 5683:
+            self.iot_service.handle(self, pkt)
         elif (isinstance(l4, UdpDatagram) and l4.dport == 69) or \
                 (isinstance(l4, TcpSegment) and l4.dport in (21, 25, 110)):
             self.file_server.handle(self, pkt)
@@ -338,7 +342,8 @@ class Server(Host):
                            "http": {"enabled": self.http_server.enabled, "pages": dict(self.http_server.pages)},
                            "syslog": {"enabled": self.syslog_server.enabled},
                            "ntp": {"enabled": self.ntp_server.enabled},
-                           "aaa": self.aaa_server.to_dict(), "files": self.file_server.to_dict()}
+                           "aaa": self.aaa_server.to_dict(), "files": self.file_server.to_dict(),
+                           "iot": self.iot_service.to_dict()}
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -360,6 +365,8 @@ class Server(Host):
         self.aaa_server = AaaServer.from_dict(sv.get("aaa"))
         from ..services.files import FileServer
         self.file_server = FileServer.from_dict(sv.get("files"))
+        from .iot import IotService
+        self.iot_service = IotService.from_dict(sv.get("iot"))
 
 
 __all__ = ["Host", "Server", "IPv4Interface"]

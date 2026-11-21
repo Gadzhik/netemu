@@ -378,7 +378,29 @@ class Router(IpStack, Ip6Stack, Device):
                 return None
         return pkt
 
+    def _asa_allows(self, pkt, in_port, out_port) -> bool:
+        a = self.extra.get("asa") or {}
+        ifs = a.get("ifaces", {})
+        ci, co = ifs.get(in_port.name, {}), ifs.get(out_port.name, {})
+        if not ci.get("nameif") or not co.get("nameif"):
+            return False                                   # an interface without nameif passes nothing
+        from ..packets import IcmpPacket
+        icmp = isinstance(pkt.payload, IcmpPacket)
+        if (not icmp or a.get("inspect_icmp")) and self.conntrack.is_reply(pkt):
+            return True
+        acl_name = a.get("access_groups", {}).get(ci["nameif"])
+        if acl_name and acl_name in self.acls:
+            ok = self.acls[acl_name].decide(pkt)[0]
+        else:
+            li, lo = ci.get("level", 0), co.get("level", 0)
+            ok = li > lo or (li == lo and a.get("same_security"))
+        if ok and (not icmp or a.get("inspect_icmp")):
+            self.conntrack.add(pkt, f"{ci['nameif']}>{co['nameif']}")
+        return ok
+
     def egress_filter(self, pkt, in_port, out_port):
+        if getattr(self, "dialect", None) == "asa" and not self._asa_allows(pkt, in_port, out_port):
+            return None
         zfw = getattr(self, "zfw", None)
         if zfw is not None and zfw.active and not zfw.check(self.conntrack, pkt, in_port, out_port):
             return None

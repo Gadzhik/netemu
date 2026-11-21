@@ -10,6 +10,20 @@ from .icons import ICON_H, ICON_W, device_pixmap
 from . import theme
 
 
+def device_kind(device) -> str | None:
+    """Icon variant inside a category (laptops, firewalls, controllers, IoT things)."""
+    key = getattr(device, "model_key", "") or ""
+    if key.startswith("laptop"):
+        return "laptop"
+    if getattr(device, "dialect", None) in ("asa", "fortios"):
+        return "firewall"
+    if key.startswith("wlc"):
+        return "wlc"
+    if getattr(device, "category", "") == "iot":
+        return "iot"
+    return None
+
+
 def _scale() -> float:
     return theme.STATE["scale"]
 
@@ -83,7 +97,7 @@ class DeviceItem(QGraphicsItem):
             p.setPen(QPen(QColor("#1e88e5"), 1.2, Qt.DashLine if self.isSelected() else Qt.SolidLine))
             p.setBrush(QColor(30, 136, 229, 30))
             p.drawRoundedRect(QRectF(-ICON_W / 2 - 2, -ICON_H / 2 - 2, ICON_W + 4, ICON_H + 4), 4, 4)
-        kind = "laptop" if getattr(self.device, "model_key", "").startswith("laptop") else None
+        kind = device_kind(self.device)
         pm = device_pixmap(self.device.category, getattr(self.device, "vendor", "generic"), kind=kind)
         p.drawPixmap(QPointF(-ICON_W / 2, -ICON_H / 2), pm)
         p.setFont(self._font)

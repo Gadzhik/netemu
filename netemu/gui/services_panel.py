@@ -110,6 +110,19 @@ class ServicesPanel(QWidget):
         ff.addRow(tr("Файлы:"), self.files_list)
         lay.addWidget(fs)
 
+        it = QGroupBox(tr("Интернет вещей (IoT)"))
+        fi = QFormLayout(it)
+        self.iot_on = QCheckBox(tr("IoT-сервер (CoAP, UDP 5683)"))
+        fi.addRow(self.iot_on)
+        self.iot_devices = QLabel()
+        self.iot_devices.setWordWrap(True)
+        fi.addRow(tr("Устройства:"), self.iot_devices)
+        self.iot_rules = QPlainTextEdit()
+        self.iot_rules.setPlaceholderText("IF Temp1 > 30 THEN Fan1 on\nIF Motion1 = yes THEN Lamp1 on")
+        self.iot_rules.setMaximumHeight(70)
+        fi.addRow(tr("Правила:"), self.iot_rules)
+        lay.addWidget(it)
+
         sl = QGroupBox("Syslog / NTP")
         v = QVBoxLayout(sl)
         row = QHBoxLayout()
@@ -163,6 +176,11 @@ class ServicesPanel(QWidget):
         self._load_records()
         self.http_on.setChecked(d.http_server.enabled)
         self.page.setPlainText(d.http_server.page("/")[1])
+        io = d.iot_service
+        self.iot_on.setChecked(io.enabled)
+        self.iot_devices.setText(", ".join(f"{n} = {v['value']}" for n, v in sorted(io.devices.items())) or "—")
+        if not self.iot_rules.hasFocus():
+            self.iot_rules.setPlainText("\n".join(io.rules))
         fsv = d.file_server
         self.tftp_on.setChecked(fsv.tftp)
         self.ftp_on.setChecked(fsv.ftp)
@@ -248,6 +266,11 @@ class ServicesPanel(QWidget):
         d.dns_server.enabled = self.dns_on.isChecked()
         d.http_server.enabled = self.http_on.isChecked()
         d.http_server.pages["index.html"] = self.page.toPlainText()
+        errs = d.iot_service.check_rules(self.iot_rules.toPlainText())
+        if errs:
+            return self.dialog.error(tr("Неверные правила IoT:") + "\n" + "\n".join(errs))
+        d.iot_service.enabled = self.iot_on.isChecked()
+        d.iot_service.rules = [x.strip() for x in self.iot_rules.toPlainText().splitlines() if x.strip()]
         fsv = d.file_server
         fsv.tftp, fsv.ftp, fsv.mail = self.tftp_on.isChecked(), self.ftp_on.isChecked(), self.mail_on.isChecked()
 

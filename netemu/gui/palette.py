@@ -11,7 +11,8 @@ from .canvas import MIME_MODEL
 from .icons import device_icon, device_pixmap
 
 CATEGORIES = [("router", "Маршрутизаторы"), ("switch", "Коммутаторы"), ("hub", "Концентраторы"),
-              ("end", "Конечные устройства"), ("wireless", "Беспроводные"), ("cloud", "Интернет")]
+              ("security", "Безопасность"), ("end", "Конечные устройства"), ("wireless", "Беспроводные"),
+              ("iot", "Интернет вещей"), ("cloud", "Интернет")]
 
 
 class ModelList(QListWidget):
@@ -28,7 +29,9 @@ class ModelList(QListWidget):
         self.setDragEnabled(True)
         self.setSpacing(2)
         for m in models:
-            it = QListWidgetItem(device_icon(m.category, m.vendor, "laptop" if m.key.startswith("laptop") else None), m.title)
+            kind = ("laptop" if m.key.startswith("laptop") else "firewall" if m.dialect in ("asa", "fortios")
+                    else "wlc" if m.key.startswith("wlc") else "iot" if m.category == "iot" else None)
+            it = QListWidgetItem(device_icon(m.category, m.vendor, kind), m.title)
             it.setData(Qt.UserRole, m.key)
             it.setToolTip(tr("{title}\nПеретащите на рабочую область или дважды щёлкните", title=m.title))
             self.addItem(it)
@@ -59,6 +62,11 @@ class DevicePalette(QWidget):
         self.box = QToolBox()
         lay.addWidget(self.box)
         groups = models_by_category()
+        for cat in list(groups):                      # models that live in their own palette group
+            moved = [m for m in groups[cat] if m.group]
+            groups[cat] = [m for m in groups[cat] if not m.group]
+            for m in moved:
+                groups.setdefault(m.group, []).append(m)
         pcs = groups.pop("pc", [])
         groups["end"] = [m for m in pcs if not m.key.startswith("laptop")] + groups.pop("server", []) + groups.pop("phone", [])
         groups["wireless"] = groups.get("wireless", []) + [m for m in pcs if m.key.startswith("laptop")]

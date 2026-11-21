@@ -603,10 +603,29 @@ class DeviceDialog(QDialog):
             self.tabs.addTab(self.terminal, tr(CLI_TITLES.get(device.vendor, "CLI")))
         elif cat == "cloud":
             self.tabs.addTab(cloud_info(device), tr("Интернет"))
+        elif cat == "iot":
+            self.config = HostConfig(self)
+            self.tabs.addTab(self.config, tr("Настройка"))
+            from .iot_panel import IotPanel
+            self.iot = IotPanel(self)
+            self.tabs.addTab(self.iot, tr("Устройство IoT"))
+        elif cat == "wlc":
+            self.config = HostConfig(self)
+            self.tabs.addTab(self.config, tr("Настройка"))
+            from .wlc_panel import WlcPanel
+            self.wlc = WlcPanel(self)
+            self.tabs.addTab(self.wlc, tr("Контроллер"))
         elif cat == "phone":
             from .phone_panel import PhonePanel
             self.phone = PhonePanel(self)
             self.tabs.addTab(self.phone, tr("Телефон"))
+        elif cat == "wireless" and device.model_key == "lap-1142":
+            c = device.controller
+            info = QLabel(tr("Лёгкая точка доступа: настройки Wi-Fi приходят от контроллера.") + "\n\n" +
+                          (tr("Контроллер: {wlc}. SSID: {ssid}.", wlc=c[1], ssid=device.wifi.get("ssid") or "—") if c
+                           else tr("Контроллер не найден: радио выключено.")))
+            info.setWordWrap(True)
+            self.tabs.addTab(info, tr("Устройство"))
         elif cat == "wireless":
             self.config = ApConfig(self)
             self.tabs.addTab(self.config, tr("Настройка"))

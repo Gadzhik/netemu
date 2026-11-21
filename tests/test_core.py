@@ -136,7 +136,7 @@ def test_unplugged_or_shutdown_port():
 
 
 # -- L3 ------------------------------------------------------------------------
-@pytest.mark.parametrize("model", [k for k, m in MODELS.items() if m.category == "router"])
+@pytest.mark.parametrize("model", [k for k, m in MODELS.items() if m.category == "router" and not m.dialect])
 def test_routing_between_two_subnets(model):
     t, r, a, b = two_subnets(model)
     s, c = ping(a, "192.168.2.10")

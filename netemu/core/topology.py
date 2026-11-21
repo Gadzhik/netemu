@@ -108,7 +108,7 @@ class Topology:
 
     def rename(self, dev: Device, name: str) -> None:
         dev.name = name
-        if dev.category in ("pc", "server", "phone"):
+        if dev.category in ("pc", "server", "phone", "wlc", "iot"):
             dev.hostname = name
         self.engine.emit("device_changed", dev)
 

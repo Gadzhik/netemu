@@ -10,9 +10,15 @@ def create_session(device):
     if device.category in ("pc", "server"):
         from .host import HostSession
         return HostSession(device)
-    if device.category in ("hub", "phone"):
+    if device.category in ("hub", "phone", "wlc", "iot"):
         return None
     vendor = getattr(device, "vendor", "cisco")
+    if getattr(device, "dialect", None) == "fortios":
+        from .fortigate import FortiSession
+        return FortiSession(device)
+    if getattr(device, "dialect", None) == "asa":
+        from .asa import AsaSession
+        return AsaSession(device)
     if vendor == "mikrotik":
         from .mikrotik import MikrotikSession
         return MikrotikSession(device)

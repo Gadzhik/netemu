@@ -14,6 +14,7 @@ VENDOR_COLORS = {
     "juniper": QColor("#2e7d32"),
     "huawei": QColor("#c62828"),
     "extreme": QColor("#6a1b9a"),
+    "fortinet": QColor("#ee3124"),
     "linux": QColor("#d35400"),
     "generic": QColor("#4f5bbd"),
     "isp": QColor("#2b8fd6"),
@@ -85,6 +86,23 @@ def classic_svg(kind: str, color: str) -> str:
         body = (f'<path d="M16 46h34a10 10 0 0 0 1-20 14 14 0 0 0-26-5 11 11 0 0 0-9 25z" fill="{color}"/>'
                 f'<path d="M25 21a14 14 0 0 1 26 5" fill="none" stroke="{lite}" stroke-width="3" stroke-linecap="round"/>'
                 + _arrow(24, 36, 40, 36, W, 2) + _arrow(42, 31, 26, 31, W, 2))
+    elif kind == "firewall":                      # brick wall with a flame-orange top
+        bricks = "".join(f'<path d="M{x} {y}h{w}" stroke="{W}" stroke-width="1.6"/>'
+                         for x, y, w in ((14, 30, 36), (14, 38, 36), (14, 46, 36)))
+        joints = "".join(f'<path d="M{x} {y}v8" stroke="{W}" stroke-width="1.6"/>'
+                         for x, y in ((26, 22), (40, 22), (20, 30), (33, 30), (46, 30), (26, 38), (40, 38),
+                                      (20, 46), (33, 46), (46, 46)))
+        body = (f'<path d="M14 22h36v32H14z" fill="{color}"/><path d="M50 22l6-5v32l-6 5z" fill="{dark}"/>'
+                f'<path d="M14 22l6-5h36l-6 5z" fill="{lite}"/>{bricks}{joints}')
+    elif kind == "iot":
+        body = (f'<circle cx="32" cy="34" r="14" fill="{color}"/><circle cx="32" cy="34" r="5" fill="{W}"/>'
+                f'<path d="M20 16a17 17 0 0 1 24 0M24 21a11 11 0 0 1 16 0" fill="none" stroke="{dark}" '
+                f'stroke-width="2.6" stroke-linecap="round"/>')
+    elif kind == "wlc":
+        body = (f'<path d="M8 32l8-6h40l-8 6z" fill="{lite}"/><path d="M8 32h40v14H8z" fill="{color}"/>'
+                f'<path d="M48 32l8-6v14l-8 6z" fill="{dark}"/>'
+                f'<path d="M20 22a13 13 0 0 1 18 0M24 26a7 7 0 0 1 10 0" fill="none" stroke="{color}" stroke-width="2.4" '
+                f'stroke-linecap="round"/>' + "".join(f'<circle cx="{x}" cy="39" r="1.6" fill="{W}"/>' for x in (14, 20, 26)))
     elif kind == "phone":
         body = (f'<path d="M14 44l6-22h28l6 22z" fill="{color}"/><path d="M14 44h40v6H14z" fill="{dark}"/>'
                 f'<rect x="26" y="25" width="16" height="7" rx="1" fill="{W}"/>'
