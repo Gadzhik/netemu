@@ -821,11 +821,13 @@ def test_classroom_hand_out_and_progress(win, qtbot, monkeypatch, tmp_path):
 
 
 def test_terminal_hint_highlight_and_search(win, qtbot):
-    from netemu.gui.terminal_tools import TerminalHighlighter, all_commands, hint_for
+    from netemu.gui.terminal_tools import all_commands, hint_for, segments
     r = win.topology.add_device("cisco-2911")
     d = win.open_device(r)
     term = d.terminal
-    assert isinstance(term.highlighter, TerminalHighlighter)
+    parts = segments("R1#ping 10.0.0.1 is up")
+    assert "".join(p for p, _ in parts) == "R1#ping 10.0.0.1 is up"
+    assert [p for p, f in parts if f is not None] == ["R1#", "10.0.0.1", "up"]
     s = term.session
     hint = hint_for(s, "")
     assert "enable" in hint

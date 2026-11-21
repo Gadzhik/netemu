@@ -15,8 +15,6 @@ class TerminalWidget(QPlainTextEdit):
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        from .terminal_tools import TerminalHighlighter
-        self.highlighter = TerminalHighlighter(self.document())
         self.history: list[str] = []
         self._hist_pos = 0
         self._input_start = 0
@@ -50,10 +48,19 @@ class TerminalWidget(QPlainTextEdit):
     def _append(self, text: str) -> None:
         if not text:
             return
+        from PySide6.QtGui import QTextCharFormat
+        from .terminal_tools import segments
         c = self.textCursor()
         c.movePosition(QTextCursor.End)
-        c.insertText(text.replace("\r", ""))
+        plain = QTextCharFormat()
+        for n, line in enumerate(text.replace("\r", "").split("\n")):
+            if n:
+                c.insertText("\n", plain)
+            for piece, fmt in segments(line):
+                c.insertText(piece, fmt or plain)
+        c.setCharFormat(plain)
         self.setTextCursor(c)
+        self.setCurrentCharFormat(plain)              # typed input stays uncoloured
         self._input_start = c.position()
         self.ensureCursorVisible()
 

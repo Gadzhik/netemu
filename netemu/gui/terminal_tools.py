@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont, QSyntaxHighlighter, QTextCharFormat
+from PySide6.QtGui import QColor, QFont, QTextCharFormat
 from PySide6.QtWidgets import QDialog, QHeaderView, QLineEdit, QTableWidget, QTableWidgetItem, QVBoxLayout
 
 from ..i18n import tr
@@ -31,11 +31,22 @@ RULES = [
 ]
 
 
-class TerminalHighlighter(QSyntaxHighlighter):
-    def highlightBlock(self, text: str) -> None:
-        for rx, fmt in RULES:
-            for m in rx.finditer(text):
-                self.setFormat(m.start(), m.end() - m.start(), fmt)
+def segments(line: str) -> list[tuple[str, QTextCharFormat | None]]:
+    """Split one output line into (text, format) pieces; later rules win where they overlap.
+    The terminal inserts the pieces with these formats as it prints (no QSyntaxHighlighter: re-highlighting
+    during font/scale changes crashed Qt on Windows)."""
+    owner: list[int] = [-1] * len(line)
+    for i, (rx, _fmt) in enumerate(RULES):
+        for m in rx.finditer(line):
+            for k in range(m.start(), m.end()):
+                owner[k] = i
+    out: list[tuple[str, QTextCharFormat | None]] = []
+    start = 0
+    for k in range(1, len(line) + 1):
+        if k == len(line) or owner[k] != owner[start]:
+            out.append((line[start:k], RULES[owner[start]][1] if owner[start] >= 0 else None))
+            start = k
+    return out
 
 
 def hint_for(session, line: str) -> str:
@@ -114,4 +125,4 @@ class CommandSearch(QDialog):
         self.accept()
 
 
-__all__ = ["TerminalHighlighter", "CommandSearch", "hint_for", "all_commands", "Qt"]
+__all__ = ["segments", "CommandSearch", "hint_for", "all_commands", "Qt"]
