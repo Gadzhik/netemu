@@ -167,6 +167,10 @@ enable ntp
 | `configure ports <port_list> vlan <vlan_name> limit-learning <number>` | Number of MACs |
 | `configure ports <port_list> vlan <vlan_name> limit-learning <number> action blackhole/stop-learning` | Number of MACs |
 | `configure ports <port_list> display-string <string>` | Description |
+| `configure ports <port_list> rate-limit egress no-limit` | Remove the limit |
+| `configure ports <port_list> rate-limit egress <rate> Kbps` | Kilobits per second |
+| `configure ports <port_list> rate-limit egress <rate> Mbps` | Megabits per second |
+| `configure ports <port_list> rate-limit egress <rate> Gbps` | Gigabits per second |
 | `configure account <name> password` | Change the password |
 | `configure ospfv3 routerid A.B.C.D` | Router ID |
 | `configure ospfv3 add vlan <vlan_name> area <area>` | Area ID |
@@ -185,6 +189,9 @@ enable ntp
 | `configure snmp delete community readwrite <community>` | Read-write |
 | `configure snmp sysContact <contact>` | System contact |
 | `configure snmp sysLocation <location>` | System location |
+| `configure lldp ports <port_list> advertise vendor-specific med policy application voice vlan <vlan_name>` | Voice VLAN |
+| `configure lldp ports <port_list> advertise vendor-specific med policy application voice vlan <vlan_name> dscp <dscp>` | DSCP |
+| `configure lldp ports <port_list> no-advertise vendor-specific med policy application voice` | Voice |
 | `configure syslog add <ip>` | Syslog host |
 | `configure syslog add <ip> local0..local7` | Facility |
 | `configure syslog delete <ip>` | Syslog host |

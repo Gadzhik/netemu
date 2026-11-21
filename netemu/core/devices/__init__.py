@@ -146,6 +146,7 @@ def create_device(engine, model_key: str, name: str, device_id: str | None = Non
     if m.category == "router" and m.vendor == "juniper":
         dev.add_loopback("lo0")      # built into every Junos router
         dev.add_tunnel("gr-0/0/0", "gr-0/0/0")
+        dev.add_tunnel("st0", "st0")             # route-based IPsec VPN (security ipsec vpn ... bind-interface)
     from ..services.remote import default_access, install
     dev.access = default_access(dev)
     install(dev)                     # telnet/ssh listeners (they answer RST until the service is enabled)

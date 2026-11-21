@@ -608,6 +608,11 @@ class JunosSession(TreeSession):
                                                                   handler=lambda s, a, n: s.cfg_dhcp_relay(a[0]))]),
                                        handler=(lambda s, a, n: s.cfg_dhcp_relay(None)) if delete else None)))
                 paths.append(P.kw("firewall", "Define a firewall configuration",
+                                  P.kw("policer", "Policer template definition",
+                                       P.arg(P.WordArg("<policer-name>"), "Policer name",
+                                             *([] if delete else [P.arg(P.LineArg("if-exceeding bandwidth-limit 1m burst-size-limit 15k | then discard"),
+                                                                        "", handler=lambda s, a, n: s.cfg_policer(a[0], a[1], False))]),
+                                             handler=(lambda s, a, n: s.cfg_policer(a[0], "", True)) if delete else None)),
                                   P.kw("family", "Protocol family",
                                        P.kw("inet", "Protocol family IPv4 for firewall filter",
                                             P.kw("filter", "Define an IPv4 firewall filter",
@@ -620,6 +625,14 @@ class JunosSession(TreeSession):
                                                        handler=(lambda s, a, n: s.cfg_fw_delete(a[0], None)) if delete else None))))))
                 if self.is_router:
                     paths.append(P.kw("security", "Security configuration",
+                                      P.kw("ike", "IKE configuration",
+                                           *([] if delete else [P.arg(P.LineArg("policy|gateway|proposal ..."), "IKE statement",
+                                                                      handler=lambda s, a, n: s.cfg_vpn("ike", a[0], False))]),
+                                           handler=(lambda s, a, n: s.cfg_vpn("ike", "", True)) if delete else None),
+                                      P.kw("ipsec", "IPsec configuration",
+                                           *([] if delete else [P.arg(P.LineArg("vpn|policy|proposal ..."), "IPsec statement",
+                                                                      handler=lambda s, a, n: s.cfg_vpn("ipsec", a[0], False))]),
+                                           handler=(lambda s, a, n: s.cfg_vpn("ipsec", "", True)) if delete else None),
                                       P.kw("nat", "Configure Network Address Translation",
                                            *([] if delete else [P.arg(P.LineArg("source|static|destination ..."), "NAT statement",
                                                                       handler=lambda s, a, n: s.cfg_jnat(a[0], False))]),
@@ -1359,6 +1372,15 @@ class JunosSession(TreeSession):
             return self.err_invalid(self.prompt, 0)
         t = self._extra().setdefault("filters", {}).setdefault(filt, {}).setdefault(term, {"from": {}, "then": None})
         if words[0] == "then":
+            if words[1] in ("policer", "dscp") and len(words) == 3:
+                from ..security.qos import parse_dscp
+                if words[1] == "dscp":
+                    try:
+                        parse_dscp(words[2])
+                    except ValueError:
+                        return self.err_invalid(self.prompt, 0)
+                t[words[1]] = words[2]
+                return None
             if words[1] not in ("accept", "discard", "reject") or len(words) > 2:
                 return self.err_invalid(self.prompt, 0)
             t["then"] = words[1]
@@ -1376,6 +1398,97 @@ class JunosSession(TreeSession):
         t["from"].setdefault(key, [])
         if v not in t["from"][key]:
             t["from"][key].append(v)
+        return None
+
+    def cfg_vpn(self, section, text, delete):
+        """security ike policy P pre-shared-key ascii-text K / ike gateway G address A|ike-policy P|external-interface I
+        / ipsec vpn V bind-interface st0.0 / ipsec vpn V ike gateway G (proposals and policies are accepted as-is)."""
+        vpn = self._extra().setdefault("vpn", {"ike_policies": {}, "gateways": {}, "vpns": {}})
+        if delete:
+            if section == "ike":
+                vpn["ike_policies"], vpn["gateways"] = {}, {}
+            else:
+                vpn["vpns"] = {}
+            return None
+        w = [x.strip('"') for x in text.split()]
+        try:
+            if section == "ike" and w[0] == "policy" and w[2] == "pre-shared-key":
+                vpn["ike_policies"].setdefault(w[1], {})["key"] = w[4]
+            elif section == "ike" and w[0] == "policy":
+                vpn["ike_policies"].setdefault(w[1], {})
+            elif section == "ike" and w[0] == "gateway":
+                g = vpn["gateways"].setdefault(w[1], {})
+                if w[2] == "address":
+                    IPv4Network(w[3] + "/32")
+                    g["address"] = w[3]
+                elif w[2] == "ike-policy":
+                    g["policy"] = w[3]
+                elif w[2] == "external-interface":
+                    g["interface"] = w[3].split(".")[0]
+                elif w[2] not in ("version", "local-identity", "remote-identity", "dead-peer-detection"):
+                    raise IndexError
+            elif section == "ike" and w[0] == "proposal":
+                pass
+            elif section == "ipsec" and w[0] == "vpn":
+                v = vpn["vpns"].setdefault(w[1], {})
+                if w[2] == "bind-interface":
+                    v["bind"] = w[3].split(".")[0]
+                elif w[2:4] == ["ike", "gateway"]:
+                    v["gateway"] = w[4]
+                elif w[2:4] == ["ike", "ipsec-policy"] or w[2] == "establish-tunnels":
+                    pass
+                else:
+                    raise IndexError
+            elif section == "ipsec" and w[0] in ("policy", "proposal"):
+                pass
+            else:
+                raise IndexError
+        except (IndexError, ValueError):
+            return self.err_invalid(self.prompt, 0)
+        return None
+
+    def _resolve_vpn(self, cfg) -> str | None:
+        vpn = cfg.get("extra", {}).get("vpn") or {}
+        for name, ic in cfg["interfaces"].items():
+            if name.startswith("st") and ic.get("tunnel"):          # recomputed from the VPN statements below
+                for k in ("st_vpn", "source", "destination", "ipsec_key"):
+                    ic.pop(k, None)
+        for vname, v in vpn.get("vpns", {}).items():
+            bind, gname = v.get("bind"), v.get("gateway")
+            if not bind or not gname:
+                continue
+            g = vpn.get("gateways", {}).get(gname)
+            if g is None:
+                return (f"[edit security ipsec vpn {vname} ike]\n  'gateway {gname}'\n    Referenced gateway is not defined\n"
+                        "error: configuration check-out failed")
+            key = vpn.get("ike_policies", {}).get(g.get("policy", ""), {}).get("key")
+            if not (g.get("address") and g.get("interface") and key):
+                return (f"[edit security ike gateway {gname}]\n  address, external-interface and an ike-policy with "
+                        "pre-shared-key are required\nerror: configuration check-out failed")
+            ic = cfg["interfaces"].setdefault(bind, {"admin_up": True, "ip": None, "description": ""})
+            ic.update(tunnel=True, short=bind, source=g["interface"], destination=g["address"], ipsec_key=key,
+                      st_vpn=vname)
+        return None
+
+    def cfg_policer(self, name, text, delete):
+        from ..security.qos import parse_rate
+        pol = self._extra().setdefault("policers", {})
+        if delete:
+            pol.pop(name, None)
+            return None
+        w = text.split()
+        p = pol.setdefault(name, {"bps": None, "action": "discard"})
+        try:
+            if w[:2] == ["if-exceeding", "bandwidth-limit"]:
+                p["bps"] = parse_rate(w[2])
+                if w[3:4] == ["burst-size-limit"]:
+                    parse_rate(w[4])
+            elif w == ["then", "discard"]:
+                p["action"] = "discard"
+            else:
+                raise ValueError
+        except (ValueError, IndexError):
+            return self.err_invalid(self.prompt, 0)
         return None
 
     def cfg_fw_delete(self, filt, term):
@@ -1498,6 +1611,43 @@ class JunosSession(TreeSession):
                             f"{ic[key]}'\n    Referenced filter '{ic[key]}' is not defined\n"
                             "error: configuration check-out failed")
         cfg["acls"] = {k: a.to_dict() for k, a in acls.items()}
+        # terms with "then policer" / "then dscp" -> QoS policies on the interfaces using the filter
+        from ..security.qos import QosClass, QosPolicy, parse_dscp
+        policers = ex.get("policers", {})
+        qpols = []
+        for fname, terms in ex.get("filters", {}).items():
+            classes = []
+            for tname, term in terms.items():
+                if not (term.get("policer") or term.get("dscp")):
+                    continue
+                if term.get("policer") and term["policer"] not in policers:
+                    return (f"[edit firewall family inet filter {fname} term {tname} then]\n  'policer {term['policer']}'\n"
+                            f"    Referenced policer '{term['policer']}' is not defined\nerror: configuration check-out failed")
+                f = term["from"]
+                m = {}
+                if f.get("source-address"):
+                    m["src"] = f["source-address"][0]
+                if f.get("destination-address"):
+                    m["dst"] = f["destination-address"][0]
+                if f.get("protocol"):
+                    m["protocol"] = f["protocol"][0]
+                bps = policers.get(term.get("policer"), {}).get("bps") if term.get("policer") else None
+                classes.append(QosClass(tname, m or {"any": True},
+                                        set_dscp=parse_dscp(term["dscp"]) if term.get("dscp") else None, police_bps=bps))
+            if classes:
+                qpols.append(QosPolicy(f"filter-{fname}", classes))
+        qnames = {p.name for p in qpols}
+        for name, ic in cfg["interfaces"].items():
+            for key, qkey in (("acl_in", "qos_in"), ("acl_out", "qos_out")):
+                q = f"filter-{ic[key]}" if ic.get(key) else None
+                if q in qnames:
+                    ic[qkey] = q
+                else:
+                    ic.pop(qkey, None)
+        if qpols:
+            cfg["qos"] = {"policies": [p.to_dict() for p in qpols], "classes": {}}
+        else:
+            cfg.pop("qos", None)
         # NAT
         nat = ex.get("nat")
         if not nat:
@@ -1978,7 +2128,7 @@ class JunosSession(TreeSession):
         if err:
             return err
         cfg = copy.deepcopy(self.candidate)
-        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_security(cfg)
+        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_vpn(cfg) or self._resolve_security(cfg)
                or self._resolve_bgp(cfg) or self._resolve_dhcp(cfg) or self._resolve_rip(cfg)
                or self._resolve_stp(cfg) or self._resolve_irb(cfg) or self._resolve_lag(cfg)
                or self._resolve_dhcp6(cfg))

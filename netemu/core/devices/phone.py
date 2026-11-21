@@ -127,6 +127,8 @@ class IPPhone(Host):
         """CDP / LLDP-MED: ask the switch which VLAN carries voice, then DHCP."""
         peer = self.nic.peer
         vv = getattr(peer, "voice_vlan", None) if peer is not None else None
+        if vv is None and peer is not None:               # RouterOS: one LLDP-MED network policy per device
+            vv = (getattr(peer.device, "extra", {}) or {}).get("lldp_med_vlan")
         if vv != self.voice_vlan:
             self.voice_vlan = vv
             self.nic.ip, self.gateway = None, None

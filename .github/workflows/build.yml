@@ -73,6 +73,26 @@ jobs:
         run: python -m pytest -q tests
       - name: Build
         run: python tools/build.py
+      - name: Self-test of the packaged program (Linux, real X11 via Xvfb)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y xvfb
+          xvfb-run -a -s "-screen 0 1600x1000x24" ./dist/NetEmu/NetEmu --self-test selftest
+      - name: Self-test of the packaged program (macOS, Cocoa)
+        if: runner.os == 'macOS'
+        run: ./dist/NetEmu.app/Contents/MacOS/NetEmu --self-test selftest
+      - name: Self-test of the packaged program (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\NetEmu\NetEmu.exe -ArgumentList '--self-test','selftest' -Wait -PassThru
+          Get-Content selftest\report.json
+          exit $p.ExitCode
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: selftest-${{ runner.os }}
+          path: selftest/*
       - name: Linux package installs its own dependencies (clean Ubuntu and Fedora)
         if: runner.os == 'Linux'
         run: |
@@ -97,6 +117,7 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           path: dist
+          pattern: NetEmu-*
           merge-multiple: true
       - name: Create the release
         env:

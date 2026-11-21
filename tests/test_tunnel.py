@@ -32,14 +32,22 @@ CFG = {
         f"system-view\ninterface GigabitEthernet0/0/0\nip address 192.168.{i}.1 24\ninterface GigabitEthernet0/0/1\n"
         f"ip address {me} 30\nquit\nip route-static 0.0.0.0 0 {gw}\ninterface Tunnel0/0/0\ntunnel-protocol gre\n"
         f"source {me}\ndestination {peer}\nip address 10.255.0.{i} 30\nquit\n"
-        f"ip route-static 192.168.{3 - i}.0 24 Tunnel0/0/0\nreturn")),
+        + (f"ipsec proposal P1\nesp encryption-algorithm aes-256\nquit\nike peer PEER\npre-shared-key cipher {key}\n"
+           f"remote-address {peer}\nquit\nipsec profile PROF\nike-peer PEER\nproposal P1\nquit\n"
+           "interface Tunnel0/0/0\nipsec profile PROF\nquit\n" if key else "")
+        + f"ip route-static 192.168.{3 - i}.0 24 Tunnel0/0/0\nreturn")),
     "juniper-srx300": ("ge-0/0/1", "ge-0/0/0", lambda i, me, peer, gw, key: (
         f"configure\nset interfaces ge-0/0/0 unit 0 family inet address 192.168.{i}.1/24\n"
         f"set interfaces ge-0/0/1 unit 0 family inet address {me}/30\n"
         f"set routing-options static route 0.0.0.0/0 next-hop {gw}\n"
-        f"set interfaces gr-0/0/0 unit 0 tunnel source {me} destination {peer}\n"
-        f"set interfaces gr-0/0/0 unit 0 family inet address 10.255.0.{i}/30\n"
-        f"set routing-options static route 192.168.{3 - i}.0/24 next-hop 10.255.0.{3 - i}\ncommit and-quit")),
+        + (f"set interfaces gr-0/0/0 unit 0 tunnel source {me} destination {peer}\n"
+           f"set interfaces gr-0/0/0 unit 0 family inet address 10.255.0.{i}/30\n" if not key else
+           f"set security ike policy IKE-POL pre-shared-key ascii-text {key}\n"
+           f"set security ike gateway GW ike-policy IKE-POL\nset security ike gateway GW address {peer}\n"
+           "set security ike gateway GW external-interface ge-0/0/1\n"
+           "set security ipsec vpn VPN bind-interface st0.0\nset security ipsec vpn VPN ike gateway GW\n"
+           f"set interfaces st0 unit 0 family inet address 10.255.0.{i}/30\n")
+        + f"set routing-options static route 192.168.{3 - i}.0/24 next-hop 10.255.0.{3 - i}\ncommit and-quit")),
 }
 
 
@@ -73,7 +81,7 @@ def test_gre_between_private_lans(model):
     assert tun.counters["encaps"] >= 4 and tun.counters["decaps"] >= 4
 
 
-@pytest.mark.parametrize("model", ["cisco-2911", "mikrotik-rb4011"])
+@pytest.mark.parametrize("model", ["cisco-2911", "mikrotik-rb4011", "huawei-ar2220", "juniper-srx300"])
 def test_ipsec_protects_and_needs_matching_keys(model):
     t, r1, r2, a, b = build(model, key="S3cret!")
     assert ping(a, "192.168.2.10") == 4

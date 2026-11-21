@@ -312,7 +312,7 @@ class HostSession(WindowsExtras, CliSession):
         args = [a for a in args if not a.startswith("-")]
         if len(args) != 1:
             return "Usage: curl [-I] http://<host>[/page]"
-        if d.nic.ip is None:
+        if d.nic.ip is None and not ("[" in args[0] and d.nic.ipv6):
             return "curl: (7) Failed to connect: network is unreachable"
 
         def done(status, body):

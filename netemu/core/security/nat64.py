@@ -12,6 +12,7 @@ from ipaddress import IPv4Address, IPv6Address, IPv6Network
 
 WELL_KNOWN = IPv6Network("64:ff9b::/96")
 _idents = itertools.count(0x6400)
+_ports = itertools.count(0)
 
 
 @dataclass
@@ -23,6 +24,8 @@ class Nat64Session:
     v4_dst: IPv4Address
     ident4: int
     hits: int = 0
+    proto: str = "icmp"            # icmp | tcp | udp
+    dport: int = 0                 # TCP/UDP destination port (same on both sides)
 
 
 @dataclass
@@ -49,8 +52,11 @@ class Nat64:
         if port.name not in self.interfaces or pkt.dst not in self.prefix:
             return False
         m = pkt.payload
+        from ..packets import TcpSegment, UdpDatagram
+        if isinstance(m, (TcpSegment, UdpDatagram)):
+            return self._out_l4(dev, pkt, m)
         if not isinstance(m, Icmp6Packet) or m.type != ECHO_REQUEST:
-            return True                                          # only ICMP echo is translated here
+            return True                                          # other ICMPv6 is not translated
         dst4 = self.embedded_v4(pkt.dst)
         r = dev.route_lookup(dst4)
         if r is None or r[0].ip is None:
@@ -65,6 +71,37 @@ class Nat64:
         from ..packets import IPv4Packet
         dev.send_ip(IPv4Packet(s.v4_src, dst4, max(1, pkt.hlim - 1), icmp, ident=next(dev._ip_ident)))
         return True
+
+    def _out_l4(self, dev, pkt, seg) -> bool:
+        from dataclasses import replace
+        from ..packets import IPv4Packet, TcpSegment
+        tcp = isinstance(seg, TcpSegment)
+        proto = "tcp" if tcp else "udp"
+        dst4 = self.embedded_v4(pkt.dst)
+        r = dev.route_lookup(dst4)
+        if r is None or r[0].ip is None:
+            return True
+        s = next((x for x in self.sessions if x.proto == proto and x.v6_src == pkt.src and x.ident6 == seg.sport
+                  and x.v4_dst == dst4 and x.dport == seg.dport), None)
+        if s is None:
+            s = Nat64Session(pkt.src, pkt.dst, seg.sport, r[0].ip.ip, dst4, 40000 + next(_ports) % 20000,
+                             proto=proto, dport=seg.dport)
+            self.sessions.append(s)
+            bind = dev.bind_tcp if tcp else dev.bind_udp
+            bind(s.ident4, lambda p4, port, s=s: self._in_l4(dev, p4, s))
+        s.hits += 1
+        dev.send_ip(IPv4Packet(s.v4_src, dst4, max(1, pkt.hlim - 1), replace(seg, sport=s.ident4), 6 if tcp else 17,
+                               next(dev._ip_ident)))
+        return True
+
+    def _in_l4(self, dev, p4, s: Nat64Session) -> None:
+        from dataclasses import replace
+        from ..stack.ipv6 import IPv6Packet
+        if p4.src != s.v4_dst:
+            return
+        src6 = IPv6Address(int(self.prefix.network_address) | int(p4.src))
+        dev.send_ip6(IPv6Packet(src6, s.v6_src, max(1, p4.ttl - 1), replace(p4.payload, dport=s.ident6),
+                                6 if s.proto == "tcp" else 17))
 
     def translate_in(self, dev, p4, s: Nat64Session) -> None:
         from ..packets import ICMP_ECHO_REPLY

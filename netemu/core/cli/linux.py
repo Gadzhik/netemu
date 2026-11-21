@@ -1368,7 +1368,7 @@ class LinuxSession(CliSession):
         if not urls:
             return "curl: try 'curl --help' or 'curl --manual' for more information"
         url = urls[0]
-        if d.nic.ip is None:
+        if d.nic.ip is None and not ("[" in url and d.nic.ipv6):
             host = url.split("//", 1)[-1].split("/", 1)[0]
             return f"curl: (7) Failed to connect to {host} port 80 after 0 ms: Couldn't connect to server"
 

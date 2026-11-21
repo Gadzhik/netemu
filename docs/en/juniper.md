@@ -377,6 +377,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `commit and-quit` | Quit configuration mode if commit succeeds |
 | `commit check` | Check correctness of syntax; do not apply changes |
 | `delete access address-assignment pool <pool-name>` | Pool name |
+| `delete firewall policer <policer-name>` | Policer name |
 | `delete firewall family inet filter <filter-name>` | Filter name |
 | `delete firewall family inet filter <filter-name> term <term-name>` | Term name |
 | `delete forwarding-options dhcp-relay` | DHCP relay agent configuration |
@@ -430,6 +431,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `delete routing-options router-id` | Router identifier |
 | `delete routing-options autonomous-system` | Autonomous system number |
+| `delete security ike` | IKE configuration |
+| `delete security ipsec` | IPsec configuration |
 | `delete security nat` | Configure Network Address Translation |
 | `delete system host-name` | Hostname for this router |
 | `delete system services dhcp-local-server` | Dynamic Host Configuration Protocol server |
@@ -455,6 +458,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `run LINE` | Run an operational-mode command |
 | `set access address-assignment pool <pool-name> family inet network/range/dhcp-attributes ...` | IPv4 |
 | `set access address-assignment pool <pool-name> family inet6 prefix X:X::/64 / dhcp-attributes dns-server X` | IPv6 |
+| `set firewall policer <policer-name> if-exceeding bandwidth-limit 1m burst-size-limit 15k / then discard` | Policer name |
 | `set firewall family inet filter <filter-name> term <term-name> from/then ...` | Match conditions or actions |
 | `set forwarding-options dhcp-relay server-group/active-server-group/group ...` | DHCP relay agent configuration |
 | `set interfaces <interface_name> description <description>` | Text description of interface |
@@ -493,6 +497,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set routing-options static route <destination> qualified-next-hop <next-hop> preference <preference>` | Preference of this next hop |
 | `set routing-options router-id <router-id>` | Router identifier |
 | `set routing-options autonomous-system <as-number>` | Autonomous system number |
+| `set security ike policy/gateway/proposal ...` | IKE statement |
+| `set security ipsec vpn/policy/proposal ...` | IPsec statement |
 | `set security nat source/static/destination ...` | NAT statement |
 | `set system host-name <host-name>` | Hostname for this router |
 | `set system services dhcp-local-server group <group-name> interface <interface-name>` | Interface name |
@@ -583,6 +589,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `commit and-quit` | Quit configuration mode if commit succeeds |
 | `commit check` | Check correctness of syntax; do not apply changes |
 | `delete access address-assignment pool <pool-name>` | Pool name |
+| `delete firewall policer <policer-name>` | Policer name |
 | `delete firewall family inet filter <filter-name>` | Filter name |
 | `delete firewall family inet filter <filter-name> term <term-name>` | Term name |
 | `delete forwarding-options dhcp-relay` | DHCP relay agent configuration |
@@ -658,6 +665,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `run LINE` | Run an operational-mode command |
 | `set access address-assignment pool <pool-name> family inet network/range/dhcp-attributes ...` | IPv4 |
 | `set chassis aggregated-devices ethernet device-count <device-count>` | Number of aggregated Ethernet devices |
+| `set firewall policer <policer-name> if-exceeding bandwidth-limit 1m burst-size-limit 15k / then discard` | Policer name |
 | `set firewall family inet filter <filter-name> term <term-name> from/then ...` | Match conditions or actions |
 | `set forwarding-options dhcp-relay server-group/active-server-group/group ...` | DHCP relay agent configuration |
 | `set interfaces <interface_name> description <description>` | Text description of interface |

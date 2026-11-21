@@ -399,6 +399,28 @@ class ExosSession(TreeSession):
                  P.kw("readwrite", "Read-write", P.arg(P.WordArg("<community>"), "", handler=e("rw", True))))),
             P.kw("sysContact", "System contact", P.arg(P.LineArg("<contact>"), "", handler=e("contact"))),
             P.kw("sysLocation", "System location", P.arg(P.LineArg("<location>"), "", handler=e("location")))]
+        vlan_n = P.kw("vlan", "VLAN", P.arg(P.WordArg("<vlan_name>"), "Voice VLAN",
+                                            P.kw("dscp", "DSCP", P.arg(P.NumArg(0, 63, "<dscp>"), "DSCP",
+                                                                       handler=lambda s, a, n: s.lldp_voice(a[0], a[1]))),
+                                            handler=lambda s, a, n: s.lldp_voice(a[0], a[1])))
+
+        def med(voice):
+            return P.kw("vendor-specific", "Vendor-specific TLVs", P.kw("med", "LLDP-MED",
+                        P.kw("policy", "Network policy", P.kw("application", "Application", voice))))
+        adv = P.kw("advertise", "Advertise", med(P.kw("voice", "Voice", vlan_n)))
+        noadv = P.kw("no-advertise", "Stop advertising",
+                     med(P.kw("voice", "Voice", handler=lambda s, a, n: s.lldp_voice(a[0], None))))
+        conf.children.append(P.kw("lldp", "LLDP", P.kw("ports", "Ports",
+                                                         P.arg(P.WordArg("<port_list>"), "Port list", adv, noadv))))
+        ports_node = next(x for x in conf.children if x.word == "ports")
+        ports_node.children[0].children.append(P.kw("rate-limit", "Rate limiting",
+            P.kw("egress", "Egress rate limit",
+                 P.kw("no-limit", "Remove the limit", handler=lambda s, a, n: s.rate_limit(a[0], None)),
+                 P.arg(P.NumArg(64, 100000000, "<rate>"), "Rate",
+                       P.kw("Kbps", "Kilobits per second", handler=lambda s, a, n: s.rate_limit(a[0], a[1] * 1000)),
+                       P.kw("Mbps", "Megabits per second", handler=lambda s, a, n: s.rate_limit(a[0], a[1] * 1000000)),
+                       P.kw("Gbps", "Gigabits per second",
+                            handler=lambda s, a, n: s.rate_limit(a[0], a[1] * 1000000000))))))
         conf.children += [
             P.kw("syslog", "Syslog",
                  P.kw("add", "Add a syslog target", P.arg(P.IpArg("<ip>"), "Syslog host",
@@ -591,6 +613,37 @@ class ExosSession(TreeSession):
             return f"Error: Port {plist} does not exist."
         for p in ports:
             p.set_admin(on)
+        return None
+
+    def lldp_voice(self, plist, vlan_name):
+        from .base import set_voice_vlan
+        d = self.device
+        ports = parse_ports(plist, d)
+        if ports is None:
+            return f"Error: Port {plist} does not exist."
+        vid = None
+        if vlan_name is not None:
+            vid, err = self._need_vlan(vlan_name)
+            if err:
+                return err
+        for p in ports:
+            set_voice_vlan(p, vid)
+        return None
+
+    def rate_limit(self, plist, bps):
+        from ..security.qos import QosClass, QosPolicy
+        d = self.device
+        ports = parse_ports(plist, d)
+        if not ports or any(p is None for p in ports):
+            return f"Error: Invalid port list {plist}"
+        for p in ports:
+            name = f"rl-{p.name}"
+            if bps is None:
+                d.qos.pop(name, None)
+                p.qos_out = None
+            else:
+                d.qos[name] = QosPolicy(name, [QosClass("class-default", {"any": True}, police_bps=bps)])
+                p.qos_out = name
         return None
 
     def sysname(self, name):

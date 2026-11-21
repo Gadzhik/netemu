@@ -548,6 +548,9 @@ Check: `display traffic policy statistics`, `display nat64 session all`, `displa
 | `aaa` | AAA view |
 | `ssh user STRING authentication-type password` | Password |
 | `ssh user STRING service-type stelnet` | STelnet |
+| `[undo] ipsec proposal STRING<1-15>` | Name |
+| `[undo] ipsec profile STRING<1-15>` | Name |
+| `[undo] ike peer STRING<1-15>` | Name |
 | `[undo] ospfv3 INTEGER<1-65535>` | Process ID |
 | `[undo] ripng INTEGER<1-65535>` | Process ID |
 | `[undo] dhcpv6 pool STRING<1-31>` | Pool name |
@@ -666,7 +669,9 @@ Check: `display traffic policy statistics`, `display nat64 session all`, `displa
 | `[undo] shutdown` | Shutdown the interface |
 | `[undo] traffic-filter inbound acl INTEGER<2000-3999>` | ACL number |
 | `[undo] traffic-filter outbound acl INTEGER<2000-3999>` | ACL number |
+| `[undo] ipsec profile STRING` | Profile |
 | `tunnel-protocol gre` | GRE |
+| `tunnel-protocol ipsec` | IPsec |
 | `tunnel-protocol none` | None |
 | `source A.B.C.D` | IP address |
 | `source IFACE` | Interface |

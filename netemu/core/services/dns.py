@@ -85,6 +85,13 @@ class Resolve(Job):
         if is_valid_ip(self.name):
             self._done(IPv4Address(self.name), "")
             return self
+        if ":" in self.name:
+            from ipaddress import IPv6Address
+            try:
+                self._done(IPv6Address(self.name), "")
+            except ValueError:
+                self._done(None, f"bad address {self.name}")
+            return self
         if self.server is None:
             self.server = getattr(h, "dns", None)
         if self.server is None:

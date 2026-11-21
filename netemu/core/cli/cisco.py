@@ -1866,7 +1866,7 @@ class CiscoSession(TreeSession):
         lines = ["Proto  Original IPv4         Translated IPv4", "       Translated IPv6       Original IPv6",
                  "-" * 60]
         for s in (n.sessions if n else []):
-            lines += [f"icmp   {s.v4_dst}:{s.ident4:<14}{s.v4_src}:{s.ident4}",
+            lines += [f"{s.proto:<7}{s.v4_dst}:{s.dport if s.proto != 'icmp' else s.ident4:<14}{s.v4_src}:{s.ident4}",
                       f"       [{s.v6_dst}]:{s.ident6}   [{s.v6_src}]:{s.ident6}", "-" * 60]
         lines.append(f"Total number of translations: {len(n.sessions) if n else 0}")
         return "\n".join(lines)

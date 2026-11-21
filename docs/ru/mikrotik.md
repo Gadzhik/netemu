@@ -353,6 +353,14 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip firewall filter print` | Print values of item properties |
 | `/ip firewall filter remove` | Remove item |
 
+**`/ip firewall mangle`**
+
+| Команда | Описание |
+|---|---|
+| `/ip firewall mangle add` | Create a new item |
+| `/ip firewall mangle print` | Print values of item properties |
+| `/ip firewall mangle remove` | Remove item |
+
 **`/ip firewall nat`**
 
 | Команда | Описание |
@@ -360,6 +368,19 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip firewall nat add` | Create a new item |
 | `/ip firewall nat print` | Print values of item properties |
 | `/ip firewall nat remove` | Remove item |
+
+**`/ip neighbor`**
+
+| Команда | Описание |
+|---|---|
+| `/ip neighbor print` | Print values of item properties |
+
+**`/ip neighbor discovery-settings`**
+
+| Команда | Описание |
+|---|---|
+| `/ip neighbor discovery-settings print` | Print values of item properties |
+| `/ip neighbor discovery-settings set` | Change item properties |
 
 **`/ip pool`**
 
@@ -438,6 +459,14 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | Команда | Описание |
 |---|---|
 | `/log print` | Print values of item properties |
+
+**`/queue simple`**
+
+| Команда | Описание |
+|---|---|
+| `/queue simple add` | Create a new item |
+| `/queue simple print` | Print values of item properties |
+| `/queue simple remove` | Remove item |
 
 **`/routing bgp advertisements`**
 
@@ -754,6 +783,14 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip firewall filter print` | Print values of item properties |
 | `/ip firewall filter remove` | Remove item |
 
+**`/ip firewall mangle`**
+
+| Команда | Описание |
+|---|---|
+| `/ip firewall mangle add` | Create a new item |
+| `/ip firewall mangle print` | Print values of item properties |
+| `/ip firewall mangle remove` | Remove item |
+
 **`/ip firewall nat`**
 
 | Команда | Описание |
@@ -761,6 +798,19 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip firewall nat add` | Create a new item |
 | `/ip firewall nat print` | Print values of item properties |
 | `/ip firewall nat remove` | Remove item |
+
+**`/ip neighbor`**
+
+| Команда | Описание |
+|---|---|
+| `/ip neighbor print` | Print values of item properties |
+
+**`/ip neighbor discovery-settings`**
+
+| Команда | Описание |
+|---|---|
+| `/ip neighbor discovery-settings print` | Print values of item properties |
+| `/ip neighbor discovery-settings set` | Change item properties |
 
 **`/ip pool`**
 
@@ -839,6 +889,14 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | Команда | Описание |
 |---|---|
 | `/log print` | Print values of item properties |
+
+**`/queue simple`**
+
+| Команда | Описание |
+|---|---|
+| `/queue simple add` | Create a new item |
+| `/queue simple print` | Print values of item properties |
+| `/queue simple remove` | Remove item |
 
 **`/routing bgp advertisements`**
 

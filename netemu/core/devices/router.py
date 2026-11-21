@@ -65,6 +65,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.cme = CallManager(self)                # Cisco CME (telephony-service)
         self.qos: dict = {}                         # policy name -> security.qos.QosPolicy
         self.qos_classes: dict = {}                 # class-map name -> match dict (Cisco) / classifier (Huawei)
+        self.qos_global: list = []                  # policies applied to every forwarded packet (RouterOS queues)
 
     # -- dynamic routing ------------------------------------------------------------
     def dynamic_routes(self) -> list[Route]:
@@ -211,7 +212,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.v6igp = {}
         self.dhcp6.apply_config(None)
         self.nat64 = None
-        self.qos, self.qos_classes = {}, {}
+        self.qos, self.qos_classes, self.qos_global = {}, {}, []
         self.mgmt.apply(None)
         self.cme.apply(None)
         self.fhrp.groups.clear()
@@ -331,6 +332,12 @@ class Router(IpStack, Ip6Stack, Device):
         if out_port.qos_out and out_port.qos_out in self.qos:
             from ..security.qos import apply
             pkt = apply(self, self.qos[out_port.qos_out], pkt, out_port, "out")
+            if pkt is None:
+                return None
+        for name in self.qos_global:
+            if name in self.qos and pkt is not None:
+                from ..security.qos import apply
+                pkt = apply(self, self.qos[name], pkt, out_port, "fwd")
         return pkt
 
     def accepts_mac(self, mac) -> bool:
@@ -586,6 +593,8 @@ class Router(IpStack, Ip6Stack, Device):
         if self.qos or self.qos_classes:
             cfg["qos"] = {"policies": [p.to_dict() for p in self.qos.values()],
                           "classes": {k: dict(v) for k, v in self.qos_classes.items()}}
+            if self.qos_global:
+                cfg["qos"]["global"] = list(self.qos_global)
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -627,6 +636,7 @@ class Router(IpStack, Ip6Stack, Device):
         q = cfg.get("qos") or {}
         self.qos = {d["name"]: QosPolicy.from_dict(d) for d in q.get("policies", [])}
         self.qos_classes = {k: dict(v) for k, v in q.get("classes", {}).items()}
+        self.qos_global = list(q.get("global", []))
         self.mgmt.apply(cfg.get("mgmt"))
         self.cme.apply(cfg.get("cme"))
         from ..routing.fhrp import FhrpGroup

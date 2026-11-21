@@ -89,6 +89,10 @@ class IPv6Packet:
     next_header: int = 58
 
     @property
+    def protocol(self) -> int:
+        return self.next_header
+
+    @property
     def ttl(self) -> int:
         return self.hlim
 
@@ -276,6 +280,12 @@ class Ip6Stack:
 
     def _deliver6(self, pkt: IPv6Packet, port) -> None:
         m = pkt.payload
+        from ..packets import TcpSegment, UdpDatagram
+        if isinstance(m, (TcpSegment, UdpDatagram)) and hasattr(self, "deliver_protocol"):
+            self.deliver6_protocol(pkt, port)
+            if not getattr(pkt, "_consumed", False):
+                self.deliver_protocol(pkt, port)          # same sockets and services as IPv4
+            return
         if not isinstance(m, Icmp6Packet):
             self.deliver6_protocol(pkt, port)
             return
@@ -339,6 +349,15 @@ class Ip6Stack:
         if mac is None:
             mac = mcast_mac(pkt.dst)
         port.send(EthernetFrame(port.mac, mac, ETH_IPV6, pkt))
+
+    def l4_send6(self, dst, payload, proto: int, src=None) -> bool:
+        """TCP/UDP over IPv6 (used by send_tcp / send_udp when the destination is an IPv6 address)."""
+        dst = IPv6Address(str(dst))
+        if src is None:
+            _port, src = self.source_for6(dst)
+            if src is None:
+                return False
+        return self.send_ip6(IPv6Packet(IPv6Address(str(src)), dst, getattr(self, "default_ttl", 64), payload, proto))
 
     def send_ip6(self, pkt: IPv6Packet, out_port=None) -> bool:
         if self.owns_ip6(pkt.dst):

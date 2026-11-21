@@ -142,6 +142,17 @@ class MikrotikSession(CliSession):
                                       "add": ("Create a new item", self.dhcp6s_add)}
         m[("ipv6", "dhcp-server", "binding")] = {"print": ("Print values of item properties",
                                                            lambda a: self.dhcp6_binding_print())}
+        m[("ip", "neighbor")] = {"print": ("Print values of item properties", lambda a: self.mt_neighbors())}
+        m[("ip", "neighbor", "discovery-settings")] = {
+            "set": ("Change item properties", self.mt_discovery_set),
+            "print": ("Print values of item properties", lambda a: self.mt_discovery_print())}
+        m[("queue",)] = {}
+        m[("queue", "simple")] = {"add": ("Create a new item", self.mt_queue_add),
+                                  "print": ("Print values of item properties", lambda a: self.mt_queue_print()),
+                                  "remove": ("Remove item", self.mt_queue_remove)}
+        m[("ip", "firewall", "mangle")] = {"add": ("Create a new item", self.mt_mangle_add),
+                                           "print": ("Print values of item properties", lambda a: self.mt_mangle_print()),
+                                           "remove": ("Remove item", self.mt_mangle_remove)}
         m[("system", "logging")] = {"print": ("Print values of item properties", lambda a: self.mt_logging_print())}
         m[("system", "logging", "action")] = {"add": ("Create a new item", self.mt_log_action_add),
                                               "print": ("Print values of item properties", lambda a: self.mt_log_actions())}
@@ -792,6 +803,143 @@ class MikrotikSession(CliSession):
                 rows.append([str(len(rows)), "D", addr, duid, pool.name])
         return "Flags: D - DYNAMIC\nColumns: ADDRESS, DUID, SERVER\n" + table(["#", " ", "ADDRESS", "DUID", "SERVER"],
                                                                                  rows, gap=1)
+
+    # -- LLDP-MED network policy: the voice VLAN IP phones learn -----------------------------------
+    def mt_discovery_set(self, args):
+        kv, _ = self._kv(args, {"discover-interface-list", "protocol", "lldp-med-net-policy-vlan", "mode"})
+        if "lldp-med-net-policy-vlan" in kv:
+            v = kv["lldp-med-net-policy-vlan"]
+            if v in ("disabled", ""):
+                self.device.extra.pop("lldp_med_vlan", None)
+            elif v.isdigit() and 1 <= int(v) <= 4094:
+                self.device.extra["lldp_med_vlan"] = int(v)
+            else:
+                raise _MtError("invalid value for argument lldp-med-net-policy-vlan")
+            from .base import set_voice_vlan
+            for p in self.device.ports.values():                # phones already connected re-learn it
+                if p.peer is not None and hasattr(p.peer.device, "_discover"):
+                    set_voice_vlan(p, p.voice_vlan)
+        return None
+
+    def mt_discovery_print(self):
+        v = self.device.extra.get("lldp_med_vlan")
+        return (" discover-interface-list: all\n                protocol: cdp,lldp,mndp\n"
+                f"  lldp-med-net-policy-vlan: {v if v else 'disabled'}")
+
+    def mt_neighbors(self):
+        rows = []
+        for p in self.device.ports.values():
+            peer = p.peer
+            if peer is not None and peer.device.category in ("phone", "router", "switch"):
+                ip = getattr(getattr(peer.device, "nic", None), "ip", None) or peer.ip
+                rows.append([str(len(rows)), p.name, str(ip.ip) if ip else "", peer.device.hostname,
+                             getattr(peer.device, "model", "")])
+        return "Columns: INTERFACE, ADDRESS, IDENTITY, PLATFORM\n" + table(
+            ["#", "INTERFACE", "ADDRESS", "IDENTITY", "PLATFORM"], rows, gap=1)
+
+    # -- /queue simple, /ip firewall mangle (change-dscp) -> global QoS policies --------------------
+    def _mt_qos_sync(self):
+        """Rebuild the device QoS from the RouterOS lists kept in extra."""
+        from ..security.qos import QosClass, QosPolicy, parse_dscp, parse_rate
+        d = self.device
+        x = d.extra
+        d.qos = {k: v for k, v in d.qos.items() if not k.startswith("mt-")}
+        d.qos_global = [g for g in d.qos_global if not g.startswith("mt-")]
+        mangle = QosPolicy("mt-mangle")
+        for i, r in enumerate(x.get("mt_mangle", [])):
+            if r.get("disabled") == "yes":
+                continue
+            m = {}
+            for k, key in (("src-address", "src"), ("dst-address", "dst"), ("protocol", "protocol")):
+                if r.get(k):
+                    m[key] = r[k]
+            mangle.classes.append(QosClass(f"rule{i}", m or {"any": True}, set_dscp=parse_dscp(r["new-dscp"])))
+        if mangle.classes:
+            d.qos[mangle.name] = mangle
+            d.qos_global.append(mangle.name)
+        for q in x.get("mt_queues", []):
+            up, _, down = q["max-limit"].partition("/")
+            pol = QosPolicy(f"mt-q-{q['name']}", [
+                QosClass("upload", {"src": q["target"]}, police_bps=parse_rate(up)),
+                QosClass("download", {"dst": q["target"]}, police_bps=parse_rate(down or up))])
+            d.qos[pol.name] = pol
+            d.qos_global.append(pol.name)
+
+    def mt_queue_add(self, args):
+        from ipaddress import IPv4Network
+        from ..security.qos import parse_rate
+        kv, _ = self._kv(args, {"name", "target", "max-limit", "limit-at", "comment", "disabled", "priority"})
+        if "target" not in kv or "max-limit" not in kv:
+            raise _MtError("failure: target and max-limit must be specified")
+        try:
+            kv["target"] = str(IPv4Network(kv["target"] if "/" in kv["target"] else kv["target"] + "/32", strict=False))
+            for part in kv["max-limit"].split("/"):
+                parse_rate(part)
+        except ValueError:
+            raise _MtError("invalid value for argument max-limit")
+        qs = self.device.extra.setdefault("mt_queues", [])
+        kv.setdefault("name", f"queue{len(qs) + 1}")
+        if any(q["name"] == kv["name"] for q in qs):
+            raise _MtError("failure: queue with such name already exists")
+        qs.append({k: kv[k] for k in ("name", "target", "max-limit")})
+        self._mt_qos_sync()
+        return None
+
+    def mt_queue_remove(self, args):
+        qs = self.device.extra.get("mt_queues", [])
+        for tok, _ in args:
+            for x in tok.split(","):
+                idx = int(x) if x.isdigit() else next((i for i, q in enumerate(qs) if q["name"] == x), None)
+                if idx is None or idx >= len(qs):
+                    raise _MtError("no such item")
+                qs.pop(idx)
+        self._mt_qos_sync()
+        return None
+
+    def mt_queue_print(self):
+        pols = self.device.qos
+        rows = []
+        for i, q in enumerate(self.device.extra.get("mt_queues", [])):
+            p = pols.get(f"mt-q-{q['name']}")
+            drops = sum(c.dropped for c in p.classes) if p else 0
+            rows.append([str(i), q["name"], q["target"], q["max-limit"], str(drops)])
+        return "Columns: NAME, TARGET, MAX-LIMIT, DROPPED\n" + table(["#", "NAME", "TARGET", "MAX-LIMIT", "DROPPED"],
+                                                                     rows, gap=1)
+
+    def mt_mangle_add(self, args):
+        from ..security.qos import parse_dscp
+        kv, _ = self._kv(args, {"chain", "action", "new-dscp", "src-address", "dst-address", "protocol", "comment",
+                                "passthrough", "disabled"})
+        if kv.get("chain") not in ("prerouting", "forward", "postrouting", "input", "output"):
+            raise _MtError("input does not match any value of chain")
+        if kv.get("action") != "change-dscp" or "new-dscp" not in kv:
+            raise _MtError("failure: NetEmu supports action=change-dscp new-dscp=N in mangle")
+        try:
+            parse_dscp(kv["new-dscp"])
+        except ValueError:
+            raise _MtError("invalid value for argument new-dscp")
+        self.device.extra.setdefault("mt_mangle", []).append(dict(kv))
+        self._mt_qos_sync()
+        return None
+
+    def mt_mangle_remove(self, args):
+        rules = self.device.extra.get("mt_mangle", [])
+        for tok, _ in args:
+            for x in sorted((int(v) for v in tok.split(",") if v.isdigit()), reverse=True):
+                if x >= len(rules):
+                    raise _MtError("no such item")
+                rules.pop(x)
+        self._mt_qos_sync()
+        return None
+
+    def mt_mangle_print(self):
+        lines = ["Flags: X - disabled, I - invalid; D - dynamic"]
+        pol = self.device.qos.get("mt-mangle")
+        for i, r in enumerate(self.device.extra.get("mt_mangle", [])):
+            hits = pol.classes[i].matched if pol and i < len(pol.classes) else 0
+            parts = " ".join(f"{k}={v}" for k, v in r.items() if k not in ("chain", "action"))
+            lines.append(f" {i}    chain={r['chain']} action={r['action']} {parts} packets={hits}")
+        return "\n".join(lines)
 
     # -- /system logging, /system ntp client, /snmp ---------------------------------------------
     def mt_log_action_add(self, args):

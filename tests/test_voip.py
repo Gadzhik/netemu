@@ -79,6 +79,21 @@ set switch-options voip interface ge-0/0/1 vlan VOICE
 set interfaces ge-0/0/23 unit 0 family ethernet-switching interface-mode trunk
 set interfaces ge-0/0/23 unit 0 family ethernet-switching vlan members all
 commit and-quit"""),
+    "mikrotik-crs326": ("ether24", ["ether1", "ether2"], """/interface bridge port set ether1 pvid=10
+/interface bridge port set ether2 pvid=10
+/interface bridge vlan add bridge=bridge vlan-ids=10 tagged=ether24 untagged=ether1,ether2
+/interface bridge vlan add bridge=bridge vlan-ids=20 tagged=ether24,ether1,ether2
+/interface bridge set bridge vlan-filtering=yes
+/ip neighbor discovery-settings set lldp-med-net-policy-vlan=20"""),
+    "extreme-x440g2": ("24", ["1", "2"], """create vlan DATA
+configure vlan DATA tag 10
+create vlan VOICE
+configure vlan VOICE tag 20
+configure vlan Default delete ports 1-2,24
+configure vlan DATA add ports 1-2 untagged
+configure vlan DATA add ports 24 tagged
+configure vlan VOICE add ports 1-2,24 tagged
+configure lldp ports 1-2 advertise vendor-specific med policy application voice vlan VOICE dscp 46"""),
 }
 
 
@@ -126,7 +141,8 @@ def test_phones_register_and_call(sw_model):
     assert p1.state == "idle" and p1.history[-1].endswith("unknown number")
 
     t2 = topology_from_dict(topology_to_dict(t), Topology())
-    assert t2.devices[sw.id].get_port(access[0]).voice_vlan == 20
+    sw2 = t2.devices[sw.id]
+    assert (sw2.get_port(access[0]).voice_vlan or sw2.extra.get("lldp_med_vlan")) == 20
     assert t2.devices[r.id].cme.dns == {1: "1001", 2: "1002"}
 
 

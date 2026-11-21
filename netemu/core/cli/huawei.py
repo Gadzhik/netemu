@@ -55,7 +55,7 @@ class HuaweiTrace(TraceListener):
 class HuaweiSession(TreeSession):
     negate_word = "undo"
     negate_modes = ("system", "interface", "vlan", "ospf", "ospf-area", "acl", "bgp", "bgp-af", "ip-pool", "rip",
-                    "ui-vty", "aaa", "ospfv3", "ripng", "dhcpv6-pool", "classifier", "behavior", "trafficpolicy")
+                    "ui-vty", "aaa", "ospfv3", "ripng", "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "ipsec-proposal", "ike-peer", "ipsec-profile")
 
     @property
     def is_router(self) -> bool:
@@ -85,6 +85,8 @@ class HuaweiSession(TreeSession):
             return f"[{h}-ospf-{self.device.ospf.cfg.process_id}]"
         if self.mode == "ospf-area":
             return f"[{h}-ospf-{self.device.ospf.cfg.process_id}-area-{self.area_ctx}]"
+        if self.mode in ("ipsec-proposal", "ike-peer", "ipsec-profile"):
+            return f"[{h}-{self.mode}-{self._sec_name}]"
         if self.mode == "classifier":
             return f"[{h}-classifier-{self._qc}]"
         if self.mode == "behavior":
@@ -170,8 +172,39 @@ class HuaweiSession(TreeSession):
             for iface_root in (x for m in ("system", "interface") for x in t[m] if x.word == "interface"):
                 iface_root.children.append(P.arg(P.TunnelNameArg(), "Tunnel interface",
                                                  handler=lambda s, a, n: s.enter_tun(a[0], n), negatable=True))
+            sec = lambda mode, h: P.kw(mode, h, P.arg(P.WordArg("STRING<1-15>"), "Name",
+                                                      handler=lambda s, a, n, m=mode: s.sec_view(m, a[0], n), negatable=True),
+                                       negatable=True)
+            t["system"] += [P.kw("ipsec", "IPsec", P.kw("proposal", "IPsec proposal",
+                                 P.arg(P.WordArg("STRING<1-15>"), "Name",
+                                       handler=lambda s, a, n: s.sec_view("ipsec-proposal", a[0], n), negatable=True)),
+                                 P.kw("profile", "IPsec profile", P.arg(P.WordArg("STRING<1-15>"), "Name",
+                                       handler=lambda s, a, n: s.sec_view("ipsec-profile", a[0], n), negatable=True)),
+                                 negatable=True),
+                            P.kw("ike", "IKE", P.kw("peer", "IKE peer", P.arg(P.WordArg("STRING<1-15>"), "Name",
+                                 handler=lambda s, a, n: s.sec_view("ike-peer", a[0], n), negatable=True)), negatable=True)]
+            _ = sec
+            noop = lambda w, h: P.kw(w, h, P.arg(P.LineArg(), h, handler=lambda s, a, n: None))
+            common6 = [x for x in t["system"] if x.word in ("display", "quit", "return")]
+            t["ipsec-proposal"] = common6 + [
+                P.kw("esp", "ESP", noop("authentication-algorithm", "Authentication"),
+                     noop("encryption-algorithm", "Encryption")),
+                noop("transform", "Transform"), noop("encapsulation-mode", "Mode")]
+            t["ike-peer"] = common6 + [
+                P.kw("pre-shared-key", "Pre-shared key",
+                     P.kw("cipher", "Cipher text", P.arg(P.WordArg("STRING"), "Key", handler=lambda s, a, n: s.sec_set("key", a[0]))),
+                     P.kw("simple", "Plain text", P.arg(P.WordArg("STRING"), "Key", handler=lambda s, a, n: s.sec_set("key", a[0])))),
+                P.kw("remote-address", "Remote address", P.arg(P.IpArg(), "IP address",
+                                                               handler=lambda s, a, n: s.sec_set("remote", a[0]))),
+                noop("ike-proposal", "IKE proposal"), noop("version", "IKE version")]
+            t["ipsec-profile"] = common6 + [
+                P.kw("ike-peer", "IKE peer", P.arg(P.WordArg("STRING"), "Peer", handler=lambda s, a, n: s.sec_set("peer", a[0]))),
+                P.kw("proposal", "Proposal", P.arg(P.WordArg("STRING"), "Proposal", handler=lambda s, a, n: None))]
             t["interface"] = t["interface"] + [
+                P.kw("ipsec", "IPsec", P.kw("profile", "Apply an IPsec profile", P.arg(P.WordArg("STRING"), "Profile",
+                     handler=lambda s, a, n: s.tun_ipsec(a[0], n), negatable=True), negatable=True), negatable=True),
                 P.kw("tunnel-protocol", "Tunnel protocol", P.kw("gre", "GRE", handler=lambda s, a, n: None),
+                     P.kw("ipsec", "IPsec", handler=lambda s, a, n: None),
                      P.kw("none", "None", handler=lambda s, a, n: None)),
                 P.kw("source", "Tunnel source", P.arg(P.IpArg(), "IP address", handler=lambda s, a, n: s.tun("source", a[0])),
                      P.arg(P.IfaceArg(), "Interface", handler=lambda s, a, n: s.tun("source", a[0].name))),
@@ -1062,7 +1095,7 @@ class HuaweiSession(TreeSession):
             self.mode = "bgp"
             return None
         if self.mode in ("vlan", "ospf", "acl", "bgp", "ip-pool", "rip", "ui-vty", "aaa", "ospfv3", "ripng",
-                         "dhcpv6-pool", "classifier", "behavior", "trafficpolicy"):
+                         "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "ipsec-proposal", "ike-peer", "ipsec-profile"):
             self.mode = "system"
             return None
         if self.mode == "ospf-area":
@@ -1787,7 +1820,7 @@ class HuaweiSession(TreeSession):
         n = self.device.nat64
         out = []
         for s in (n.sessions if n else []):
-            out += ["  Protocol          : ICMP", f"  IPv6 SrcAddr/ID   : {s.v6_src}/{s.ident6}",
+            out += [f"  Protocol          : {s.proto.upper()}", f"  IPv6 SrcAddr/ID   : {s.v6_src}/{s.ident6}",
                     f"  IPv6 DestAddr     : {s.v6_dst}", f"  IPv4 SrcAddr/ID   : {s.v4_src}/{s.ident4}",
                     f"  IPv4 DestAddr     : {s.v4_dst}", ""]
         return "\n".join(out) + f"  Total : {len(n.sessions) if n else 0}"
@@ -1923,6 +1956,50 @@ class HuaweiSession(TreeSession):
         if not getattr(self.iface, "is_tunnel", False):
             return self.err_invalid(self.prompt, 0)
         return tunnel_set(self.iface, attr, value)
+
+    # -- IPsec (ike peer / ipsec profile on a tunnel interface) ---------------------------------
+    _SEC_KEYS = {"ipsec-proposal": "hw_proposals", "ike-peer": "hw_ike_peers", "ipsec-profile": "hw_ipsec_profiles"}
+
+    def sec_view(self, mode, name, negate):
+        store = self.device.extra.setdefault(self._SEC_KEYS[mode], {})
+        if negate:
+            store.pop(name, None)
+            self._ipsec_apply()
+            return None
+        store.setdefault(name, {})
+        self.mode, self._sec_name = mode, name
+        return None
+
+    def sec_set(self, attr, value):
+        self.device.extra[self._SEC_KEYS[self.mode]][self._sec_name][attr] = str(value)
+        self._ipsec_apply()
+        return None
+
+    def tun_ipsec(self, profile, negate):
+        if not getattr(self.iface, "is_tunnel", False):
+            return self.err_invalid(self.prompt, 0)
+        prot = self.device.extra.setdefault("tunnel_protection", {})
+        if negate:
+            prot.pop(self.iface.name, None)
+        else:
+            if profile not in self.device.extra.get("hw_ipsec_profiles", {}):
+                return f"Error: The IPsec profile {profile} does not exist."
+            prot[self.iface.name] = profile
+        self._ipsec_apply()
+        return None
+
+    def _ipsec_apply(self):
+        """Tunnels with an IPsec profile get the pre-shared key of the profile's IKE peer."""
+        x = self.device.extra
+        peers, profs = x.get("hw_ike_peers", {}), x.get("hw_ipsec_profiles", {})
+        for tname, prof in x.get("tunnel_protection", {}).items():
+            t = self.device.ports.get(tname)
+            if t is not None:
+                peer = peers.get(profs.get(prof, {}).get("peer", ""), {})
+                t.ipsec_key = peer.get("key")
+        for t in self.device.ports.values():
+            if getattr(t, "is_tunnel", False) and t.name not in x.get("tunnel_protection", {}):
+                t.ipsec_key = None
 
     # -- Eth-Trunk ---------------------------------------------------------------------------
     def enter_trunk(self, n, negate):

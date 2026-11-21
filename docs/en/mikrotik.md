@@ -353,6 +353,14 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip firewall filter print` | Print values of item properties |
 | `/ip firewall filter remove` | Remove item |
 
+**`/ip firewall mangle`**
+
+| Command | Description |
+|---|---|
+| `/ip firewall mangle add` | Create a new item |
+| `/ip firewall mangle print` | Print values of item properties |
+| `/ip firewall mangle remove` | Remove item |
+
 **`/ip firewall nat`**
 
 | Command | Description |
@@ -360,6 +368,19 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip firewall nat add` | Create a new item |
 | `/ip firewall nat print` | Print values of item properties |
 | `/ip firewall nat remove` | Remove item |
+
+**`/ip neighbor`**
+
+| Command | Description |
+|---|---|
+| `/ip neighbor print` | Print values of item properties |
+
+**`/ip neighbor discovery-settings`**
+
+| Command | Description |
+|---|---|
+| `/ip neighbor discovery-settings print` | Print values of item properties |
+| `/ip neighbor discovery-settings set` | Change item properties |
 
 **`/ip pool`**
 
@@ -438,6 +459,14 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | Command | Description |
 |---|---|
 | `/log print` | Print values of item properties |
+
+**`/queue simple`**
+
+| Command | Description |
+|---|---|
+| `/queue simple add` | Create a new item |
+| `/queue simple print` | Print values of item properties |
+| `/queue simple remove` | Remove item |
 
 **`/routing bgp advertisements`**
 
@@ -754,6 +783,14 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip firewall filter print` | Print values of item properties |
 | `/ip firewall filter remove` | Remove item |
 
+**`/ip firewall mangle`**
+
+| Command | Description |
+|---|---|
+| `/ip firewall mangle add` | Create a new item |
+| `/ip firewall mangle print` | Print values of item properties |
+| `/ip firewall mangle remove` | Remove item |
+
 **`/ip firewall nat`**
 
 | Command | Description |
@@ -761,6 +798,19 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip firewall nat add` | Create a new item |
 | `/ip firewall nat print` | Print values of item properties |
 | `/ip firewall nat remove` | Remove item |
+
+**`/ip neighbor`**
+
+| Command | Description |
+|---|---|
+| `/ip neighbor print` | Print values of item properties |
+
+**`/ip neighbor discovery-settings`**
+
+| Command | Description |
+|---|---|
+| `/ip neighbor discovery-settings print` | Print values of item properties |
+| `/ip neighbor discovery-settings set` | Change item properties |
 
 **`/ip pool`**
 
@@ -839,6 +889,14 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | Command | Description |
 |---|---|
 | `/log print` | Print values of item properties |
+
+**`/queue simple`**
+
+| Command | Description |
+|---|---|
+| `/queue simple add` | Create a new item |
+| `/queue simple print` | Print values of item properties |
+| `/queue simple remove` | Remove item |
 
 **`/routing bgp advertisements`**
 

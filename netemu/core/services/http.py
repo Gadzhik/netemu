@@ -76,6 +76,8 @@ class HttpGet(Job):
         if u.lower().startswith("http://"):
             u = u[7:]
         name, _, path = u.partition("/")
+        if name.startswith("[") and "]" in name:        # IPv6 literal
+            name = name[1:name.index("]")]
         self.name = name
         self.path = "/" + path
         self.sport = 1025 + next(_ports) % 30000

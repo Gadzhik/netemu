@@ -57,6 +57,8 @@ class IpStack:
         self._tcp_handlers.pop(port, None)
 
     def _l4_send(self, dst, payload, proto, src=None) -> bool:
+        if ":" in str(dst) and hasattr(self, "l4_send6"):
+            return self.l4_send6(dst, payload, proto, src)
         dst = IPv4Address(str(dst))
         if src is None:
             if self.owns_ip(dst):

@@ -49,6 +49,12 @@ class QosClass:
             acl = getattr(dev, "acls", {}).get(m["acl"])
             if acl is None or not acl.decide(pkt)[0]:
                 return False
+        from ipaddress import IPv4Address, IPv4Network
+        for key in ("src", "dst"):
+            if key in m:
+                addr = getattr(pkt, key, None)
+                if not isinstance(addr, IPv4Address) or addr not in IPv4Network(m[key], strict=False):
+                    return False
         return True
 
 
@@ -65,6 +71,19 @@ class QosPolicy:
     def from_dict(cls, d: dict) -> "QosPolicy":
         return cls(d["name"], [QosClass(c["name"], dict(c.get("match", {})), c.get("set_dscp"), c.get("police_bps"))
                                for c in d.get("classes", [])])
+
+
+def parse_rate(text: str) -> int:
+    """'64k', '1M', '2.5m', '1000000', '64 Kbps' -> bits per second."""
+    t = str(text).strip().lower().replace("bps", "").replace(" ", "")
+    mult = 1
+    if t and t[-1] in "kmg":
+        mult = {"k": 1000, "m": 1000_000, "g": 1000_000_000}[t[-1]]
+        t = t[:-1]
+    v = int(float(t) * mult)
+    if v <= 0:
+        raise ValueError("rate must be positive")
+    return v
 
 
 def packet_size(pkt) -> int:

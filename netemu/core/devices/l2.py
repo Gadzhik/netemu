@@ -191,7 +191,20 @@ class Switch(Router):
                 continue
             member, tag = p.vlan_out(vlan)
             if member:
-                p.send(frame if frame.vlan == tag else replace(frame, vlan=tag))
+                out = frame
+                if p.qos_out and p.qos_out in self.qos:
+                    out = self._switch_qos(frame, p)
+                    if out is None:
+                        continue
+                p.send(out if out.vlan == tag else replace(out, vlan=tag))
+
+    def _switch_qos(self, frame, port):
+        from ..packets import IPv4Packet
+        from ..security.qos import apply
+        if not isinstance(frame.payload, IPv4Packet):
+            return frame
+        pkt = apply(self, self.qos[port.qos_out], frame.payload, port, "out")
+        return None if pkt is None else (frame if pkt is frame.payload else replace(frame, payload=pkt))
 
     # -- port security / DHCP snooping ------------------------------------------------------------
     def _port_security(self, frame: EthernetFrame, port: Port) -> bool:
