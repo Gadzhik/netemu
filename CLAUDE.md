@@ -12,7 +12,7 @@ NetEmu is an educational network simulator in the spirit of Cisco Packet Tracer.
 There is a canvas with cables, a simulation mode with packet animation, labs with automatic checks,
 teacher mode, LAN collaboration and a Russian/English UI.
 
-Current version: **0.3.0** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
+Current version: **0.3.1** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
 - README.md is in English, README.ru.md in Russian.
 - User docs are in `docs/en` and `docs/ru`; they are also shown in the app via F1.
 
