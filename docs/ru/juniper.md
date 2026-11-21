@@ -359,6 +359,8 @@ set system ntp server 192.168.1.100
 | `show ospf3 neighbor` | Show neighbor status |
 | `show ospf3 database` | Show the OSPFv3 link-state database |
 | `show ripng neighbor` | Show neighbor status |
+| `show isis adjacency` | Show IS-IS adjacencies |
+| `show isis database` | Show IS-IS link-state database |
 | `show ntp associations` | Show NTP peers |
 | `show ntp status` | Show NTP status |
 | `show log messages` | System messages |
@@ -396,6 +398,7 @@ set system ntp server 192.168.1.100
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet6` | IPv6 parameters |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet6 address` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet6 address X:X:X:X::X/<0-128>` | Interface address/destination prefix |
+| `delete interfaces <interface_name> unit <interface_unit_number> family iso` | OSI ISO protocol parameters |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id` | Virtual LAN identifier value for 802.1q VLAN tags |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id>` | VLAN ID |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet` | IPv4 parameters |
@@ -422,6 +425,7 @@ set system ntp server 192.168.1.100
 | `delete protocols ospf area <area_id> interface <interface_name>` | Interface name |
 | `delete protocols ospf export` | Export policy |
 | `delete protocols ospf export <policy-name>` | Policy name |
+| `delete protocols isis` | IS-IS configuration |
 | `delete protocols ospf3` | OSPFv3 configuration |
 | `delete protocols ripng` | RIPng configuration |
 | `delete routing-options rib inet6.0 static route X:X:X:X::X/<0-128>` | Destination prefix |
@@ -469,6 +473,8 @@ set system ntp server 192.168.1.100
 | `set interfaces <interface_name> unit <interface_unit_number> family inet filter input <filter-name>` | Filter name |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet filter output <filter-name>` | Filter name |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet6 address X:X:X:X::X/<0-128>` | Interface address/destination prefix |
+| `set interfaces <interface_name> unit <interface_unit_number> family iso` | OSI ISO protocol parameters |
+| `set interfaces <interface_name> unit <interface_unit_number> family iso address <address>` | NET, e.g. 49.0001.0000.0000.0001.00 |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id>` | VLAN ID |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet address <name>` | Interface address/destination prefix |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet filter input <filter-name>` | Filter name |
@@ -489,6 +495,7 @@ set system ntp server 192.168.1.100
 | `set protocols ospf area <area_id> interface <interface_name> dead-interval <dead-interval>` | Dead interval |
 | `set protocols ospf area <area_id> interface <interface_name> priority <priority>` | Designated router priority |
 | `set protocols ospf export <policy-name>` | Policy name |
+| `set protocols isis interface <name> [passive] / interface <name> level 2 metric N / level 1 disable` | IS-IS statement |
 | `set protocols ospf3 area <area_id> interface <interface_name>` | Interface name |
 | `set protocols ripng group <group_name> neighbor <interface_name>` | Interface name |
 | `set routing-options rib inet6.0 static route X:X:X:X::X/<0-128> next-hop X:X:X:X::X` | Next hop |

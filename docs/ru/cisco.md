@@ -620,6 +620,7 @@ end
 | `show ip route bgp` | Border Gateway Protocol (BGP) |
 | `show ip route rip` | Routing Information Protocol (RIP) |
 | `show ip route vrf WORD` | VPN Routing/Forwarding instance name |
+| `show ip route isis` | ISO IS-IS |
 | `show ip route eigrp` | Enhanced Interior Gateway Routing Protocol (EIGRP) |
 | `show ip interface brief` | Brief summary of IP status and configuration |
 | `show ip ospf` | OSPF information |
@@ -659,6 +660,13 @@ end
 | `show startup-config` | Contents of startup configuration |
 | `show version` | System hardware and software status |
 | `show users` | Display information about terminal lines |
+| `show isis neighbors` | IS-IS neighbors |
+| `show isis database` | IS-IS link state database |
+| `show clns neighbors` | CLNS neighbor adjacencies |
+| `show mpls ldp neighbor` | Display LDP neighbor information |
+| `show mpls ldp bindings` | Show the LDP Label Information Base (LIB) |
+| `show mpls forwarding-table` | Show the Label Forwarding Information Base (LFIB) |
+| `show mpls interfaces` | Per-interface MPLS forwarding information |
 | `show ephone` | Show ephone status |
 | `show ephone registered` | Registered ephones |
 | `show ephone-dn summary` | Summary |
@@ -773,6 +781,10 @@ end
 | `[no] logging trap debugging` | Debugging conditions (7) |
 | `[no] logging buffered` | Set buffered logging parameters |
 | `[no] logging A.B.C.D` | IP address of the logging host |
+| `[no] mpls label protocol ldp` | Use LDP (default) |
+| `[no] mpls ldp router-id IFACE` | Interface |
+| `[no] mpls ldp router-id IFACE force` | Forcibly change the LDP router id |
+| `[no] mpls ip` | Dynamic MPLS forwarding for IP |
 | `[no] nat64 prefix stateful X:X:X:X::X/<0-128>` | Stateful prefix (/96) |
 | `[no] nat64 v4 pool WORD A.B.C.D A.B.C.D` | End |
 | `[no] nat64 v6v4 list ACL pool POOL overload` | IPv6 to IPv4 mapping |
@@ -782,6 +794,8 @@ end
 | `[no] policy-map WORD` | policy-map name |
 | `[no] router ospf <1-65535>` | Process ID |
 | `[no] router rip` | Routing Information Protocol (RIP) |
+| `[no] router isis` | ISO IS-IS |
+| `[no] router isis WORD` | ISO routing area tag |
 | `[no] router eigrp <1-65535>` | Autonomous System |
 | `[no] router bgp <1-4294967295>` | Autonomous system number |
 | `[no] snmp-server community WORD` | SNMP community string |
@@ -837,6 +851,8 @@ end
 | `ip address A.B.C.D A.B.C.D` | IP subnet mask |
 | `ip vrf forwarding` | Configure forwarding table |
 | `ip vrf forwarding WORD` | VRF name |
+| `ip router isis` | IS-IS Routing for IP |
+| `ip router isis WORD` | Routing process tag |
 | `[no] ipv6 address X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 enable` | Enable IPv6 on interface |
 | `[no] ipv6 nd ra suppress` | Suppress IPv6 Router Advertisements |
@@ -844,6 +860,12 @@ end
 | `[no] ipv6 ospf cost <1-65535>` | Cost |
 | `[no] ipv6 rip WORD enable` | Enable RIP routing on interface |
 | `[no] ipv6 dhcp server WORD` | Name of IPv6 DHCP pool |
+| `[no] isis metric <1-16777214>` | Default metric |
+| `[no] isis metric <1-16777214> LINE` | level |
+| `[no] isis circuit-type` | Configure circuit type for interface |
+| `[no] isis circuit-type LINE` | Configure circuit type for interface |
+| `[no] mpls ip` | Configure dynamic MPLS forwarding for IP |
+| `[no] mpls label protocol ldp` | Use LDP (default) |
 | `[no] nat64 enable` | Enable NAT64 on the interface |
 | `[no] service-policy input WORD` | policy-map name |
 | `[no] service-policy output WORD` | policy-map name |
@@ -1110,6 +1132,8 @@ end
 | `[no] ntp master <1-15>` | Stratum number |
 | `[no] router ospf <1-65535>` | Process ID |
 | `[no] router rip` | Routing Information Protocol (RIP) |
+| `[no] router isis` | ISO IS-IS |
+| `[no] router isis WORD` | ISO routing area tag |
 | `[no] router eigrp <1-65535>` | Autonomous System |
 | `[no] router bgp <1-4294967295>` | Autonomous system number |
 | `[no] snmp-server community WORD` | SNMP community string |

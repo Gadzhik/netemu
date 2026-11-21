@@ -55,7 +55,7 @@ class HuaweiTrace(TraceListener):
 class HuaweiSession(TreeSession):
     negate_word = "undo"
     negate_modes = ("system", "interface", "vlan", "ospf", "ospf-area", "acl", "bgp", "bgp-af", "ip-pool", "rip",
-                    "ui-vty", "aaa", "ospfv3", "ripng", "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "ipsec-proposal", "ike-peer", "ipsec-profile")
+                    "ui-vty", "aaa", "ospfv3", "ripng", "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "isis", "ipsec-proposal", "ike-peer", "ipsec-profile")
 
     @property
     def is_router(self) -> bool:
@@ -85,6 +85,8 @@ class HuaweiSession(TreeSession):
             return f"[{h}-ospf-{self.device.ospf.cfg.process_id}]"
         if self.mode == "ospf-area":
             return f"[{h}-ospf-{self.device.ospf.cfg.process_id}-area-{self.area_ctx}]"
+        if self.mode == "isis":
+            return f"[{h}-isis-{self.device.isis.cfg.tag if self.device.isis else 1}]"
         if self.mode in ("ipsec-proposal", "ike-peer", "ipsec-profile"):
             return f"[{h}-{self.mode}-{self._sec_name}]"
         if self.mode == "classifier":
@@ -172,6 +174,24 @@ class HuaweiSession(TreeSession):
             for iface_root in (x for m in ("system", "interface") for x in t[m] if x.word == "interface"):
                 iface_root.children.append(P.arg(P.TunnelNameArg(), "Tunnel interface",
                                                  handler=lambda s, a, n: s.enter_tun(a[0], n), negatable=True))
+            c6 = [x for x in t["system"] if x.word in ("display", "quit", "return")]
+            nop = lambda w, h: P.kw(w, h, P.arg(P.LineArg(), h, handler=lambda s, a, n: None))
+            t["system"].append(P.kw("isis", "IS-IS", P.arg(P.NumArg(1, 65535, "INTEGER<1-65535>"), "Process ID",
+                                    handler=lambda s, a, n: s.isis_view(a[0], n), negatable=True),
+                                    handler=lambda s, a, n: s.isis_view(1, n), negatable=True))
+            t["isis"] = c6 + [
+                P.kw("network-entity", "Network entity title", P.arg(P.WordArg("XX.XXXX....XXXX.00"), "NET",
+                     handler=lambda s, a, n: s.isis_net(a[0], n), negatable=True), negatable=True),
+                nop("is-level", "Level"), nop("cost-style", "Cost style"), nop("is-name", "Host name")]
+            t["interface"].append(P.kw("isis", "IS-IS", P.kw("enable", "Enable IS-IS on the interface",
+                P.arg(P.NumArg(1, 65535, "INTEGER<1-65535>"), "Process ID", handler=lambda s, a, n: s.if_isis(n),
+                      negatable=True), handler=lambda s, a, n: s.if_isis(n), negatable=True),
+                P.kw("cost", "Interface cost", P.arg(P.NumArg(1, 16777214, "INTEGER<1-16777214>"), "Cost",
+                     handler=lambda s, a, n: s.isis_cost(a[0], n), negatable=True), negatable=True),
+                nop("circuit-type", "Circuit type"), negatable=True))
+            next(x for x in t["user"] if x.word == "display").children.append(P.kw("isis", "IS-IS",
+                P.kw("peer", "Neighbours", handler=lambda s, a, n: s.display_isis("peer")),
+                P.kw("lsdb", "Link state database", handler=lambda s, a, n: s.display_isis("lsdb"))))
             sec = lambda mode, h: P.kw(mode, h, P.arg(P.WordArg("STRING<1-15>"), "Name",
                                                       handler=lambda s, a, n, m=mode: s.sec_view(m, a[0], n), negatable=True),
                                        negatable=True)
@@ -1095,7 +1115,7 @@ class HuaweiSession(TreeSession):
             self.mode = "bgp"
             return None
         if self.mode in ("vlan", "ospf", "acl", "bgp", "ip-pool", "rip", "ui-vty", "aaa", "ospfv3", "ripng",
-                         "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "ipsec-proposal", "ike-peer", "ipsec-profile"):
+                         "dhcpv6-pool", "classifier", "behavior", "trafficpolicy", "isis", "ipsec-proposal", "ike-peer", "ipsec-profile"):
             self.mode = "system"
             return None
         if self.mode == "ospf-area":
@@ -1957,6 +1977,73 @@ class HuaweiSession(TreeSession):
             return self.err_invalid(self.prompt, 0)
         return tunnel_set(self.iface, attr, value)
 
+    # -- IS-IS -----------------------------------------------------------------------------------
+    def isis_view(self, pid, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if negate:
+            d.disable_isis()
+            return None
+        if d.isis is None:
+            d.enable_isis(IsisConfig(tag=str(pid)))
+        self.mode = "isis"
+        return None
+
+    def isis_net(self, net, negate):
+        from ..routing.isis import parse_net
+        p = self.device.isis
+        if negate:
+            p.cfg.net = None
+            p.stop()
+            return None
+        if parse_net(net) is None:
+            return "Error: The network entity title is invalid."
+        p.cfg.net = net
+        p.restart()
+        return None
+
+    def if_isis(self, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if d.isis is None:
+            if negate:
+                return None
+            d.enable_isis(IsisConfig())
+        lst = d.isis.cfg.interfaces
+        if negate:
+            d.isis.cfg.interfaces = [x for x in lst if x != self.iface.name]
+        elif self.iface.name not in lst:
+            lst.append(self.iface.name)
+        d.isis.link_changed(self.iface)
+        return None
+
+    def isis_cost(self, value, negate):
+        d = self.device
+        if d.isis is not None:
+            if negate:
+                d.isis.cfg.metrics.pop(self.iface.name, None)
+            else:
+                d.isis.cfg.metrics[self.iface.name] = int(value)
+            d.isis.link_changed(self.iface)
+        return None
+
+    def display_isis(self, what):
+        from .base import isis_database_lines, isis_neighbors_rows
+        tag = self.device.isis.cfg.tag if self.device.isis else 1
+        if what == "peer":
+            lines = ["", f"                          Peer information for ISIS({tag})", "",
+                     "  System Id     Interface          Circuit Id        State HoldTime Type     PRI",
+                     "-" * 80]
+            for sid, host, port, ip, state, hold in isis_neighbors_rows(self.device):
+                lines.append(f"  {sid:<14}{port.name:<19}{sid}.01  {state:<6}{hold:<9}L2       64")
+            lines.append(f"\nTotal Peer(s): {len(isis_neighbors_rows(self.device))}")
+            return "\n".join(lines)
+        return "\n".join(["", f"                        Database information for ISIS({tag})",
+                          "                        -------------------------------------", "",
+                          "                          Level-2 Link State Database", "",
+                          "LSPID                 Seq Num      Checksum      Holdtime      Length  ATT/P/OL"]
+                         + isis_database_lines(self.device))
+
     # -- IPsec (ike peer / ipsec profile on a tunnel interface) ---------------------------------
     _SEC_KEYS = {"ipsec-proposal": "hw_proposals", "ike-peer": "hw_ike_peers", "ipsec-profile": "hw_ipsec_profiles"}
 
@@ -2686,6 +2773,8 @@ class HuaweiSession(TreeSession):
                 proto, flags, nh = ("O_ASE" if r.code.startswith("O E") else "OSPF"), "D", str(r.next_hop)
             elif r.code == "R":
                 proto, flags, nh = "RIP", "D", str(r.next_hop)
+            elif r.code.startswith("i"):
+                proto, flags, nh = "ISIS-L2", "D", str(r.next_hop)
             elif r.code == "B":
                 lst = d.bgp.paths.get(r.network, []) if d.bgp else []
                 ebgp = next((bp.ebgp for bp in lst if bp.best), True)

@@ -51,6 +51,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.dhcp_server = None     # services.dhcp.DhcpServer (ip dhcp pool ...)
         self.rip = None             # RipProcess when "router rip" is configured
         self.eigrp = None           # EigrpProcess when "router eigrp" is configured
+        self.isis = None            # IsisProcess when IS-IS is configured
         self.global_router_id: str | None = None   # Junos "routing-options router-id"
         self.acls: dict = {}                        # name -> security.acl.Acl
         self.firewall: list = []                    # RouterOS /ip firewall filter rules (AclRule)
@@ -71,6 +72,8 @@ class Router(IpStack, Ip6Stack, Device):
         self.qos: dict = {}                         # policy name -> security.qos.QosPolicy
         self.qos_classes: dict = {}                 # class-map name -> match dict (Cisco) / classifier (Huawei)
         self.qos_global: list = []                  # policies applied to every forwarded packet (RouterOS queues)
+        from ..routing.mpls import Mpls
+        self.mpls = Mpls(self)                      # MPLS / LDP ("mpls ip" on interfaces)
 
     # -- dynamic routing ------------------------------------------------------------
     def dynamic_routes(self) -> list[Route]:
@@ -81,6 +84,8 @@ class Router(IpStack, Ip6Stack, Device):
             out += [r for r in self.rip.routes if r.port is not None and r.port.is_up]
         if getattr(self, "eigrp", None) is not None:
             out += [r for r in self.eigrp.routes if r.port is not None and r.port.is_up]
+        if getattr(self, "isis", None) is not None:
+            out += [r for r in self.isis.routes if r.port is not None and r.port.is_up]
         if self.bgp is not None:
             out += self.bgp.routes          # recursive: resolved through the IGP at lookup time
         return out
@@ -108,6 +113,21 @@ class Router(IpStack, Ip6Stack, Device):
         if self.eigrp.cfg.enabled:
             self.eigrp.start()
         return self.eigrp
+
+    def enable_isis(self, cfg=None):
+        from ..routing.isis import IsisConfig, IsisProcess
+        if self.isis is None:
+            self.isis = IsisProcess(self, cfg or IsisConfig())
+        elif cfg is not None:
+            self.isis.cfg = cfg
+        if self.isis.cfg.enabled:
+            self.isis.start()
+        return self.isis
+
+    def disable_isis(self) -> None:
+        if getattr(self, "isis", None) is not None:
+            self.isis.stop()
+            self.isis = None
 
     def disable_eigrp(self) -> None:
         if getattr(self, "eigrp", None) is not None:
@@ -237,6 +257,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.qos, self.qos_classes, self.qos_global = {}, {}, []
         self.mgmt.apply(None)
         self.cme.apply(None)
+        self.mpls.apply(None)
         self.fhrp.groups.clear()
         self.static_routes6 = []
         self.ipv6_routing = None
@@ -244,6 +265,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.disable_bgp()
         self.disable_rip()
         self.disable_eigrp()
+        self.disable_isis()
         self.dhcp_server = None
         self.global_router_id = None
         self.policies = {}
@@ -264,6 +286,14 @@ class Router(IpStack, Ip6Stack, Device):
 
     def routes_changed(self) -> None:
         self.engine.emit("routes_changed", self)
+        m = getattr(self, "mpls", None)
+        if m is not None and m.running and not getattr(self, "_mpls_pending", False):
+            self._mpls_pending = True
+
+            def later():
+                self._mpls_pending = False
+                m.refresh()
+            self.engine.schedule(0.0, later)
 
     def console(self, message: str) -> None:
         """Asynchronous console message (%OSPF-5-ADJCHG ...)."""
@@ -372,6 +402,8 @@ class Router(IpStack, Ip6Stack, Device):
             return True
         if getattr(self, "eigrp", None) is not None and self.eigrp.running and mac.value == 0x01005E00000A:
             return True
+        if getattr(self, "mpls", None) is not None and self.mpls.running and mac.value == 0x01005E000002:
+            return True
         return self.ospf is not None and self.ospf.running and mac == OSPF_MAC
 
     def joined_group(self, ip) -> bool:
@@ -383,6 +415,8 @@ class Router(IpStack, Ip6Stack, Device):
         if self.rip is not None and self.rip.running and ip == RIP_GROUP:
             return True
         if getattr(self, "eigrp", None) is not None and self.eigrp.running and str(ip) == "224.0.0.10":
+            return True
+        if getattr(self, "mpls", None) is not None and self.mpls.running and str(ip) == "224.0.0.2":
             return True
         return self.ospf is not None and self.ospf.running and ip == ALL_SPF_ROUTERS
 
@@ -444,6 +478,14 @@ class Router(IpStack, Ip6Stack, Device):
                 return  # no subinterface for this VLAN
         else:
             port = next((s for s in subs if s.native), port)
+        if frame.ethertype == "MPLS":
+            if getattr(self, "mpls", None) is not None:
+                self.mpls.receive(frame, port)
+            return
+        if frame.ethertype == "ISIS":                       # CLNS: not IP
+            if getattr(self, "isis", None) is not None:
+                self.isis.receive(frame, port)
+            return
         self.handle_l3_frame(frame, port)
 
     def link_state_changed(self, port: Port) -> None:
@@ -463,6 +505,8 @@ class Router(IpStack, Ip6Stack, Device):
             self.ospf.link_changed(port)
         if getattr(self, "eigrp", None) is not None:
             self.eigrp.link_changed(port)
+        if getattr(self, "isis", None) is not None:
+            self.isis.link_changed(port)
 
     # -- routing table ------------------------------------------------------
     # -- VRF-lite: which routing table the current lookup uses ------------------------------
@@ -487,6 +531,12 @@ class Router(IpStack, Ip6Stack, Device):
         if in_port is not None and getattr(in_port, "vrf", None) != self.vrf_ctx:
             with self.in_vrf(in_port.vrf):
                 return super().send_ip(pkt, in_port)
+        m = getattr(self, "mpls", None)
+        if m is not None and m.running and self.vrf_ctx is None and not self.owns_ip(pkt.dst) \
+                and not pkt.dst.is_multicast:
+            r = self.route_lookup(pkt.dst)
+            if r is not None and m.push(pkt, r[0], r[1]):
+                return True                                  # left labelled (ingress LSR)
         return super().send_ip(pkt, in_port)
 
     def _deliver_local(self, pkt, port) -> None:
@@ -622,6 +672,8 @@ class Router(IpStack, Ip6Stack, Device):
             cfg["rip"] = self.rip.cfg.to_dict()
         if getattr(self, "eigrp", None) is not None:
             cfg["eigrp"] = self.eigrp.cfg.to_dict()
+        if getattr(self, "isis", None) is not None:
+            cfg["isis"] = self.isis.cfg.to_dict()
         if self.static_routes6:
             cfg["static_routes6"] = [s.to_dict() for s in self.static_routes6]
         if self.ipv6_routing is not None:
@@ -656,6 +708,9 @@ class Router(IpStack, Ip6Stack, Device):
         cm = self.cme.to_dict()
         if cm:
             cfg["cme"] = cm
+        mp = self.mpls.to_dict()
+        if mp:
+            cfg["mpls"] = mp
         if self.qos or self.qos_classes:
             cfg["qos"] = {"policies": [p.to_dict() for p in self.qos.values()],
                           "classes": {k: dict(v) for k, v in self.qos_classes.items()}}
@@ -705,6 +760,7 @@ class Router(IpStack, Ip6Stack, Device):
         self.qos_global = list(q.get("global", []))
         self.mgmt.apply(cfg.get("mgmt"))
         self.cme.apply(cfg.get("cme"))
+        self.mpls.apply(cfg.get("mpls"))
         from ..routing.fhrp import FhrpGroup
         self.fhrp.groups.clear()
         for d in cfg.get("fhrp", []):
@@ -716,6 +772,10 @@ class Router(IpStack, Ip6Stack, Device):
         self.ipv6_routing = cfg.get("ipv6_routing")
         if any(p.ipv6 for p in self.ports.values()):
             self.engine.schedule(200.0, self.ipv6_changed)
+        self.disable_isis()
+        if cfg.get("isis") is not None:
+            from ..routing.isis import IsisConfig
+            self.enable_isis(IsisConfig.from_dict(cfg["isis"]))
         self.disable_eigrp()
         if cfg.get("eigrp") is not None:
             from ..routing.eigrp import EigrpConfig

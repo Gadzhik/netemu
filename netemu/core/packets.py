@@ -196,12 +196,16 @@ class EthernetFrame:
                 data = inner.data
                 text = data.summary() if hasattr(data, "summary") else ""
                 return f"{app_label(inner)} {p.src}:{inner.sport} -> {p.dst}:{inner.dport} {text}".rstrip()
+            if not isinstance(inner, IcmpPacket) and hasattr(inner, "summary"):
+                return f"{inner.summary()} {p.src} -> {p.dst}"
             name = inner.name if isinstance(inner, IcmpPacket) else "data"
             return f"ICMP {name} {p.src} -> {p.dst} (TTL {p.ttl})"
         if self.ethertype == "IPv6" and hasattr(p, "hlim"):
             inner = p.payload
             tgt = f" target {inner.target}" if getattr(inner, "target", None) is not None else ""
             return f"{self.protocol} {inner.name}{tgt} {p.src} -> {p.dst} (HL {p.hlim})"
+        if hasattr(p, "summary"):                          # IS-IS, MPLS, LACP, ...
+            return p.summary()
         return f"{self.ethertype} {self.src} -> {self.dst}"
 
     def layers(self) -> list[tuple[str, list[str]]]:
@@ -220,6 +224,8 @@ class EthernetFrame:
                 out.append(("ICMP", p.payload.layer_lines()))
             elif isinstance(p.payload, OspfPacket):
                 out.append(("OSPF", p.payload.layer_lines()))
+            elif not isinstance(p.payload, (TcpSegment, UdpDatagram)) and hasattr(p.payload, "layer_lines"):
+                out.append((getattr(p.payload, "label", "Payload"), p.payload.layer_lines()))
             elif isinstance(p.payload, (TcpSegment, UdpDatagram)):
                 l4 = p.payload
                 out.append(("Layer 4: " + ("TCP" if isinstance(l4, TcpSegment) else "UDP"), l4.layer_lines()))
@@ -229,4 +235,11 @@ class EthernetFrame:
             out.append(("Layer 3: IPv6", p.layer_lines()))
             if hasattr(p.payload, "layer_lines"):
                 out.append(("ICMPv6", p.payload.layer_lines()))
+        elif hasattr(p, "layer_lines"):                    # IS-IS PDUs, MPLS label stacks
+            out.append((getattr(p, "label", self.ethertype), p.layer_lines()))
+            inner = getattr(p, "inner", None)
+            if isinstance(inner, IPv4Packet):
+                out.append(("Layer 3: IPv4", inner.layer_lines()))
+                if hasattr(inner.payload, "layer_lines"):
+                    out.append((getattr(inner.payload, "label", "Payload"), inner.payload.layer_lines()))
         return out

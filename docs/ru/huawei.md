@@ -422,6 +422,8 @@ return
 | `display rip INTEGER<1-65535> route` | Routing table |
 | `display saved-configuration` | Saved configuration |
 | `display version` | Display version information |
+| `display isis peer` | Neighbours |
+| `display isis lsdb` | Link state database |
 | `display nat64 session all` | All |
 | `display logbuffer` | Log buffer |
 | `display info-center` | Information center |
@@ -494,6 +496,8 @@ return
 | `display rip INTEGER<1-65535> route` | Routing table |
 | `display saved-configuration` | Saved configuration |
 | `display version` | Display version information |
+| `display isis peer` | Neighbours |
+| `display isis lsdb` | Link state database |
 | `display nat64 session all` | All |
 | `display logbuffer` | Log buffer |
 | `display info-center` | Information center |
@@ -548,6 +552,8 @@ return
 | `aaa` | AAA view |
 | `ssh user STRING authentication-type password` | Password |
 | `ssh user STRING service-type stelnet` | STelnet |
+| `[undo] isis` | IS-IS |
+| `[undo] isis INTEGER<1-65535>` | Process ID |
 | `[undo] ipsec proposal STRING<1-15>` | Name |
 | `[undo] ipsec profile STRING<1-15>` | Name |
 | `[undo] ike peer STRING<1-15>` | Name |
@@ -620,6 +626,8 @@ return
 | `display rip INTEGER<1-65535> route` | Routing table |
 | `display saved-configuration` | Saved configuration |
 | `display version` | Display version information |
+| `display isis peer` | Neighbours |
+| `display isis lsdb` | Link state database |
 | `display nat64 session all` | All |
 | `display logbuffer` | Log buffer |
 | `display info-center` | Information center |
@@ -669,6 +677,10 @@ return
 | `[undo] shutdown` | Shutdown the interface |
 | `[undo] traffic-filter inbound acl INTEGER<2000-3999>` | ACL number |
 | `[undo] traffic-filter outbound acl INTEGER<2000-3999>` | ACL number |
+| `[undo] isis enable` | Enable IS-IS on the interface |
+| `[undo] isis enable INTEGER<1-65535>` | Process ID |
+| `[undo] isis cost INTEGER<1-16777214>` | Cost |
+| `[undo] isis circuit-type LINE` | Circuit type |
 | `[undo] ipsec profile STRING` | Profile |
 | `tunnel-protocol gre` | GRE |
 | `tunnel-protocol ipsec` | IPsec |

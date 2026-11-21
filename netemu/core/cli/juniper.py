@@ -161,6 +161,21 @@ class JunosSession(TreeSession):
                 protos = P.kw("protocols", "Routing protocol configuration")
                 root.children.append(protos)
             dl = verb == "delete"
+            if self.is_router:
+                protos.children.append(P.kw("isis", "IS-IS configuration",
+                    *([] if dl else [P.arg(P.LineArg("interface <name> [passive] | interface <name> level 2 metric N | "
+                                                     "level 1 disable"), "IS-IS statement",
+                                           handler=lambda s, a, n: s.cfg_isis(a[0], False))]),
+                    handler=(lambda s, a, n: s.cfg_isis("", True)) if dl else None))
+                unit_arg = next(x for x in next(y for y in root.children if y.word == "interfaces").children[0].children
+                                if x.word == "unit").children[0]
+                fam = next((x for x in unit_arg.children if x.word == "family"), None)
+                if fam is not None and not any(c.word == "iso" for c in fam.children):
+                    fam.children.append(P.kw("iso", "OSI ISO protocol parameters",
+                        *([] if dl else [P.kw("address", "Interface address",
+                                              P.arg(P.WordArg("<address>"), "NET, e.g. 49.0001.0000.0000.0001.00",
+                                                    handler=lambda s, a, n: s.cfg_iso(a[0], a[-1])))]),
+                        handler=(lambda s, a, n: s.cfg_iso(a[0], None)) if dl else (lambda s, a, n: None)))
             protos.children += [
                 P.kw("ospf3", "OSPFv3 configuration",
                      *([] if dl else [P.kw("area", "Configure an OSPF area",
@@ -196,6 +211,10 @@ class JunosSession(TreeSession):
                        P.arg(P.LineArg("virtual-address A | priority N | preempt | no-preempt"), "",
                              handler=lambda s, a, n: s.cfg_address(a[0], a[2], False, unit=a[1]) or s.cfg_vrrp(a[0], a[3], a[4])))))
         show = next(x for x in t["oper"] if x.word == "show")
+        if self.is_router:
+            show.children.append(P.kw("isis", "Show IS-IS information",
+                P.kw("adjacency", "Show IS-IS adjacencies", handler=lambda s, a, n: s.show_isis("adjacency")),
+                P.kw("database", "Show IS-IS link-state database", handler=lambda s, a, n: s.show_isis("database"))))
         from .base import mgmt_ntp_assoc, mgmt_ntp_status
         show.children += [
             P.kw("ntp", "Show Network Time Protocol information",
@@ -1400,6 +1419,60 @@ class JunosSession(TreeSession):
             t["from"][key].append(v)
         return None
 
+    # -- IS-IS (candidate) ---------------------------------------------------------------------
+    def _isis_cand(self):
+        return self.candidate.setdefault("isis", {"tag": "1", "net": None, "interfaces": [], "passive": [],
+                                                  "metrics": {}, "enabled": True})
+
+    def cfg_isis(self, text, delete):
+        if delete:
+            self.candidate.pop("isis", None)
+            return None
+        w = text.split()
+        c = self._isis_cand()
+        try:
+            if w[0] == "level" and w[2] in ("disable", "wide-metrics-only"):
+                return None
+            if w[0] != "interface":
+                raise IndexError
+            port = self.device.get_port(w[1].split(".")[0])
+            if port is None:
+                return f"error: interface {w[1]} not found"
+            if port.name not in c["interfaces"]:
+                c["interfaces"].append(port.name)
+            rest = w[2:]
+            if rest == ["passive"] and port.name not in c["passive"]:
+                c["passive"].append(port.name)
+            elif rest[:1] == ["level"] and rest[2:3] == ["metric"]:
+                c["metrics"][port.name] = int(rest[3])
+            elif rest and rest != ["passive"] and rest[:1] != ["point-to-point"]:
+                raise IndexError
+        except (IndexError, ValueError):
+            return self.err_invalid(self.prompt, 0)
+        return None
+
+    def cfg_iso(self, port, net):
+        from ..routing.isis import parse_net
+        if net is None:
+            self._isis_cand()["net"] = None
+            return None
+        if parse_net(net) is None:
+            return "error: invalid ISO address (format 49.0001.0000.0000.0001.00)"
+        if port.is_loopback:
+            self._isis_cand()["net"] = net
+        return None
+
+    def show_isis(self, what):
+        from .base import isis_database_lines, isis_neighbors_rows
+        if what == "adjacency":
+            lines = ["Interface             System         L State         Hold (secs) SNPA"]
+            for sid, host, port, ip, state, hold in isis_neighbors_rows(self.device):
+                lines.append(f"{port.name + '.0':<22}{host:<15}2 {state.capitalize():<14}{hold:<12}")
+            return "\n".join(lines)
+        return "\n".join(["IS-IS level 2 link-state database:",
+                          "LSP ID                      Sequence Checksum Lifetime Attributes"]
+                         + isis_database_lines(self.device))
+
     def cfg_vpn(self, section, text, delete):
         """security ike policy P pre-shared-key ascii-text K / ike gateway G address A|ike-policy P|external-interface I
         / ipsec vpn V bind-interface st0.0 / ipsec vpn V ike gateway G (proposals and policies are accepted as-is)."""
@@ -2224,7 +2297,8 @@ class JunosSession(TreeSession):
                  "+ = Active Route, - = Last Active, * = Both", ""]
         age = _age(d.engine.now)
         for r in table:
-            proto = {"C": "Direct", "L": "Local", "S": "Static", "B": "BGP", "R": "RIP"}.get(r.code, "OSPF")
+            proto = {"C": "Direct", "L": "Local", "S": "Static", "B": "BGP", "R": "RIP",
+                     "i L2": "IS-IS"}.get(r.code, "OSPF")
             pref = 0 if r.code in ("C", "L") else r.distance
             metric = f", metric {r.metric}" if r.code.startswith(("O", "R")) else ""
             if r.code == "B":

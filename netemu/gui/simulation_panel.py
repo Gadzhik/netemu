@@ -11,7 +11,9 @@ from ..i18n import tr
 from .controller import SimController, SimRecord
 from .items import PROTO_COLORS
 
-PROTOCOLS = ("ARP", "STP", "ICMP", "ICMPv6", "NDP", "SSH", "TELNET", "LACP", "PAgP", "HSRP", "VRRP", "OSPFv3", "RIPng", "DHCPv6", "RIP", "OSPF", "BGP", "DHCP", "DNS", "HTTP", "TCP")
+PROTOCOLS = ("ARP", "STP", "ICMP", "ICMPv6", "NDP", "SSH", "TELNET", "LACP", "PAgP", "HSRP", "VRRP", "OSPFv3", "RIPng",
+             "DHCPv6", "RIP", "OSPF", "EIGRP", "ISIS", "BGP", "MPLS", "LDP", "GRE", "IPsec", "DHCP", "DNS", "HTTP",
+             "Syslog", "SNMP", "NTP", "SCCP", "RTP", "TCP")
 
 
 class PduDialog(QDialog):

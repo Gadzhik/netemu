@@ -16,7 +16,7 @@ PROMPTS = {"user": ">", "priv": "#", "config": "(config)#", "config-if": "(confi
            "config-router": "(config-router)#", "config-router-bgp": "(config-router)#",
            "config-router-af": "(config-router-af)#", "dhcp-config": "(dhcp-config)#",
            "config-router-rip": "(config-router)#", "config-router-eigrp": "(config-router)#",
-           "config-vrf": "(config-vrf)#",
+           "config-vrf": "(config-vrf)#", "config-router-isis": "(config-router)#",
            "config-std-nacl": "(config-std-nacl)#", "config-ext-nacl": "(config-ext-nacl)#",
            "config-line": "(config-line)#", "config-rtr6": "(config-rtr)#",
            "config-dhcpv6": "(config-dhcpv6)#", "config-isakmp": "(config-isakmp)#",
@@ -78,12 +78,13 @@ class CiscoSession(TreeSession):
                     "config-router-bgp", "config-router-af", "dhcp-config", "config-router-rip",
                     "config-std-nacl", "config-ext-nacl", "config-router-eigrp", "config-cmap", "config-pmap",
                     "config-pmap-c", "config-telephony", "config-ephone-dn", "config-ephone", "config-isakmp",
-                    "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf")
+                    "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf",
+                    "config-router-isis")
     parent_modes = {"config-if": "config", "config-subif": "config", "config-vlan": "config",
                     "config-router": "config", "config-std-nacl": "config", "config-ext-nacl": "config",
                     "config-router-bgp": "config", "config-router-af": "config-router-bgp",
                     "dhcp-config": "config", "config-router-rip": "config", "config-line": "config",
-                    "config-router-eigrp": "config", "config-vrf": "config",
+                    "config-router-eigrp": "config", "config-vrf": "config", "config-router-isis": "config",
                     "config-rtr6": "config", "config-dhcpv6": "config", "config-isakmp": "config",
                     "cfg-crypto-trans": "config", "ipsec-profile": "config", "config-cmap": "config",
                     "config-telephony": "config", "config-ephone-dn": "config", "config-ephone": "config",
@@ -297,6 +298,8 @@ class CiscoSession(TreeSession):
                 P.arg(P.LineArg("fa0/1 - 4 , gi0/1"), "Interface list", handler=lambda s, a, n: s.enter_range(a[0]))))
         if self.is_router:
             self._add_vrf_trees(t)
+            self._add_isis_trees(t)
+            self._add_mpls_trees(t)
             de3 = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
             t["config-router-eigrp"] = sorted(de3 + [
                 P.kw("exit", "Exit from routing protocol configuration mode", handler=lambda s, a, n: s.set_mode("config")),
@@ -957,6 +960,10 @@ class CiscoSession(TreeSession):
                                     negatable=True),
                                P.kw("rip", "Routing Information Protocol (RIP)",
                                     handler=lambda s, a, n: s.router_rip(n), negatable=True),
+                               P.kw("isis", "ISO IS-IS",
+                                    P.arg(P.WordArg("WORD"), "ISO routing area tag",
+                                          handler=lambda s, a, n: s.router_isis(a[0], n), negatable=True),
+                                    handler=lambda s, a, n: s.router_isis("1", n), negatable=True),
                                P.kw("eigrp", "Enhanced Interior Gateway Routing Protocol (EIGRP)",
                                     P.arg(P.NumArg(1, 65535, "<1-65535>"), "Autonomous System",
                                           handler=lambda s, a, n: s.router_eigrp(a[0], n), negatable=True),
@@ -2496,6 +2503,190 @@ class CiscoSession(TreeSession):
         return "\n".join(lines)
 
     # -- RIP -------------------------------------------------------------------------------
+    # -- MPLS / LDP ------------------------------------------------------------------------------
+    def _add_mpls_trees(self, t):
+        t["config-if"].append(P.kw("mpls", "Configure MPLS interface parameters",
+            P.kw("ip", "Configure dynamic MPLS forwarding for IP", handler=lambda s, a, n: s.if_mpls(n), negatable=True),
+            P.kw("label", "Label protocol", P.kw("protocol", "Configure label/tag distribution protocol (LDP)",
+                 P.kw("ldp", "Use LDP (default)", handler=lambda s, a, n: None, negatable=True))), negatable=True))
+        t["config"].append(P.kw("mpls", "Configure MPLS parameters",
+            P.kw("label", "Label properties", P.kw("protocol", "Set platform default label distribution protocol",
+                 P.kw("ldp", "Use LDP (default)", handler=lambda s, a, n: None, negatable=True), negatable=True),
+                 negatable=True),
+            P.kw("ldp", "Label Distribution Protocol", P.kw("router-id", "Select interface to be used as LDP router id",
+                 P.arg(P.IfaceArg(), "Interface",
+                       P.kw("force", "Forcibly change the LDP router id", handler=lambda s, a, n: s.mpls_rid(a[0], n)),
+                       handler=lambda s, a, n: s.mpls_rid(a[0], n), negatable=True), negatable=True), negatable=True),
+            P.kw("ip", "Dynamic MPLS forwarding for IP", handler=lambda s, a, n: None, negatable=True), negatable=True))
+        show = next(x for x in t["priv"] if x.word == "show")
+        show.children.append(P.kw("mpls", "MPLS information",
+            P.kw("ldp", "Label Distribution Protocol information",
+                 P.kw("neighbor", "Display LDP neighbor information", handler=lambda s, a, n: s.show_mpls("neighbor")),
+                 P.kw("bindings", "Show the LDP Label Information Base (LIB)",
+                      handler=lambda s, a, n: s.show_mpls("bindings"))),
+            P.kw("forwarding-table", "Show the Label Forwarding Information Base (LFIB)",
+                 handler=lambda s, a, n: s.show_mpls("forwarding")),
+            P.kw("interfaces", "Per-interface MPLS forwarding information", handler=lambda s, a, n: s.show_mpls("interfaces"))))
+
+    def if_mpls(self, negate):
+        m = self.device.mpls
+        name = self.iface.name
+        if negate:
+            m.interfaces = [x for x in m.interfaces if x != name]
+        elif name not in m.interfaces:
+            m.interfaces.append(name)
+        m.ensure()
+        return None
+
+    def mpls_rid(self, port, negate):
+        self.device.mpls.router_id_iface = None if negate else port.name
+        return None
+
+    def show_mpls(self, what):
+        m = self.device.mpls
+        if what == "neighbor":
+            out = []
+            now = self.device.engine.now
+            for lid, p in m.peers.items():
+                up = int((now - p.up_since) / 1000)
+                out += [f"    Peer LDP Ident: {lid}:0; Local LDP Ident {m.lsr_id()}:0",
+                        f"        TCP connection: {lid}.646 - {m.lsr_id()}.{11000 + len(out)}",
+                        f"        State: Oper; Msgs sent/rcvd: {10 + up // 5}/{10 + up // 5}; Downstream",
+                        f"        Up time: {up // 3600:02d}:{up % 3600 // 60:02d}:{up % 60:02d}",
+                        "        LDP discovery sources:", f"          {p.port.name}, Src IP addr: {p.ip}",
+                        "        Addresses bound to peer LDP Ident:",
+                        "          " + "  ".join(str(a) for a in sorted(p.addresses))]
+            return "\n".join(out)
+        if what == "bindings":
+            out = []
+            for net, lab in sorted(m.local.items(), key=lambda x: (int(x[0].network_address), x[0].prefixlen)):
+                out += [f"  lib entry: {net}, rev {lab}",
+                        f"        local binding:  label: {'imp-null' if lab == 3 else lab}"]
+                for lid, p in m.peers.items():
+                    if net in p.bindings:
+                        rl = p.bindings[net]
+                        out.append(f"        remote binding: lsr: {lid}:0, label: {'imp-null' if rl == 3 else rl}")
+            return "\n".join(out)
+        if what == "interfaces":
+            lines = ["Interface              IP            Tunnel   BGP Static Operational"]
+            for name in m.interfaces:
+                p = self.device.ports.get(name)
+                if p is not None:
+                    lines.append(f"{p.name:<23}Yes (ldp)     No       No  No     {'Yes' if p.is_up else 'No'}")
+            return "\n".join(lines)
+        lines = ["Local      Outgoing   Prefix           Bytes Label   Outgoing   Next Hop",
+                 "Label      Label      or Tunnel Id     Switched      interface"]
+        for lab, (net, out, port, nh) in sorted(m.lfib.items()):
+            o = "Pop Label" if out in (None, 3) else str(out)
+            lines.append(f"{lab:<11}{o:<11}{str(net):<17}{0:<14}{port.short:<11}{nh}")
+        return "\n".join(lines)
+
+    # -- IS-IS -----------------------------------------------------------------------------------
+    def _add_isis_trees(self, t):
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        noop = lambda w, h: P.kw(w, h, P.arg(P.LineArg(), h, handler=lambda s, a, n: None, negatable=True),
+                                 handler=lambda s, a, n: None, negatable=True)
+        t["config-router-isis"] = sorted(de + [
+            P.kw("exit", "Exit from routing protocol configuration mode", handler=lambda s, a, n: s.set_mode("config")),
+            P.kw("net", "A Network Entity Title for this process (OSI only)",
+                 P.arg(P.WordArg("XX.XXXX. ... .XXX.XX"), "Network entity title (NET)",
+                       handler=lambda s, a, n: s.isis_net(a[0], n), negatable=True), negatable=True),
+            P.kw("passive-interface", "Suppress routing updates on an interface",
+                 P.arg(P.IfaceArg(), "Interface", handler=lambda s, a, n: s.isis_passive(a[0], n), negatable=True),
+                 negatable=True),
+            noop("is-type", "IS Level for this routing process"), noop("metric-style", "Use old/new style metrics"),
+            noop("log-adjacency-changes", "Log changes in adjacency state")], key=lambda x: x.word or "")
+        ifip = next(x for x in t["config-if"] if x.word == "ip")
+        ifip.children.append(P.kw("router", "IP router interface commands", P.kw("isis", "IS-IS Routing for IP",
+            P.arg(P.WordArg("WORD"), "Routing process tag", handler=lambda s, a, n: s.if_isis(n), negatable=True),
+            handler=lambda s, a, n: s.if_isis(n), negatable=True), negatable=True))
+        t["config-if"].append(P.kw("isis", "IS-IS commands", P.kw("metric", "Configure the metric for interface",
+            P.arg(P.NumArg(1, 16777214, "<1-16777214>"), "Default metric",
+                  P.arg(P.LineArg(), "level", handler=lambda s, a, n: s.isis_metric(a[0], n)),
+                  handler=lambda s, a, n: s.isis_metric(a[0], n), negatable=True), negatable=True),
+            noop("circuit-type", "Configure circuit type for interface"), negatable=True))
+        show = next(x for x in t["priv"] if x.word == "show")
+        show.children += [
+            P.kw("isis", "IS-IS routing information",
+                 P.kw("neighbors", "IS-IS neighbors", handler=lambda s, a, n: s.show_isis("neighbors")),
+                 P.kw("database", "IS-IS link state database", handler=lambda s, a, n: s.show_isis("database"))),
+            P.kw("clns", "CLNS network information", P.kw("neighbors", "CLNS neighbor adjacencies",
+                                                          handler=lambda s, a, n: s.show_isis("neighbors")))]
+        sip = next(x for x in show.children if x.word == "ip")
+        route = next(x for x in sip.children if x.word == "route")
+        route.children.append(P.kw("isis", "ISO IS-IS", handler=lambda s, a, n: s.show_ip_route("i")))
+
+    def router_isis(self, tag, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if negate:
+            d.disable_isis()
+            return None
+        if d.isis is None:
+            d.enable_isis(IsisConfig(tag=str(tag)))
+        self.mode = "config-router-isis"
+        return None
+
+    def isis_net(self, net, negate):
+        from ..routing.isis import parse_net
+        p = self.device.isis
+        if negate:
+            p.cfg.net = None
+            p.stop()
+            return None
+        if parse_net(net) is None:
+            return "%CLNS: Invalid NET (format: 49.0001.0000.0000.0001.00)"
+        p.cfg.net = net
+        p.restart()
+        return None
+
+    def isis_passive(self, port, negate):
+        lst = self.device.isis.cfg.passive
+        if negate:
+            self.device.isis.cfg.passive = [x for x in lst if x != port.name]
+        elif port.name not in lst:
+            lst.append(port.name)
+        return None
+
+    def if_isis(self, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if d.isis is None:
+            if negate:
+                return None
+            d.enable_isis(IsisConfig())
+        lst = d.isis.cfg.interfaces
+        if negate:
+            d.isis.cfg.interfaces = [x for x in lst if x != self.iface.name]
+        elif self.iface.name not in lst:
+            lst.append(self.iface.name)
+        d.isis.link_changed(self.iface)
+        return None
+
+    def isis_metric(self, value, negate):
+        d = self.device
+        if d.isis is None:
+            return None
+        if negate:
+            d.isis.cfg.metrics.pop(self.iface.name, None)
+        else:
+            d.isis.cfg.metrics[self.iface.name] = int(value)
+        d.isis.link_changed(self.iface)
+        return None
+
+    def show_isis(self, what):
+        from .base import isis_database_lines, isis_neighbors_rows
+        if what == "neighbors":
+            lines = ["", f"Tag {self.device.isis.cfg.tag if self.device.isis else ''}:",
+                     "System Id           Type Interface     IP Address      State Holdtime Circuit Id"]
+            for sid, host, port, ip, state, hold in isis_neighbors_rows(self.device):
+                lines.append(f"{host:<20}L2   {port.short:<14}{ip:<16}{state:<6}{hold:<9}{host}.01")
+            return "\n".join(lines)
+        return "\n".join(["", f"Tag {self.device.isis.cfg.tag if self.device.isis else ''}:",
+                          "IS-IS Level-2 Link State Database:",
+                          "LSPID                 LSP Seq Num  LSP Checksum  LSP Holdtime/Rcvd      ATT/P/OL"]
+                         + isis_database_lines(self.device))
+
     # -- VRF-lite --------------------------------------------------------------------------------
     def _add_vrf_trees(self, t):
         name = lambda h="VRF name": P.arg(P.WordArg("WORD"), h, handler=lambda s, a, n: s.vrf_define(a[0], n),
@@ -3751,7 +3942,7 @@ class CiscoSession(TreeSession):
                 pad = 8 if nested and major.prefixlen > 0 else 5
                 pad = max(pad, len(code) + 2)
                 head = f"{code:<{pad}}{r.network}"
-                if r.code.startswith(("O", "B", "R", "D")):
+                if r.code.startswith(("O", "B", "R", "D", "i")):
                     age = hms(d.engine.now / 1000 % 86400)
                     tail = f"[{r.distance}/{r.metric}] via {r.next_hop}, {age}, {r.port.name}"
                     if prev is not None and prev.network == r.network:
@@ -3861,6 +4052,13 @@ def render_running(device, cfg: dict) -> str:
         svi = bool(ic.get("svi")) or bool(ic.get("loopback"))
         if ic.get("voice_vlan"):
             lines.append(f" switchport voice vlan {ic['voice_vlan']}")
+        if name in (cfg.get("mpls") or {}).get("interfaces", []):
+            lines.append(" mpls ip")
+        _isis = cfg.get("isis") or {}
+        if name in _isis.get("interfaces", []):
+            lines.append(" ip router isis" + ("" if _isis.get("tag", "1") == "1" else " " + _isis["tag"]))
+            if name in _isis.get("metrics", {}):
+                lines.append(f" isis metric {_isis['metrics'][name]}")
         if ic.get("bandwidth"):
             lines.append(f" bandwidth {ic['bandwidth']}")
         if ic.get("delay"):
@@ -3977,6 +4175,20 @@ def render_running(device, cfg: dict) -> str:
         if cfg.get("ip_routing") or cfg.get("default_gateway"):
             lines.append("!")
     if True:
+        mp = cfg.get("mpls") or {}
+        if mp.get("interfaces"):
+            lines.append("mpls label protocol ldp")
+            if mp.get("router_id"):
+                lines.append(f"mpls ldp router-id {mp['router_id']} force")
+            lines.append("!")
+        isis = cfg.get("isis")
+        if isis and isis.get("net"):
+            tag = isis.get("tag", "1")
+            lines += [f"router isis{'' if tag == '1' else ' ' + tag}", f" net {isis['net']}", " is-type level-2-only",
+                      " metric-style wide"]
+            for x in isis.get("passive", []):
+                lines.append(f" passive-interface {x}")
+            lines.append("!")
         eg = cfg.get("eigrp")
         if eg and eg.get("enabled", True):
             lines.append(f"router eigrp {eg['asn']}")

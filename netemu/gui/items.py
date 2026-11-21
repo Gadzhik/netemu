@@ -24,7 +24,11 @@ PROTO_COLORS = {"ARP": QColor("#fbc02d"), "ICMP": QColor("#ec407a"), "OSPF": QCo
                 "SSH": QColor("#26a69a"), "TELNET": QColor("#ef5350"),
                 "LACP": QColor("#8d6e63"), "PAgP": QColor("#a1887f"),
                 "HSRP": QColor("#5c6bc0"), "VRRP": QColor("#7986cb"),
-                "OSPFv3": QColor("#00897b"), "RIPng": QColor("#ff8a65"), "DHCPv6": QColor("#9ccc65")}
+                "OSPFv3": QColor("#00897b"), "RIPng": QColor("#ff8a65"), "DHCPv6": QColor("#9ccc65"),
+                "EIGRP": QColor("#ef6c00"), "ISIS": QColor("#6d4c41"), "IS-IS": QColor("#6d4c41"),
+                "MPLS": QColor("#00acc1"), "LDP": QColor("#26c6da"), "GRE": QColor("#8e24aa"),
+                "IPsec": QColor("#455a64"), "Syslog": QColor("#9e9d24"), "SNMP": QColor("#5d4037"),
+                "NTP": QColor("#3949ab"), "SCCP": QColor("#d81b60"), "RTP": QColor("#e53935")}
 
 
 class DeviceItem(QGraphicsItem):

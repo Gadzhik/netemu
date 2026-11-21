@@ -538,3 +538,30 @@ def set_voice_vlan(port, vlan):
     if peer is not None and hasattr(peer.device, "_discover"):
         peer.device.engine.schedule(100.0, peer.device._discover)
     return None
+
+
+def isis_neighbors_rows(device):
+    """[(system id, hostname, interface, ip, state, hold)] for show isis neighbors / display isis peer."""
+    p = getattr(device, "isis", None)
+    if p is None:
+        return []
+    now = device.engine.now
+    return [(a.system_id, a.hostname, a.port, str(a.ip or ""), a.state.upper(),
+             max(0, 10 - int((now - a.last_seen) / 1000))) for a in p.adj.values()]
+
+
+def isis_database_lines(device, star_own=True):
+    p = getattr(device, "isis", None)
+    if p is None:
+        return []
+    out = []
+    for sid, e in sorted(p.lsdb.items()):
+        own = "*" if sid == p.system_id and star_own else " "
+        out.append(f"{e['hostname'] + '.00-00':<26}{own} 0x{e['seq']:08X}   0x{(e['seq'] * 7919) & 0xFFFF:04X}"
+                   f"        1199              0/0/0")
+        for n, m in e["neighbors"]:
+            nh = next((x["hostname"] for s, x in p.lsdb.items() if s == n), n)
+            out.append(f"  Metric: {m:<10} IS-Extended {nh}.00")
+        for pfx, m in e["prefixes"]:
+            out.append(f"  Metric: {m:<10} IP {pfx}")
+    return out
