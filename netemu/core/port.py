@@ -122,6 +122,8 @@ class Port:
     def is_up(self) -> bool:
         """Line protocol: both ends administratively up and a cable plugged in."""
         p = self.peer
+        if self.link is not None and getattr(self.link, "too_long", False):
+            return False                                   # copper beyond 100 m: no link
         return bool(self.admin_up and p is not None and p.admin_up
                     and self.device.powered and p.device.powered)
 
@@ -228,6 +230,27 @@ class SubInterface(Port):
         return f"<SubInterface {self.device.name}:{self.name} vlan={self.vlan}>"
 
 
+def parse_location(text: str | None) -> tuple:
+    """'Building A / Floor 2 / Rack 1' -> ('Building A', 'Floor 2', 'Rack 1')"""
+    parts = [x.strip() for x in (text or "").split("/") if x.strip()]
+    return tuple(parts[:3]) + ("",) * (3 - len(parts[:3]))
+
+
+def estimate_length(a, b) -> float:
+    """Cable length in metres from the placement: same rack 2 m, same floor 30 m, another floor of the same
+    building 60 m, another building 300 m; devices without a placement count as one room (5 m)."""
+    la, lb = parse_location(getattr(a, "location", "")), parse_location(getattr(b, "location", ""))
+    if not la[0] or not lb[0]:
+        return 5.0
+    if la[0] != lb[0]:
+        return 300.0
+    if la[1] != lb[1]:
+        return 60.0
+    if la[2] and la[2] == lb[2]:
+        return 2.0
+    return 30.0
+
+
 class Link:
     def __init__(self, a: Port, b: Port, delay: float = LINK_DELAY_MS):
         if a is b or a.device is b.device:
@@ -238,8 +261,30 @@ class Link:
         self.b = b
         self.delay = delay
         self.wireless = False
+        self.media = "copper"          # copper (Cat 6, 100 m) | fiber (multimode, 550 m) | singlemode (10 km)
+        self.length_m: float | None = None     # None: estimated from where the devices are placed
         a.link = self
         b.link = self
+
+    MAX_LENGTH = {"copper": 100, "fiber": 550, "singlemode": 10000}
+
+    @property
+    def length(self) -> float:
+        if self.length_m is not None:
+            return float(self.length_m)
+        return estimate_length(self.a.device, self.b.device)
+
+    @property
+    def too_long(self) -> bool:
+        return not self.wireless and self.length > self.MAX_LENGTH.get(self.media, 100)
+
+    def set_physical(self, media: str | None = None, length_m: float | None = None) -> None:
+        if media is not None:
+            self.media = media
+        self.length_m = length_m
+        for p in (self.a, self.b):
+            p.device.link_state_changed(p)
+        self.engine.emit("link_state", self.a)
 
     @property
     def engine(self):

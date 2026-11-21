@@ -165,6 +165,9 @@ class MainWindow(QMainWindow):
         self.act_capture = self._act("Анализатор пакетов", self.show_capture, "Ctrl+Shift+W")
         m.addAction(self.act_capture)
         self.capture_dock = None
+        self.act_physical = self._act("Физический вид (здания, стойки, кабели)", self.show_physical, "Ctrl+Shift+P")
+        m.addAction(self.act_physical)
+        self.physical_dock = None
 
         m = mb.addMenu(tr("&Вид"))
         self.act_labels = self._act("Подписи портов", self._toggle_labels, checkable=True)
@@ -689,6 +692,19 @@ class MainWindow(QMainWindow):
         self._help.activateWindow()
         return self._help
 
+    def show_physical(self):
+        from .physical_panel import PhysicalPanel
+        if self.physical_dock is None:
+            self.physical_panel = PhysicalPanel(self)
+            self.physical_dock = QDockWidget(tr("Физический вид"), self)
+            self.physical_dock.setObjectName("physical")
+            self.physical_dock.setWidget(self.physical_panel)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.physical_dock)
+        self.physical_panel.refresh()
+        self.physical_dock.show()
+        self.physical_dock.raise_()
+        return self.physical_panel
+
     # -- packet analyzer ---------------------------------------------------------------------------
     def show_capture(self):
         from .capture_panel import CapturePanel
@@ -913,6 +929,8 @@ class MainWindow(QMainWindow):
             self.class_leave()
         if getattr(self, "capture_dock", None) is not None:
             self.capture_panel.shutdown()
+        if getattr(self, "physical_dock", None) is not None:
+            self.physical_panel.shutdown()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()

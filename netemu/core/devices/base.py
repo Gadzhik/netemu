@@ -182,6 +182,8 @@ class Device:
         self.engine.emit("log", self, message)
 
     # -- configuration -----------------------------------------------------
+    location: str = ""                       # "Building / Floor / Rack" (physical view)
+
     def to_config(self) -> dict[str, Any]:
         """Vendor-neutral configuration state (used for save/load)."""
         cfg = {

@@ -181,6 +181,8 @@ class LinkItem(QGraphicsItem):
     def paint(self, p: QPainter, option, widget=None) -> None:
         p.setRenderHint(QPainter.Antialiasing)
         color = theme.color("cable_sel") if self.isSelected() else theme.color("cable")
+        if getattr(self.link, "too_long", False):
+            color = QColor("#e53935")                     # copper longer than 100 m: the link stays down
         pen = QPen(color, 2.4 if self.isSelected() else 1.6)
         if getattr(self.link, "wireless", False):
             pen.setStyle(Qt.DashLine)

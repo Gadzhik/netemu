@@ -20,11 +20,19 @@ def topology_to_dict(topo: Topology) -> dict[str, Any]:
     for d in topo.devices.values():
         devices.append({
             "id": d.id, "model": d.model_key, "name": d.name,
-            "x": round(d.x, 1), "y": round(d.y, 1), "powered": d.powered,
+            "x": round(d.x, 1), "y": round(d.y, 1), "powered": d.powered, "location": getattr(d, "location", ""),
             "config": d.to_config(), "startup": d.startup_config,
         })
-    links = [{"a": [l.a.device.id, l.a.name], "b": [l.b.device.id, l.b.name]}
-             for l in topo.links if not getattr(l, "wireless", False)]
+    links = []
+    for l in topo.links:
+        if getattr(l, "wireless", False):
+            continue
+        ld = {"a": [l.a.device.id, l.a.name], "b": [l.b.device.id, l.b.name]}
+        if l.media != "copper":
+            ld["media"] = l.media
+        if l.length_m is not None:
+            ld["length"] = l.length_m
+        links.append(ld)
     data = {"format": FORMAT, "version": VERSION, "devices": devices, "links": links}
     if getattr(topo, "lab", None) is not None:
         data["lab"] = topo.lab.to_dict()
@@ -45,10 +53,14 @@ def topology_from_dict(data: dict[str, Any], topo: Topology | None = None) -> To
                               device_id=dd["id"])
         dev.powered = dd.get("powered", True)
         dev.startup_config = dd.get("startup")
+        dev.location = dd.get("location", "")
     for ld in data.get("links", []):
         a = topo.devices[ld["a"][0]].ports[ld["a"][1]]
         b = topo.devices[ld["b"][0]].ports[ld["b"][1]]
-        topo.connect(a, b)
+        link = topo.connect(a, b)
+        if ld.get("media") or ld.get("length") is not None:
+            link.media = ld.get("media", "copper")
+            link.length_m = ld.get("length")
     for dd in data.get("devices", []):
         topo.devices[dd["id"]].apply_config(dd.get("config", {}))
     topo.sync_names()
