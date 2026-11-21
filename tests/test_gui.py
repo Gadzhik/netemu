@@ -491,7 +491,7 @@ def test_english_interface_has_no_russian_text(qtbot, monkeypatch):
             for t in root.findChildren(QTableWidget):
                 texts += [t.horizontalHeaderItem(i).text() for i in range(t.columnCount())]
         texts.append(dialogs[-1].text())
-        russian = [t for t in texts if cyr.search(t) and "Русский" not in t and "Язык" not in t]
+        russian = [t for t in texts if cyr.search(t) and t not in i18n.LANGUAGES.values() and "Язык" not in t]
         assert not russian, russian[:10]
         assert w.menuBar().actions()[0].text() == "&File"
         assert "Command Prompt" in [dialogs[4].tabs.tabText(i) for i in range(dialogs[4].tabs.count())]

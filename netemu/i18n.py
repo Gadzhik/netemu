@@ -1,15 +1,22 @@
-"""User-interface language (Russian is the source language, English is a translation).
+"""User-interface language (Russian is the source language; English, Ukrainian and Kazakh are translations).
 
 GUI code wraps every user-visible string in ``tr("Русский текст {x}", x=...)``.
 The Russian text is the lookup key; ``EN`` holds the English version. The
 choice is stored with QSettings by the GUI and applied with ``set_language``
 before any window is created. Vendor CLI output is always English, as on real
 equipment, so the core needs no translation.
+
+Further languages live in ``i18n_<code>.py`` (``TRANSLATION`` dict, same keys).
+A string missing there falls back to English. Documentation, labs and reports
+exist in Russian and English only; ``content_language()`` picks one of them.
 """
 from __future__ import annotations
 
-LANGUAGES = {"ru": "Русский", "en": "English"}
+import importlib
+
+LANGUAGES = {"ru": "Русский", "en": "English", "uk": "Українська", "kk": "Қазақша"}
 _lang = "ru"
+_tables: dict[str, dict[str, str]] = {}
 
 
 def set_language(lang: str) -> None:
@@ -21,9 +28,32 @@ def language() -> str:
     return _lang
 
 
-def tr(text: str, **fmt) -> str:
-    s = EN.get(text, text) if _lang == "en" else text
+def content_language() -> str:
+    """Language for docs, labs and reports: Russian or English."""
+    return "ru" if _lang == "ru" else "en"
+
+
+def table(lang: str) -> dict[str, str]:
+    if lang == "en":
+        return EN
+    if lang not in _tables:
+        try:
+            _tables[lang] = importlib.import_module(f"netemu.i18n_{lang}").TRANSLATION
+        except ImportError:
+            _tables[lang] = {}
+    return _tables[lang]
+
+
+def tr_in(lang: str, text: str, **fmt) -> str:
+    if lang == "ru":
+        s = text
+    else:
+        s = table(lang).get(text) or EN.get(text, text)
     return s.format(**fmt) if fmt else s
+
+
+def tr(text: str, **fmt) -> str:
+    return tr_in(_lang, text, **fmt)
 
 
 EN: dict[str, str] = {
