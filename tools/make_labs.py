@@ -442,7 +442,8 @@ def build(fn):
     t.engine.run(max_time=t.engine.now + 60000)
     lab_obj = Lab(title, text, parse_checks(checks)[0], notes, script, faults, "troubleshoot" if faults else "lab")
     from labs_en import EN
-    en = EN[fname]
+    from labs_more import EN as EN2
+    en = EN.get(fname) or EN2[fname]
     assert len(en["checks"]) == len(lab_obj.checks), f"{fname}: English check list does not match"
     lab_obj.translations = {"en": en}
     before = [ok for _, ok, _ in evaluate(t, lab_obj)]
@@ -462,7 +463,11 @@ def build(fn):
 
 
 if __name__ == "__main__":
+    from labs_more import LABS as MORE
     OUT.mkdir(parents=True, exist_ok=True)
-    for fn in LABS:
+    only = sys.argv[1:]
+    for fn in LABS + MORE:
+        if only and not any(o in fn.__name__ for o in only):
+            continue
         name, n = build(fn)
         print(f"{name}: {n} checks OK")

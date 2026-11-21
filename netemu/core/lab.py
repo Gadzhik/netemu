@@ -33,9 +33,10 @@ from datetime import datetime
 from ipaddress import ip_address, ip_network
 
 CHECK_TYPES = ("ping", "noping", "route", "ospf", "hostname", "vlan", "ip", "dhcp", "nat", "ssh", "stproot", "fhrp",
-               "wifi", "access")
+               "wifi", "access", "bgp", "channel", "psec", "phone", "ospf6", "http")
 NEED = {"ping": 2, "noping": 2, "route": 2, "ospf": 2, "hostname": 2, "vlan": 2, "ip": 2, "dhcp": 1, "nat": 1,
-        "ssh": 1, "stproot": 1, "fhrp": 2, "wifi": 1, "access": 3}
+        "ssh": 1, "stproot": 1, "fhrp": 2, "wifi": 1, "access": 3, "bgp": 2, "channel": 2, "psec": 2, "phone": 1,
+        "ospf6": 2, "http": 2}
 
 
 # ------------------------------------------------------------------------------------ crypto
@@ -312,6 +313,31 @@ def run_check(topology, c: Check) -> tuple[bool, str]:
             if ok and len(a) > 1:
                 ok = (getattr(dev, "wifi", {}) or {}).get("ssid") == a[1]
             return ok, "associated" if ok else "not associated"
+        if k == "bgp":
+            bgp = getattr(dev, "bgp", None)
+            n = sum(1 for p in (bgp.peers.values() if bgp else []) if p.state == "Established")
+            return n >= int(a[1]), f"{n} established BGP session(s)"
+        if k == "channel":
+            want = int(a[2]) if len(a) > 2 else 2
+            for p in dev.ports.values():
+                if getattr(p, "is_channel", False) and (p.name.lower().endswith(a[1].lower().lstrip("po")) or
+                                                         p.short.lower() == a[1].lower()):
+                    n = len(p.active_members)
+                    return n >= want, f"{n} bundled member(s)"
+            return False, f"no port-channel {a[1]}"
+        if k == "psec":
+            p = dev.get_port(a[1])
+            ok = p is not None and p.psec is not None
+            return ok, "port security on" if ok else "port security off"
+        if k == "phone":
+            st = getattr(dev, "state", "")
+            return st not in ("", "unregistered"), f"phone {st or 'n/a'}" + (f", DN {dev.number}" if getattr(dev, "number", None) else "")
+        if k == "ospf6":
+            proc = getattr(dev, "v6igp", {}).get("ospf6")
+            n = len(getattr(proc, "neighbors", {}) or {}) if proc is not None else 0
+            return n >= int(a[1]), f"{n} OSPFv3 neighbour(s)"
+        if k == "http":
+            return _http(topology, dev, a[1])
         if k == "access":
             p = dev.get_port(a[1])
             if p is None:
@@ -339,6 +365,17 @@ def _ping(topology, dev, target) -> tuple[bool, str]:
         return False, f"bad address {target}"
     topology.engine.run_until(lambda: job.done)
     return res["ok"] > 0, f"{res['ok']}/3 replies"
+
+
+def _http(topology, dev, url) -> tuple[bool, str]:
+    from .services.http import HttpGet
+    res = {}
+
+    def done(status, body):
+        res["s"] = status
+    job = HttpGet(dev, url, done).start()
+    topology.engine.run_until(lambda: job.done)
+    return res.get("s") == 200, f"HTTP {res.get('s') or 'failed'}"
 
 
 def evaluate(topology, lab: Lab) -> list[tuple[Check, bool, str]]:

@@ -1,0 +1,242 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "5eaee1335423",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 150,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R1",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:1::1/64"
+      ],
+      "ipv6_enabled": true
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:12::1/64"
+      ],
+      "ipv6_enabled": true
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "ipv6_routing": true
+   },
+   "startup": null
+  },
+  {
+   "id": "2ed84b2f05a8",
+   "model": "cisco-2911",
+   "name": "R2",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R2",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:12::2/64"
+      ],
+      "ipv6_enabled": true
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:23::1/64"
+      ],
+      "ipv6_enabled": true
+     }
+    },
+    "static_routes": [],
+    "ipv6_routing": true
+   },
+   "startup": null
+  },
+  {
+   "id": "f1876d0bcc89",
+   "model": "cisco-2911",
+   "name": "R3",
+   "x": 650,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R3",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:3::1/64"
+      ],
+      "ipv6_enabled": true
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:23::2/64"
+      ],
+      "ipv6_enabled": true
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "ipv6_routing": true
+   },
+   "startup": null
+  },
+  {
+   "id": "3d861cf083ae",
+   "model": "pc",
+   "name": "PC1",
+   "x": 150,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:1::10/64"
+      ],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "gateway6": "2001:db8:1::1"
+   },
+   "startup": null
+  },
+  {
+   "id": "5c605db2c464",
+   "model": "pc",
+   "name": "PC3",
+   "x": 650,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC3",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:3::10/64"
+      ],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "gateway6": "2001:db8:3::1"
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "5eaee1335423",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "2ed84b2f05a8",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "2ed84b2f05a8",
+    "GigabitEthernet0/2"
+   ],
+   "b": [
+    "f1876d0bcc89",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "3d861cf083ae",
+    "FastEthernet0"
+   ],
+   "b": [
+    "5eaee1335423",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "5c605db2c464",
+    "FastEthernet0"
+   ],
+   "b": [
+    "f1876d0bcc89",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "IPv6 и OSPFv3",
+  "text": "Адреса IPv6 уже назначены. Сети ПК 2001:db8:1::/64 и 2001:db8:3::/64 пока не связаны.\n\n1. На каждом маршрутизаторе запустите OSPFv3 (`ipv6 router ospf 1`, router-id 1.1.1.1 / 2.2.2.2 / 3.3.3.3).\n2. Включите его на всех интерфейсах в зоне 0 (`ipv6 ospf 1 area 0`).\n3. Проверьте `show ipv6 ospf neighbor`, `show ipv6 route` и `ping 2001:db8:3::10` с PC1.",
+  "checks": [
+   "ospf6 R2 2 | У R2 два соседа OSPFv3",
+   "route R1 2001:db8:3::/64 | R1 знает сеть PC3",
+   "ping PC1 2001:db8:3::10 | PC1 видит PC3 по IPv6"
+  ],
+  "translations": {
+   "en": {
+    "title": "IPv6 and OSPFv3",
+    "text": "The IPv6 addresses are assigned. The PC networks 2001:db8:1::/64 and 2001:db8:3::/64 are not connected yet.\n\n1. Start OSPFv3 on every router (`ipv6 router ospf 1`, router-id 1.1.1.1 / 2.2.2.2 / 3.3.3.3).\n2. Enable it on all interfaces in area 0 (`ipv6 ospf 1 area 0`).\n3. Check `show ipv6 ospf neighbor`, `show ipv6 route` and `ping 2001:db8:3::10` from PC1.",
+    "checks": [
+     "R2 has two OSPFv3 neighbours",
+     "R1 knows PC3's network",
+     "PC1 reaches PC3 over IPv6"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\nipv6 router ospf 1\nrouter-id 1.1.1.1\nexit\ninterface gi0/0\nipv6 ospf 1 area 0\ninterface gi0/1\nipv6 ospf 1 area 0\nend",
+   "R2": "enable\nconfigure terminal\nipv6 router ospf 1\nrouter-id 2.2.2.2\nexit\ninterface gi0/1\nipv6 ospf 1 area 0\ninterface gi0/2\nipv6 ospf 1 area 0\nend",
+   "R3": "enable\nconfigure terminal\nipv6 router ospf 1\nrouter-id 3.3.3.3\nexit\ninterface gi0/0\nipv6 ospf 1 area 0\ninterface gi0/1\nipv6 ospf 1 area 0\nend"
+  }
+ }
+}

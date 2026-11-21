@@ -1,0 +1,246 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "910a7b4404b5",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "38c05f7a383b",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 20,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "443c63f5eeeb",
+   "model": "pc",
+   "name": "PC1",
+   "x": 250,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "38c05f7a383b",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "910a7b4404b5",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "443c63f5eeeb",
+    "FastEthernet0"
+   ],
+   "b": [
+    "910a7b4404b5",
+    "FastEthernet0/1"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Port security",
+  "text": "К порту Fa0/1 разрешено подключать только рабочий компьютер PC1.\n\n1. Переведите Fa0/1 в режим access и включите на нём port security.\n2. Разрешите один MAC-адрес и запомните его автоматически (`mac-address sticky`), нарушение — shutdown.\n3. Проверьте `show port-security interface fa0/1` и связь PC1 со шлюзом.",
+  "checks": [
+   "psec SW1 Fa0/1 | Port security включён на Fa0/1",
+   "ping PC1 192.168.1.1 | PC1 работает через защищённый порт"
+  ],
+  "translations": {
+   "en": {
+    "title": "Port security",
+    "text": "Only the office PC1 may be connected to port Fa0/1.\n\n1. Make Fa0/1 an access port and enable port security on it.\n2. Allow one MAC address, learn it automatically (`mac-address sticky`), violation mode shutdown.\n3. Check `show port-security interface fa0/1` and that PC1 reaches its gateway.",
+    "checks": [
+     "Port security is on for Fa0/1",
+     "PC1 works through the secured port"
+    ]
+   }
+  },
+  "script": {
+   "SW1": "enable\nconfigure terminal\ninterface fa0/1\nswitchport mode access\nswitchport port-security\nswitchport port-security maximum 1\nswitchport port-security mac-address sticky\nswitchport port-security violation shutdown\nend"
+  }
+ }
+}

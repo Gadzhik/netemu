@@ -1,0 +1,273 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "44d1e1de2563",
+   "model": "internet",
+   "name": "Internet",
+   "x": 400,
+   "y": 60,
+   "powered": true,
+   "config": {
+    "hostname": "Internet",
+    "interfaces": {
+     "ISP0": {
+      "admin_up": true,
+      "ip": "203.0.113.1/30",
+      "description": ""
+     },
+     "ISP1": {
+      "admin_up": true,
+      "ip": "203.0.113.5/30",
+      "description": ""
+     },
+     "ISP2": {
+      "admin_up": true,
+      "ip": "203.0.113.9/30",
+      "description": ""
+     },
+     "ISP3": {
+      "admin_up": true,
+      "ip": "203.0.113.13/30",
+      "description": ""
+     },
+     "ISP4": {
+      "admin_up": true,
+      "ip": "203.0.113.17/30",
+      "description": ""
+     },
+     "ISP5": {
+      "admin_up": true,
+      "ip": "203.0.113.21/30",
+      "description": ""
+     },
+     "ISP6": {
+      "admin_up": true,
+      "ip": "203.0.113.25/30",
+      "description": ""
+     },
+     "ISP7": {
+      "admin_up": true,
+      "ip": "203.0.113.29/30",
+      "description": ""
+     },
+     "dns.google": {
+      "admin_up": true,
+      "ip": "8.8.8.8/32",
+      "description": "",
+      "loopback": true,
+      "short": "dns.google"
+     },
+     "one.one.one.one": {
+      "admin_up": true,
+      "ip": "1.1.1.1/32",
+      "description": "",
+      "loopback": true,
+      "short": "one.one.one.one"
+     },
+     "www.example.com": {
+      "admin_up": true,
+      "ip": "93.184.216.34/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.example.com"
+     },
+     "www.netemu.lab": {
+      "admin_up": true,
+      "ip": "198.51.100.80/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.netemu.lab"
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "42a0b6c36b24",
+   "model": "cisco-2911",
+   "name": "HQ",
+   "x": 200,
+   "y": 200,
+   "powered": true,
+   "config": {
+    "hostname": "HQ",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "203.0.113.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [
+     {
+      "network": "0.0.0.0/0",
+      "next_hop": "203.0.113.1",
+      "interface": null,
+      "distance": 1
+     }
+    ]
+   },
+   "startup": null
+  },
+  {
+   "id": "7c772030a7b8",
+   "model": "cisco-2911",
+   "name": "BRANCH",
+   "x": 600,
+   "y": 200,
+   "powered": true,
+   "config": {
+    "hostname": "BRANCH",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.2.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "203.0.113.6/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [
+     {
+      "network": "0.0.0.0/0",
+      "next_hop": "203.0.113.5",
+      "interface": null,
+      "distance": 1
+     }
+    ]
+   },
+   "startup": null
+  },
+  {
+   "id": "215c70bc2632",
+   "model": "pc",
+   "name": "PC-HQ",
+   "x": 200,
+   "y": 380,
+   "powered": true,
+   "config": {
+    "hostname": "PC-HQ",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "9e9d6e70400b",
+   "model": "pc",
+   "name": "PC-BR",
+   "x": 600,
+   "y": 380,
+   "powered": true,
+   "config": {
+    "hostname": "PC-BR",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.2.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.2.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "42a0b6c36b24",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "44d1e1de2563",
+    "ISP0"
+   ]
+  },
+  {
+   "a": [
+    "7c772030a7b8",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "44d1e1de2563",
+    "ISP1"
+   ]
+  },
+  {
+   "a": [
+    "215c70bc2632",
+    "FastEthernet0"
+   ],
+   "b": [
+    "42a0b6c36b24",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "9e9d6e70400b",
+    "FastEthernet0"
+   ],
+   "b": [
+    "7c772030a7b8",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "VPN между офисами (GRE + IPsec)",
+  "text": "Главный офис (HQ, 203.0.113.2) и филиал (BRANCH, 203.0.113.6) выходят в интернет. Частные сети 192.168.1.0/24 и 192.168.2.0/24 пока не видят друг друга.\n\n1. Создайте между маршрутизаторами GRE-туннель Tunnel0 (10.255.0.0/30).\n2. Защитите его IPsec: ISAKMP-политика с ключом `Vpn-2026`, transform-set и `tunnel protection ipsec profile`.\n3. Направьте сеть другого офиса в туннель и проверьте связь между ПК.",
+  "checks": [
+   "ping PC-HQ 192.168.2.10 | Офисы связаны через VPN",
+   "ping HQ 10.255.0.2 | Туннель поднят"
+  ],
+  "translations": {
+   "en": {
+    "title": "Site-to-site VPN (GRE + IPsec)",
+    "text": "The head office (HQ, 203.0.113.2) and the branch (BRANCH, 203.0.113.6) are on the Internet. Their private networks 192.168.1.0/24 and 192.168.2.0/24 cannot reach each other yet.\n\n1. Build a GRE tunnel Tunnel0 between the routers (10.255.0.0/30).\n2. Protect it with IPsec: an ISAKMP policy with the key `Vpn-2026`, a transform set and `tunnel protection ipsec profile`.\n3. Route the other office's network into the tunnel and test PC to PC.",
+    "checks": [
+     "The offices are connected through the VPN",
+     "The tunnel is up"
+    ]
+   }
+  },
+  "script": {
+   "HQ": "enable\nconfigure terminal\ncrypto isakmp policy 10\nencryption aes 256\nauthentication pre-share\ngroup 14\nexit\ncrypto isakmp key Vpn-2026 address 203.0.113.6\ncrypto ipsec transform-set TS esp-aes 256 esp-sha-hmac\nexit\ncrypto ipsec profile VPN\nset transform-set TS\nexit\ninterface tunnel 0\nip address 10.255.0.1 255.255.255.252\ntunnel source gi0/1\ntunnel destination 203.0.113.6\ntunnel protection ipsec profile VPN\nexit\nip route 192.168.2.0 255.255.255.0 Tunnel0\nend",
+   "BRANCH": "enable\nconfigure terminal\ncrypto isakmp policy 10\nencryption aes 256\nauthentication pre-share\ngroup 14\nexit\ncrypto isakmp key Vpn-2026 address 203.0.113.2\ncrypto ipsec transform-set TS esp-aes 256 esp-sha-hmac\nexit\ncrypto ipsec profile VPN\nset transform-set TS\nexit\ninterface tunnel 0\nip address 10.255.0.2 255.255.255.252\ntunnel source gi0/1\ntunnel destination 203.0.113.2\ntunnel protection ipsec profile VPN\nexit\nip route 192.168.1.0 255.255.255.0 Tunnel0\nend"
+  }
+ }
+}

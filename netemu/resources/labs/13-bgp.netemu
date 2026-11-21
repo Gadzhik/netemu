@@ -1,0 +1,170 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "15057ba755da",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 250,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R1",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "10.1.0.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "172.16.12.1/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "fd0f8013f61d",
+   "model": "cisco-2911",
+   "name": "R2",
+   "x": 550,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R2",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "10.2.0.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "172.16.12.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "934df244f149",
+   "model": "pc",
+   "name": "PC1",
+   "x": 250,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "10.1.0.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "10.1.0.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "842a358b6231",
+   "model": "pc",
+   "name": "PC2",
+   "x": 550,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "10.2.0.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "10.2.0.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "15057ba755da",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "fd0f8013f61d",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "934df244f149",
+    "FastEthernet0"
+   ],
+   "b": [
+    "15057ba755da",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "842a358b6231",
+    "FastEthernet0"
+   ],
+   "b": [
+    "fd0f8013f61d",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "eBGP между двумя AS",
+  "text": "Две компании соединены каналом 172.16.12.0/30: R1 в AS 65001 (сеть 10.1.0.0/24), R2 в AS 65002 (сеть 10.2.0.0/24).\n\n1. Настройте eBGP-соседство между R1 и R2.\n2. Анонсируйте каждую локальную сеть командой `network … mask …`.\n3. Проверьте `show ip bgp summary`, маршрут с кодом B и связь PC1 с PC2.",
+  "checks": [
+   "bgp R1 1 | У R1 установлена BGP-сессия",
+   "bgp R2 1 | У R2 установлена BGP-сессия",
+   "route R1 10.2.0.0/24 | R1 получил сеть 10.2.0.0/24 по BGP",
+   "ping PC1 10.2.0.10 | PC1 видит PC2"
+  ],
+  "translations": {
+   "en": {
+    "title": "eBGP between two autonomous systems",
+    "text": "Two companies are linked by 172.16.12.0/30: R1 in AS 65001 (10.1.0.0/24), R2 in AS 65002 (10.2.0.0/24).\n\n1. Configure the eBGP neighbourship between R1 and R2.\n2. Advertise each local network with `network … mask …`.\n3. Check `show ip bgp summary`, the B route and that PC1 reaches PC2.",
+    "checks": [
+     "R1 has an established BGP session",
+     "R2 has an established BGP session",
+     "R1 learned 10.2.0.0/24 through BGP",
+     "PC1 reaches PC2"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\nrouter bgp 65001\nneighbor 172.16.12.2 remote-as 65002\nnetwork 10.1.0.0 mask 255.255.255.0\nend",
+   "R2": "enable\nconfigure terminal\nrouter bgp 65002\nneighbor 172.16.12.1 remote-as 65001\nnetwork 10.2.0.0 mask 255.255.255.0\nend"
+  }
+ }
+}

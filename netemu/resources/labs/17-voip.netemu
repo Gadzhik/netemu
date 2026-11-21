@@ -1,0 +1,317 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "df4ca9edc0dc",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 40,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/0.20": {
+      "admin_up": true,
+      "ip": "192.168.20.1/24",
+      "description": "",
+      "parent": "GigabitEthernet0/0",
+      "vlan": 20,
+      "native": false,
+      "arp_broadcast": true
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "1a6e15d46164",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 180,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "access",
+      "pvid": 10,
+      "access_vlan": 10,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "access",
+      "pvid": 10,
+      "access_vlan": 10,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "trunk",
+      "pvid": 1,
+      "access_vlan": 1,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "vlans": {
+     "1": "default",
+     "10": "VLAN0010",
+     "20": "VLAN0020"
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "b880884d806f",
+   "model": "ip-phone",
+   "name": "Phone1",
+   "x": 250,
+   "y": 330,
+   "powered": true,
+   "config": {
+    "hostname": "Phone1",
+    "interfaces": {
+     "Switch": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "PC": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "dhcp": true
+   },
+   "startup": null
+  },
+  {
+   "id": "cf8ab9f9261c",
+   "model": "ip-phone",
+   "name": "Phone2",
+   "x": 550,
+   "y": 330,
+   "powered": true,
+   "config": {
+    "hostname": "Phone2",
+    "interfaces": {
+     "Switch": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "PC": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "dhcp": true
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "df4ca9edc0dc",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "1a6e15d46164",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "b880884d806f",
+    "Switch"
+   ],
+   "b": [
+    "1a6e15d46164",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "cf8ab9f9261c",
+    "Switch"
+   ],
+   "b": [
+    "1a6e15d46164",
+    "FastEthernet0/2"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "IP-телефония (voice VLAN, CME)",
+  "text": "Подключите два IP-телефона к станции Cisco CME на R1. Данные идут во VLAN 10, голос — во VLAN 20 (192.168.20.0/24).\n\n1. На SW1 включите голосовой VLAN 20 на портах телефонов (`switchport voice vlan 20`).\n2. На R1 создайте DHCP-пул VOICE с опцией 150 (адрес CME 192.168.20.1).\n3. Настройте `telephony-service` (ip source-address, max-ephones, max-dn, auto assign) и номера 1001, 1002.\n4. Позвоните с Phone1 на 1002 (вкладка «Телефон»).",
+  "checks": [
+   "phone Phone1 | Phone1 зарегистрирован на CME",
+   "phone Phone2 | Phone2 зарегистрирован на CME"
+  ],
+  "translations": {
+   "en": {
+    "title": "IP telephony (voice VLAN, CME)",
+    "text": "Connect two IP phones to Cisco CME on R1. Data uses VLAN 10, voice VLAN 20 (192.168.20.0/24).\n\n1. On SW1 enable voice VLAN 20 on the phone ports (`switchport voice vlan 20`).\n2. On R1 create DHCP pool VOICE with option 150 (CME address 192.168.20.1).\n3. Configure `telephony-service` (ip source-address, max-ephones, max-dn, auto assign) and numbers 1001, 1002.\n4. Call 1002 from Phone1 (Phone tab).",
+    "checks": [
+     "Phone1 is registered with CME",
+     "Phone2 is registered with CME"
+    ]
+   }
+  },
+  "script": {
+   "SW1": "enable\nconfigure terminal\ninterface range fa0/1 - 2\nswitchport voice vlan 20\nend",
+   "R1": "enable\nconfigure terminal\nip dhcp excluded-address 192.168.20.1\nip dhcp pool VOICE\nnetwork 192.168.20.0 255.255.255.0\ndefault-router 192.168.20.1\noption 150 ip 192.168.20.1\nexit\ntelephony-service\nmax-ephones 5\nmax-dn 5\nip source-address 192.168.20.1 port 2000\nauto assign 1 to 5\nexit\nephone-dn 1\nnumber 1001\nexit\nephone-dn 2\nnumber 1002\nend"
+  }
+ }
+}

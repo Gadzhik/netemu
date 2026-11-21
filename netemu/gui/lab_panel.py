@@ -170,7 +170,9 @@ class LabEditor(QDialog):
                          "route <устройство> <сеть>, ospf <устройство> <соседей>, hostname <устройство> <имя>, "
                          "vlan <устройство> <id>, access <коммутатор> <порт> <vlan>, ip <устройство> <адрес>, dhcp <ПК>, "
                          "nat <маршрутизатор>, ssh <устройство>, stproot <коммутатор>, fhrp <устройство> active|standby, "
-                         "wifi <устройство> [SSID]."))
+                         "wifi <устройство> [SSID], bgp <устройство> <сессий>, "
+                         "channel <коммутатор> <Po> [портов], psec <коммутатор> <порт>, phone <телефон>, "
+                         "ospf6 <устройство> <соседей>, http <устройство> <URL>."))
         hint.setWordWrap(True)
         v.addWidget(hint)
         self.checks = QPlainTextEdit("\n".join(c.line() for c in lab.checks))
