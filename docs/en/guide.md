@@ -138,6 +138,13 @@ A project file can contain a lab: a task and its checks. When such a file is ope
 | IPv6: addressing and routing | addresses and `ipv6 unicast-routing` |
 | Wireless network | SSID, WPA2, laptops joining |
 | 🔧 Troubleshooting: VLAN, OSPF | two faults planted in a working network |
+| eBGP between two autonomous systems | two ASes exchange their networks |
+| EtherChannel (LACP) | bundles two links, no port blocked by STP |
+| Port security | only the office PC may use the port |
+| Site-to-site VPN (GRE + IPsec) | an encrypted tunnel across the Internet |
+| IP telephony (voice VLAN, CME) | two phones register and call each other |
+| IPv6 and OSPFv3 | dynamic IPv6 routing |
+| Exam: an office from scratch | a full office configuration in one task |
 
 Every lab is verified when it is built: before the solution the checks fail, after it they all pass.
 
@@ -216,9 +223,33 @@ Packets travel along cables as envelopes: ARP yellow, ICMP pink. Clicking an env
 - **File → Save / Open**: projects in `*.netemu` format (JSON). The topology, positions and the configuration of every device, including the startup-config, are saved.
 - Ready examples are in the `examples` folder: `multivendor-demo.netemu` and `complex-lab.netemu` (22 devices, redundant paths).
 
+## Packet analyzer
+
+**Tools → Packet analyzer** (`Ctrl+Shift+W`) captures frames like Wireshark. Choose a cable or *All cables*, press **Start capture** and generate traffic. The display filter takes a protocol name (`icmp`, `arp`, `ospf`, `dhcp`, …), `ip.addr==A`, `ip.src==A`, `ip.dst==A`, `vlan==N`, joined with `and`. Selecting a row shows the headers layer by layer and a hex dump. **Save .pcap…** writes the shown packets to a libpcap file that opens in Wireshark or tcpdump.
+
+## Physical view
+
+**Tools → Physical view** (`Ctrl+Shift+P`) shows where the equipment stands. Select devices and press **Place selected…** to give them a placement such as `HQ / Floor 2 / Rack 1`. A cable's length is estimated from the placement (same rack 2 m, same floor 30 m, another floor 60 m, another building 300 m) or set by hand. Copper (Cat 6) carries a link up to 100 m, multimode fiber up to 550 m, single-mode up to 10 km; a cable that is too long keeps the link down and is drawn red.
+
+## Terminal helpers
+
+The console colours prompts, addresses, up/down states, errors and ping results. A line under the console shows which keywords may follow the typed command. `Ctrl+F` opens a searchable list of every command of the dialect; a double-click puts the command into the prompt.
+
+## Classroom mode
+
+**Class → Open a class and hand out the lab…** starts a class on the teacher's computer (address, port and PIN). Students choose **Class → Join a class…**, enter the address, the PIN and their name, and receive the lab. Every check a student runs (`F6`) is sent to the teacher, whose roster shows each student's progress; **Save class report…** writes an HTML summary.
+
+## Hints for failed checks
+
+When a lab check fails, the lab panel explains the probable cause: an interface in shutdown, a missing gateway or route, an ACL on the path, a VLAN that does not exist, and so on.
+
+## Updates
+
+**Help → Check for updates…** compares the version with the latest GitHub release and offers the file for your system. The start-up check can be turned off in the same menu.
+
 ## Language
 
-**View → Language / Язык**: Russian or English. The interface language changes after a restart. CLI output is always English, as on real hardware.
+**View → Language / Язык**: Russian, English, Ukrainian or Kazakh (Ukrainian and Kazakh cover the interface; help and labs are shown in English). The interface language changes after a restart. CLI output is always English, as on real hardware.
 
 ## Keyboard shortcuts
 
@@ -231,6 +262,8 @@ Packets travel along cables as envelopes: ARP yellow, ICMP pink. Clicking an env
 | `Ctrl+Z` / `Ctrl+Y` | Undo / redo a canvas edit |
 | `N` / `F` | Tools: note / frame |
 | `Ctrl+E` | Export the diagram to PNG or SVG |
+| `Ctrl+Shift+W` / `Ctrl+Shift+P` | Packet analyzer / physical view |
+| `Ctrl+F` (in a console) | Find a command |
 | `F6` | Check the lab |
 | `Ctrl+A` | Select all |
 | `Ctrl++` / `Ctrl+-` / `Ctrl+0` / `Ctrl+9` | Zoom in / zoom out / zoom 100% / fit whole topology |

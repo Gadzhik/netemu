@@ -12,7 +12,7 @@ NetEmu is an educational network simulator in the spirit of Cisco Packet Tracer.
 There is a canvas with cables, a simulation mode with packet animation, labs with automatic checks,
 teacher mode, LAN collaboration and a Russian/English UI.
 
-Current version: **0.3.2** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
+Current version: **0.4.0** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
 - README.md is in English, README.ru.md in Russian.
 - User docs are in `docs/en` and `docs/ru`; they are also shown in the app via F1.
 
@@ -50,17 +50,21 @@ python -m venv .venv
 ## Everyday commands (all must stay green before finishing a task)
 ```bash
 .venv/Scripts/python -m pyflakes netemu tools         # lint, must print nothing
-.venv/Scripts/python -m pytest -q tests                # 332 tests, ~10 s, GUI tests off screen
+.venv/Scripts/python -m pytest -q tests                # 384 tests, ~10 s, GUI tests off screen
 .venv/Scripts/python tools/gen_docs.py                 # regenerate CLI command tables in docs/*/*.md
-.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 12 ready-made labs
+.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 19 ready-made labs (labs 13-19: tools/labs_more.py)
 .venv/Scripts/python tools/screenshots.py              # re-render docs/images/*.png (English UI, off screen)
 .venv/Scripts/python tools/build.py                    # PyInstaller build -> release/ (zip; setup.exe via Inno Setup)
+.venv/Scripts/python tools/i18n_status.py             # coverage of the uk/kk translations
 ```
 - `tests/test_docs.py` fails when:
   - the generated command tables are stale (run `gen_docs.py`);
   - a fenced example in the vendor docs produces a CLI error (every code block in the
     hand-written part of `docs/*/<vendor>.md` is executed);
   - a GUI string has no English translation in `netemu/i18n.py` (the `EN` dict, keyed by the Russian text).
+    Ukrainian/Kazakh live in `netemu/i18n_uk.py` / `i18n_kk.py` (`TRANSLATION`, same keys); missing strings fall
+    back to English, so new strings only *need* EN, but add uk/kk when you can (`tests/test_i18n.py` checks
+    placeholders and stale keys, and requires >= 90 % coverage).
 - `tests/test_gui.py::test_english_interface_has_no_russian_text` scans the menus in English mode.
 
 ## Architecture
@@ -156,13 +160,30 @@ python -m venv .venv
    - dark theme and UI scale, LAN collaboration;
    - English README and screenshots; first git commit; CI test matrix.
 
+5. **0.4.0**:
+   - vendor gaps closed: QoS and voice VLAN on every vendor, IPsec on every router, NAT64 for TCP/UDP;
+   - EIGRP (`routing/eigrp.py`), IS-IS (`isis.py`), MPLS/LDP (`mpls.py`), VRF-lite (`Port.vrf`, `Router.vrf_ctx`);
+   - stateful firewall (`security/stateful.py`: Cisco ZBF, SRX zones), 802.1X + RADIUS, AAA/TACACS+
+     (`services/aaa.py`); TFTP/FTP/SMTP/POP3 (`services/files.py`), DHCP option 82;
+   - devices: Cisco ASA (`cli/asa.py`) and FortiGate (`cli/fortigate.py`) selected by `DeviceModel.dialect`,
+     WLC + lightweight AP (`devices/wlc.py`), IoT (`devices/iot.py`);
+   - labs 13-19, classroom mode (`core/classroom.py`, `gui/classroom.py`, TCP 47900), failed-check hints
+     (`core/diagnose.py`);
+   - packet analyzer (`gui/capture_panel.py`, `core/pcap.py` writes real wire formats), physical view
+     (`Device.location`, `Link.media`/`length_m`, copper > 100 m keeps the link down), terminal highlighting,
+     next-keyword hint and Ctrl+F command search (`gui/terminal_tools.py`; the terminal tab is now a page
+     widget, use `dlg.terminal.parentWidget()` with `tabs.setCurrentWidget`);
+   - Ukrainian and Kazakh UI; update checker (`gui/updater.py`); packaged self-test `--self-test <dir>` run by
+     CI on all three OSes (screenshots uploaded as artifacts).
+
 ## Known gaps / ideas for next time (also listed in README "Limitations")
-- QoS only on Cisco/Huawei; IPsec only on Cisco/MikroTik; CME only on Cisco.
-- Voice VLAN is missing on MikroTik and Extreme.
-- NAT64 translates ICMP echo only.
-- HSRP only on Cisco; one IPv4 address per interface; STP is computed centrally (no max-age timers).
+- CME only on Cisco; HSRP only on Cisco (VRRP everywhere).
+- MPLS is LDP only (no RSVP-TE, no MP-BGP L3VPN); IS-IS and EIGRP are IPv4 only.
+- Docs and lab texts exist only in ru/en; uk/kk users see English there (`content_language()`).
+- One IPv4 address per interface; STP is computed centrally (no max-age timers).
 - Collaboration shares the project, not the running simulation (each peer simulates locally; last writer
   wins on concurrent edits of one device).
-- Linux/macOS have never been run by hand; only CI covers them. Check the latest Actions run first.
+- Linux/macOS have never been run by hand; CI covers them (tests + packaged self-test with screenshots).
+  Check the latest Actions run first.
 - Lab texts: the Russian is the source, English sits in `tools/labs_en.py`. A new lab needs both;
   `make_labs.py` asserts the check counts match.

@@ -21,6 +21,22 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
 
 ## Features
 
+- **New in 0.4**:
+  - routing and MPLS: EIGRP (DUAL, feasible successors), IS-IS (L1/L2), MPLS with LDP, VRF-lite;
+  - security: stateful firewall (Cisco zone-based firewall, Junos SRX security zones), 802.1X with
+    RADIUS, AAA with TACACS+/RADIUS for logins;
+  - services: TFTP and FTP servers (`copy running-config tftp:`), e-mail (SMTP/POP3 with a mail client on PCs),
+    DHCP option 82;
+  - new devices: Cisco ASA 5506-X (ASA CLI), FortiGate 60F (FortiOS CLI), Cisco WLC 2504 with lightweight
+    access points, IoT sensors and actuators with an IoT server and IF … THEN rules;
+  - teaching: 19 ready-made labs (new: BGP, EtherChannel, port security, site-to-site VPN, VoIP,
+    IPv6/OSPFv3, an exam); classroom mode (the teacher hands out a lab over the LAN and sees every student's
+    checks live); hints that explain why a check failed;
+  - tools: packet analyzer with display filters and `.pcap` export for Wireshark; physical view
+    (building / floor / rack, cable type and length, copper limited to 100 m); terminal syntax highlighting,
+    a live hint of the next keywords and command search (`Ctrl+F`);
+  - interface: Ukrainian and Kazakh; update check against GitHub releases; the vendor gaps of 0.3 are closed
+    (QoS and voice VLAN on every vendor, IPsec on every router, NAT64 for TCP/UDP).
 - **New in 0.3**:
   - teaching:
     - 12 ready-made labs with automatic checks: VLAN, inter-VLAN routing, STP, OSPF, DHCP, NAT, ACL, HSRP,
@@ -61,7 +77,9 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
   | Routers | Cisco 2911, MikroTik RB4011, Juniper SRX300, Huawei AR2220 |
   | Switches (L2 and L3) | Cisco 2960-24TT, MikroTik CRS326, Juniper EX2300, Huawei S5720, Extreme X440-G2 |
   | End devices | PC and server (Windows), PC (Linux), server (Linux), IP Phone 7960 |
-  | Wireless | Access point, laptops (Windows, Linux) |
+  | Security | Cisco ASA 5506-X, FortiGate 60F |
+  | Wireless | Access point, Cisco WLC 2504 with Lightweight AP 1142, laptops (Windows, Linux) |
+  | IoT | Temperature, motion and smoke sensors; smart lamp, fan and door |
   | Other | Hub, Internet (ISP cloud) |
 
 - **Networking**:
@@ -98,7 +116,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
   - devices, cables, configurations, notes and the lab are shared;
   - each participant simulates locally.
 - **Interface**:
-  - Russian or English (**View → Language**);
+  - Russian, English, Ukrainian or Kazakh (**View → Language**);
   - light/dark theme;
   - scale 100–200 % for projectors;
   - built-in help (`F1`).
@@ -198,12 +216,11 @@ of the License, or (at your option) any later version. It is distributed WITHOUT
 
 ## Limitations
 
-- NAT64 translates ICMP echo only.
-- HSRP is Cisco only; VRRP is available everywhere.
-- QoS is configured on Cisco and Huawei only.
-- IPsec is available on Cisco and MikroTik; GRE on all routers.
-- Voice VLAN works on Cisco, Huawei and Juniper switches; CME is Cisco only.
+- HSRP is Cisco only; VRRP is available everywhere. CME (IP telephony call control) is Cisco only.
 - One IPv4 address per interface.
+- MPLS is LDP only (no RSVP-TE, no L3VPN with MP-BGP); IS-IS and EIGRP are IPv4 only.
+- Ukrainian and Kazakh cover the interface; the documentation and the lab texts fall back to English.
+- The packet analyzer serializes the simulated headers; payloads of application protocols are synthetic.
 - STP is computed per switch domain without max-age timers.
 - In a collaboration session every participant runs their own simulation.
 - Linux and macOS builds are verified by CI only.
