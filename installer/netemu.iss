@@ -17,6 +17,7 @@ DefaultDirName={autopf}\NetEmu
 DefaultGroupName=NetEmu
 UninstallDisplayIcon={app}\NetEmu.exe
 SetupIconFile=..\netemu\resources\netemu.ico
+LicenseFile=..\LICENSE
 OutputDir=..\release
 OutputBaseFilename=NetEmu-{#AppVersion}-setup
 Compression=lzma2

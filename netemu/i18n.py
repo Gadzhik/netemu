@@ -260,6 +260,8 @@ EN: dict[str, str] = {
     "Браузер": "Web Browser",
     "Службы": "Services",
     "Служба включена": "Service on",
+    "<p>Учебный симулятор компьютерных сетей.</p><p>Устройства Cisco, MikroTik, Juniper, Huawei и Extreme с CLI соответствующих производителей, ПК с командной строкой Windows и Linux, пошаговая симуляция пакетов, лабораторные работы с автопроверкой.</p>": "<p>An educational network simulator.</p><p>Cisco, MikroTik, Juniper, Huawei and Extreme devices with their own CLIs, PCs with Windows and Linux command lines, step-by-step packet simulation and labs with automatic checks.</p>",
+    "<p>Свободное ПО: GNU General Public License версии 3 или более поздней. Программа распространяется без каких-либо гарантий.</p>": "<p>Free software: GNU General Public License version 3 or later. This program comes with ABSOLUTELY NO WARRANTY.</p>",
     "&Совместная работа": "&Collaboration",
     "PIN сессии:": "Session PIN:",
     "TCP-порт сессии:": "Session TCP port:",

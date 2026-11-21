@@ -634,9 +634,12 @@ class MainWindow(QMainWindow):
     def about(self) -> None:
         QMessageBox.about(self, tr("О программе"),
                           f"<h3>NetEmu {__version__}</h3>"
-                          + tr("<p>Учебный симулятор компьютерных сетей.</p><p>Устройства Cisco, MikroTik, Juniper "
-                               "и Huawei с CLI соответствующих производителей; Ethernet, ARP, IPv4, статическая "
-                               "маршрутизация, ICMP; режим пошаговой симуляции пакетов.</p>"))
+                          + tr("<p>Учебный симулятор компьютерных сетей.</p><p>Устройства Cisco, MikroTik, Juniper, "
+                               "Huawei и Extreme с CLI соответствующих производителей, ПК с командной строкой Windows и "
+                               "Linux, пошаговая симуляция пакетов, лабораторные работы с автопроверкой.</p>")
+                          + tr("<p>Свободное ПО: GNU General Public License версии 3 или более поздней. "
+                               "Программа распространяется без каких-либо гарантий.</p>")
+                          + '<p><a href="https://github.com/Gadzhik/netemu">github.com/Gadzhik/netemu</a></p>')
 
     # -- help / language ------------------------------------------------------------------
     def show_help(self, topic: str | None = None):

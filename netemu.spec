@@ -35,3 +35,4 @@ from pathlib import Path
 _dist = Path(DISTPATH) / "NetEmu"
 for _folder in ("docs", "examples"):
     shutil.copytree(_folder, _dist / _folder, dirs_exist_ok=True)
+shutil.copy("LICENSE", _dist / "LICENSE.txt")
