@@ -221,11 +221,11 @@ class Router(IpStack, Ip6Stack, Device):
 
     # -- OSPFv3 / RIPng -------------------------------------------------------------------------
     def extra_groups6(self, port) -> set:
-        from ..routing.v6igp import OSPF6_GROUP, RIPNG_GROUP
+        from ..routing.v6igp import GROUPS
         out = set()
         for kind, proc in self.v6igp.items():
             if port.name in proc.cfg.interfaces:
-                out.add(OSPF6_GROUP if kind == "ospf6" else RIPNG_GROUP)
+                out.add(GROUPS[kind])
         if port.name in self.dhcp6.ifaces:
             from ..services.dhcp6 import ALL_DHCP
             out.add(ALL_DHCP)
@@ -239,6 +239,10 @@ class Router(IpStack, Ip6Stack, Device):
             for r in proc.routes:
                 if r.port.is_up:
                     out.append(Route6(r.network, r.code, r.port, r.next_hop, distance(self, kind), r.metric))
+        isis = getattr(self, "isis", None)
+        if isis is not None:
+            ad = {"huawei": 15, "juniper": 18}.get(getattr(self, "vendor", ""), 115)
+            out += [Route6(r.network, r.code, r.port, r.next_hop, ad, r.metric) for r in isis.routes6 if r.port.is_up]
         return out
 
     def deliver6_protocol(self, pkt, port) -> None:

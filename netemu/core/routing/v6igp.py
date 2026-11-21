@@ -1,4 +1,4 @@
-"""IPv6 interior routing: OSPFv3 and RIPng.
+"""IPv6 interior routing: OSPFv3, RIPng and EIGRP for IPv6.
 
 Both run on interfaces explicitly enabled for them (``ipv6 ospf 1 area 0``, ``ospfv3 1 area 0``,
 ``set protocols ospf3 area 0 interface …``, ``ipv6 rip NAME enable`` …).  Routers discover each
@@ -6,7 +6,11 @@ other with hellos sent to the link-local groups (OSPFv3 ff02::5, RIPng ff02::9) 
 addresses, so neighbours are real: a cable, a shutdown, a missing ``ipv6 unicast-routing`` or a
 protocol enabled only on one side all show.  Routes are then computed over the neighbour graph of
 the whole routing domain — shortest path by interface cost for OSPFv3, hop count for RIPng (max 15)
-— with the neighbour's link-local address as the next hop, as on real routers."""
+— with the neighbour's link-local address as the next hop, as on real routers.
+
+EIGRP for IPv6 (``ipv6 router eigrp 100`` + ``ipv6 eigrp 100`` on interfaces) uses the same machinery:
+hellos to ff02::a (next header 88), neighbours only within the same AS, and the classic composite
+metric 256 * (10^7 / minimum bandwidth + total delay) over the whole path (``D`` routes, AD 90)."""
 from __future__ import annotations
 
 import heapq
@@ -15,7 +19,10 @@ from ipaddress import IPv6Address, IPv6Network
 
 OSPF6_GROUP = IPv6Address("ff02::5")
 RIPNG_GROUP = IPv6Address("ff02::9")
-TIMERS = {"ospf6": (10000.0, 40000.0), "ripng": (30000.0, 180000.0)}   # hello/update, dead
+EIGRP6_GROUP = IPv6Address("ff02::a")
+TIMERS = {"ospf6": (10000.0, 40000.0), "ripng": (30000.0, 180000.0), "eigrp6": (5000.0, 15000.0)}  # hello, dead
+GROUPS = {"ospf6": OSPF6_GROUP, "ripng": RIPNG_GROUP, "eigrp6": EIGRP6_GROUP}
+NEXT_HEADER = {"ospf6": 89, "ripng": 17, "eigrp6": 88}
 
 
 @dataclass(frozen=True)
@@ -30,12 +37,14 @@ class V6IgpMsg:
 
     @property
     def label(self) -> str:
-        return "OSPFv3" if self.kind == "ospf6" else "RIPng"
+        return {"ospf6": "OSPFv3", "eigrp6": "EIGRPv6"}.get(self.kind, "RIPng")
 
     @property
     def name(self) -> str:
         if self.kind == "ospf6":
             return "LS Update" if self.mtype == "lsu" else "Hello"
+        if self.kind == "eigrp6":
+            return "Hello"
         return "Response"
 
     def layer_lines(self) -> list[str]:
@@ -47,6 +56,8 @@ class V6IgpMsg:
             return out
         if self.kind == "ospf6":
             return ["OSPFv3 Hello", f"Router ID: {self.router_id}", f"Area: {self.area}"]
+        if self.kind == "eigrp6":
+            return ["EIGRP for IPv6 Hello", f"Autonomous system: {self.area}", f"Router ID: {self.router_id}"]
         return ["RIPng Response"] + [f"Route: {p} metric 1" for p in self.prefixes[:8]]
 
 
@@ -150,13 +161,15 @@ class V6Igp:
 
     def _send_hellos(self) -> None:
         from ..stack.ipv6 import IPv6Packet
-        group = OSPF6_GROUP if self.kind == "ospf6" else RIPNG_GROUP
+        group = GROUPS[self.kind]
         for p in self.enabled_ports():
             area = self.cfg.interfaces.get(p.name, {}).get("area", "0.0.0.0")
+            if self.kind == "eigrp6":
+                area = self.cfg.tag                           # the AS number must match
             pref = tuple(str(r.network) for r in self.routes[:8]) + tuple(str(a.network) for a in p.ipv6)
             msg = V6IgpMsg(self.kind, self.router_id(), area, pref if self.kind == "ripng" else (), self)
-            self.dev._send6_on(p, IPv6Packet(self.dev.link_local(p).ip, group, 1, msg, next_header=89 if
-                                             self.kind == "ospf6" else 17))
+            self.dev._send6_on(p, IPv6Packet(self.dev.link_local(p).ip, group, 1, msg,
+                                             next_header=NEXT_HEADER[self.kind]))
 
     def receive(self, pkt, port) -> None:
         m = pkt.payload
@@ -166,6 +179,8 @@ class V6Igp:
             return
         if self.kind == "ospf6" and m.area != self.cfg.interfaces[port.name].get("area", "0.0.0.0"):
             return                                   # area mismatch: no adjacency
+        if self.kind == "eigrp6" and m.area != self.cfg.tag:
+            return                                   # another autonomous system
         key = (port.name, m.router_id)
         new = key not in self.neighbors
         self.neighbors[key] = (pkt.src, self.dev.engine.now, m.proc)
@@ -174,6 +189,9 @@ class V6Igp:
             if self.kind == "ospf6":
                 self.dev.console(f"%OSPFv3-5-ADJCHG: Process {self.cfg.tag}, Nbr {m.router_id} on {port.short} "
                                  "from LOADING to FULL, Loading Done")
+            if self.kind == "eigrp6":
+                self.dev.console(f"%DUAL-5-NBRCHANGE: EIGRP-IPv6 {self.cfg.tag}: Neighbor {pkt.src} ({port.name}) "
+                                 "is up: new adjacency")
             self._recompute_domain()
 
     # -- routes ---------------------------------------------------------------------------------------
@@ -247,8 +265,57 @@ class V6Igp:
         self.routes = sorted(best.values(), key=lambda r: int(r.network.network_address))
 
 
+class Eigrp6(V6Igp):
+    """EIGRP for IPv6: composite metric over the path (minimum bandwidth, summed delay)."""
+
+    def compute(self) -> None:
+        from .eigrp import composite, port_bandwidth, port_delay
+        procs = {id(p): p for p in self._domain()}
+        edges = {pid: [(p, np_, ll) for p, np_, ll in proc._adjacent() if id(np_) in procs]
+                 for pid, proc in procs.items()}
+        bws = sorted({port_bandwidth(p) for es in edges.values() for p, _, _ in es} |
+                     {port_bandwidth(p) for proc in procs.values() for p in proc.enabled_ports()})
+        mine = {a.network for p in self.dev.ports.values() for a in getattr(p, "ipv6", [])}
+        best: dict = {}
+        for floor in bws:                                    # exact: min bandwidth >= floor, then least delay
+            dist, first, heap, tie = {id(self): 0}, {}, [(0, 0, id(self))], 1
+            done = set()
+            while heap:
+                d, _, pid = heapq.heappop(heap)
+                if pid in done:
+                    continue
+                done.add(pid)
+                for p, np_, ll in edges.get(pid, []):
+                    if port_bandwidth(p) < floor:
+                        continue
+                    nd = d + port_delay(p)
+                    if nd < dist.get(id(np_), 1 << 62):
+                        dist[id(np_)] = nd
+                        first[id(np_)] = (p, ll) if pid == id(self) else first[pid]
+                        heapq.heappush(heap, (nd, tie, id(np_)))
+                        tie += 1
+            for pid, d in dist.items():
+                if pid == id(self):
+                    continue
+                proc = procs[pid]
+                for p in proc.enabled_ports():
+                    if port_bandwidth(p) < floor:
+                        continue
+                    for a in p.ipv6:
+                        if a.network in mine or a.network.is_link_local:
+                            continue
+                        metric = composite(floor, d + port_delay(p))
+                        cur = best.get(a.network)
+                        if cur is None or metric < cur.metric:
+                            lp, ll = first[pid]
+                            best[a.network] = Route6Info(a.network, lp, ll, metric, "D")
+        self.routes = sorted(best.values(), key=lambda r: int(r.network.network_address))
+
+
 def distance(dev, kind: str) -> int:
     v = getattr(dev, "vendor", "cisco")
+    if kind == "eigrp6":
+        return 90
     if kind == "ospf6":
         return 10 if v in ("huawei", "juniper") else 110
     return 100 if v in ("huawei", "juniper") else 120
@@ -258,6 +325,8 @@ def make_process(dev, cfg: V6IgpConfig) -> V6Igp:
     if cfg.kind == "ospf6":
         from .ospf6 import Ospf6
         return Ospf6(dev, cfg)
+    if cfg.kind == "eigrp6":
+        return Eigrp6(dev, cfg)
     return V6Igp(dev, cfg)
 
 

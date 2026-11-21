@@ -680,6 +680,8 @@ Check: `display traffic policy statistics`, `display nat64 session all`, `displa
 | `[undo] isis enable` | Enable IS-IS on the interface |
 | `[undo] isis enable INTEGER<1-65535>` | Process ID |
 | `[undo] isis cost INTEGER<1-16777214>` | Cost |
+| `[undo] isis ipv6 enable` | Enable IS-IS for IPv6 on the interface |
+| `[undo] isis ipv6 enable INTEGER<1-65535>` | Process ID |
 | `[undo] isis circuit-type LINE` | Circuit type |
 | `[undo] ipsec profile STRING` | Profile |
 | `tunnel-protocol gre` | GRE |

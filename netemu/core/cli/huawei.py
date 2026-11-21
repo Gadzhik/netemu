@@ -182,12 +182,17 @@ class HuaweiSession(TreeSession):
             t["isis"] = c6 + [
                 P.kw("network-entity", "Network entity title", P.arg(P.WordArg("XX.XXXX....XXXX.00"), "NET",
                      handler=lambda s, a, n: s.isis_net(a[0], n), negatable=True), negatable=True),
-                nop("is-level", "Level"), nop("cost-style", "Cost style"), nop("is-name", "Host name")]
+                nop("is-level", "Level"), nop("cost-style", "Cost style"), nop("is-name", "Host name"),
+                P.kw("ipv6", "IPv6", P.kw("enable", "Enable IPv6 for the IS-IS process",
+                                          handler=lambda s, a, n: None, negatable=True), negatable=True)]
             t["interface"].append(P.kw("isis", "IS-IS", P.kw("enable", "Enable IS-IS on the interface",
                 P.arg(P.NumArg(1, 65535, "INTEGER<1-65535>"), "Process ID", handler=lambda s, a, n: s.if_isis(n),
                       negatable=True), handler=lambda s, a, n: s.if_isis(n), negatable=True),
                 P.kw("cost", "Interface cost", P.arg(P.NumArg(1, 16777214, "INTEGER<1-16777214>"), "Cost",
                      handler=lambda s, a, n: s.isis_cost(a[0], n), negatable=True), negatable=True),
+                P.kw("ipv6", "IPv6", P.kw("enable", "Enable IS-IS for IPv6 on the interface",
+                    P.arg(P.NumArg(1, 65535, "INTEGER<1-65535>"), "Process ID", handler=lambda s, a, n: s.if_isis6(n),
+                          negatable=True), handler=lambda s, a, n: s.if_isis6(n), negatable=True), negatable=True),
                 nop("circuit-type", "Circuit type"), negatable=True))
             next(x for x in t["user"] if x.word == "display").children.append(P.kw("isis", "IS-IS",
                 P.kw("peer", "Neighbours", handler=lambda s, a, n: s.display_isis("peer")),
@@ -2002,6 +2007,21 @@ class HuaweiSession(TreeSession):
         p.restart()
         return None
 
+    def if_isis6(self, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if d.isis is None:
+            if negate:
+                return None
+            d.enable_isis(IsisConfig())
+        lst = d.isis.cfg.interfaces6
+        if negate:
+            d.isis.cfg.interfaces6 = [x for x in lst if x != self.iface.name]
+        elif self.iface.name not in lst:
+            lst.append(self.iface.name)
+        d.isis.link_changed(self.iface)
+        return None
+
     def if_isis(self, negate):
         from ..routing.isis import IsisConfig
         d = self.device
@@ -2902,6 +2922,13 @@ def render_current(device, cfg: dict) -> str:
             lines.append(f" traffic-filter inbound acl {ic['acl_in']}")
         if ic.get("acl_out"):
             lines.append(f" traffic-filter outbound acl {ic['acl_out']}")
+        isis_c = cfg.get("isis") or {}
+        if name in isis_c.get("interfaces", []):
+            lines.append(f" isis enable {isis_c.get('tag', '1')}")
+        if name in isis_c.get("interfaces6", []):
+            lines.append(f" isis ipv6 enable {isis_c.get('tag', '1')}")
+        if name in isis_c.get("metrics", {}):
+            lines.append(f" isis cost {isis_c['metrics'][name]}")
         ospf_c = cfg.get("ospf") or {}
         if name in ospf_c.get("costs", {}):
             lines.append(f" ospf cost {int(ospf_c['costs'][name])}")
@@ -2984,6 +3011,14 @@ def render_current(device, cfg: dict) -> str:
                     lines.append(f"  peer {ip} {word}")
             if nc.get("weight"):
                 lines.append(f"  peer {ip} preferred-value {nc['weight']}")
+        lines.append("#")
+    isis_c = cfg.get("isis")
+    if isis_c:
+        lines += [f"isis {isis_c.get('tag', '1')}", " is-level level-2", " cost-style wide"]
+        if isis_c.get("net"):
+            lines.append(f" network-entity {isis_c['net']}")
+        if isis_c.get("interfaces6"):
+            lines.append(" ipv6 enable")
         lines.append("#")
     ospf = cfg.get("ospf")
     if ospf and ospf.get("enabled", True):

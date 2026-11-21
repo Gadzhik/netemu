@@ -270,6 +270,16 @@ class CiscoSession(TreeSession):
                            P.kw("enable", "Enable RIP routing on interface",
                                 handler=lambda s, a, n: s.v6igp_if("ripng", a[0], None, n), negatable=True),
                            negatable=True),
+                     negatable=True),
+                P.kw("eigrp", "Configure EIGRP IPv6 on interface",
+                     P.arg(P.NumArg(1, 65535, "<1-65535>"), "Autonomous system number",
+                           handler=lambda s, a, n: s.v6igp_if("eigrp6", a[0], None, n), negatable=True),
+                     negatable=True),
+                P.kw("router", "IPv6 Router interface commands",
+                     P.kw("isis", "IS-IS Routing for IPv6",
+                          P.arg(P.WordArg("WORD"), "Routing process tag", handler=lambda s, a, n: s.if_isis6(n),
+                                negatable=True),
+                          handler=lambda s, a, n: s.if_isis6(n), negatable=True),
                      negatable=True)]
         v6g = next((x for x in t["config"] if x.word == "ipv6"), None)
         if v6g is not None:
@@ -281,6 +291,10 @@ class CiscoSession(TreeSession):
                                      P.kw("rip", "IPv6 Routing Information Protocol (RIPng)",
                                           P.arg(P.WordArg("WORD"), "User selected string identifying this process",
                                                 handler=lambda s, a, n: s.v6igp_router("ripng", a[0], n), negatable=True),
+                                          negatable=True),
+                                     P.kw("eigrp", "Enhanced Interior Gateway Routing Protocol (EIGRP)",
+                                          P.arg(P.NumArg(1, 65535, "<1-65535>"), "Autonomous System",
+                                                handler=lambda s, a, n: s.v6igp_router("eigrp6", a[0], n), negatable=True),
                                           negatable=True),
                                      negatable=True))
         if v6g is not None:
@@ -623,6 +637,11 @@ class CiscoSession(TreeSession):
             P.kw("exit", "Exit from IPv6 routing protocol configuration mode", handler=lambda s, a, n: s.set_mode("config")),
             P.kw("router-id", "router-id for this OSPF process",
                  P.arg(P.IpArg(), "OSPF router-id in IP address format", handler=lambda s, a, n: s.v6igp_rid(a[0]))),
+            P.kw("eigrp", "EIGRP specific commands",
+                 P.kw("router-id", "router id for this EIGRP process",
+                      P.arg(P.IpArg(), "EIGRP Router-ID in IP address format",
+                            handler=lambda s, a, n: s.v6igp_rid(a[0])))),
+            P.kw("shutdown", "Shutdown this instance of EIGRP", handler=lambda s, a, n: None, negatable=True),
         ], key=lambda x: x.word or "")
         show6 = next((x for x in next(y for y in t["priv"] if y.word == "show").children if x.word == "ipv6"), None)
         if show6 is not None:
@@ -631,7 +650,16 @@ class CiscoSession(TreeSession):
                      P.kw("neighbor", "Neighbor list", handler=lambda s, a, n: s.show_v6igp_nb("ospf6")),
                      P.kw("database", "Database summary", handler=lambda s, a, n: __import__(
                          "netemu.core.cli.base", fromlist=["x"]).ospf6_database_text(s.device))),
-                P.kw("rip", "RIP routing protocol status", handler=lambda s, a, n: s.show_v6igp_nb("ripng"))]
+                P.kw("rip", "RIP routing protocol status", handler=lambda s, a, n: s.show_v6igp_nb("ripng")),
+                P.kw("eigrp", "Show IPv6 EIGRP",
+                     P.kw("neighbors", "IPv6 EIGRP neighbors", handler=lambda s, a, n: s.show_v6igp_nb("eigrp6")))]
+            r6 = next((x for x in show6.children if x.word == "route"), None)
+            if r6 is not None:
+                r6.children += [P.kw(w, h, handler=lambda s, a, n, c=c: s.show_ipv6_route(c)) for w, h, c in
+                                (("eigrp", "EIGRP routes", "D"), ("isis", "IS-IS routes", "I"),
+                                 ("ospf", "OSPF routes", "O"), ("static", "Static routes", "S"),
+                                 ("connected", "Connected routes", "C"))
+                                if not any(x.word == w for x in r6.children)]
         t["config-if"] = sorted(t["config-if"] + [
             P.kw("standby", "HSRP interface configuration commands", grp("hsrp", 0), negatable=True),
             P.kw("vrrp", "VRRP Interface configuration commands", grp("vrrp", 1), negatable=True),
@@ -2045,6 +2073,14 @@ class CiscoSession(TreeSession):
     def show_v6igp_nb(self, kind):
         from .base import v6igp_neighbors
         proc = self.device.v6igp.get(kind)
+        if kind == "eigrp6":
+            lines = [f"EIGRP-IPv6 Neighbors for AS({proc.cfg.tag if proc else ''})",
+                     "H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq",
+                     "                                                   (sec)         (ms)       Cnt Num"]
+            for i, (rid, p, ll) in enumerate(v6igp_neighbors(self.device, kind)):
+                lines += [f"{i:<4}Link-local address:     {p.name if p else '':<23}12 00:00:30   1    100  0  3",
+                          f"    {ll.compressed.upper()}"]
+            return "\n".join(lines)
         if kind == "ripng":
             if proc is None:
                 return ""
@@ -2509,12 +2545,15 @@ class CiscoSession(TreeSession):
                 lines.append(f"    {str(a.ip).upper()}")
         return "\n".join(lines)
 
-    def show_ipv6_route(self):
+    def show_ipv6_route(self, only: str | None = None):
         d = self.device
         tbl = d.routing_table6()
+        if only:
+            tbl = [r for r in tbl if r.code.startswith(only)]
         lines = [f"IPv6 Routing Table - default - {len(tbl)} entries",
                  "Codes: C - Connected, L - Local, S - Static, U - Per-user Static route",
-                 "       B - BGP, R - RIP, ND - ND Default, NDp - ND Prefix, DCE - Destination",
+                 "       B - BGP, R - RIP, I1 - ISIS L1, I2 - ISIS L2, D - EIGRP, EX - EIGRP external",
+                 "       ND - ND Default, NDp - ND Prefix, DCE - Destination",
                  "       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2", ""]
         for r in tbl:
             if r.code in ("C", "L"):
@@ -2522,7 +2561,8 @@ class CiscoSession(TreeSession):
                           if r.code == "C" else f"     via {r.port.name}, receive"]
             else:
                 via = str(r.next_hop).upper() if r.next_hop else r.port.name
-                lines += [f"{r.code:<3}{str(r.network).upper()} [{r.distance}/0]", f"     via {via}"]
+                lines += [f"{r.code:<3}{str(r.network).upper()} [{r.distance}/{r.metric}]", f"     via {via}"
+                          + (f", {r.port.name}" if r.next_hop else "")]
         return "\n".join(lines)
 
     def show_ipv6_neighbors(self):
@@ -3162,6 +3202,23 @@ class CiscoSession(TreeSession):
             self.device.isis.cfg.passive = [x for x in lst if x != port.name]
         elif port.name not in lst:
             lst.append(port.name)
+        return None
+
+    def if_isis6(self, negate):
+        from ..routing.isis import IsisConfig
+        d = self.device
+        if not negate and not d.ip6_forwarding:
+            return "% IPv6 routing not enabled"
+        if d.isis is None:
+            if negate:
+                return None
+            d.enable_isis(IsisConfig())
+        lst = d.isis.cfg.interfaces6
+        if negate:
+            d.isis.cfg.interfaces6 = [x for x in lst if x != self.iface.name]
+        elif self.iface.name not in lst:
+            lst.append(self.iface.name)
+        d.isis.link_changed(self.iface)
         return None
 
     def if_isis(self, negate):
@@ -4602,8 +4659,12 @@ def render_running(device, cfg: dict) -> str:
                     lines.append(f" ipv6 ospf {v.get('tag', '1')} area {area_dec(ic6.get('area', '0.0.0.0'))}")
                     if ic6.get("cost"):
                         lines.append(f" ipv6 ospf cost {ic6['cost']}")
+                elif v["kind"] == "eigrp6":
+                    lines.append(f" ipv6 eigrp {v.get('tag', '1')}")
                 else:
                     lines.append(f" ipv6 rip {v.get('tag', '1')} enable")
+        if name in (cfg.get("isis") or {}).get("interfaces6", []):
+            lines.append(" ipv6 router isis" + ("" if cfg["isis"].get("tag", "1") == "1" else " " + cfg["isis"]["tag"]))
         for g in cfg.get("fhrp", []):
             if g["port"] != name:
                 continue
@@ -4904,6 +4965,10 @@ def render_running(device, cfg: dict) -> str:
                 lines.append(f"ipv6 router ospf {v.get('tag', '1')}")
                 if v.get("router_id"):
                     lines.append(f" router-id {v['router_id']}")
+            elif v["kind"] == "eigrp6":
+                lines.append(f"ipv6 router eigrp {v.get('tag', '1')}")
+                if v.get("router_id"):
+                    lines.append(f" eigrp router-id {v['router_id']}")
             else:
                 lines.append(f"ipv6 router rip {v.get('tag', '1')}")
             lines.append("!")

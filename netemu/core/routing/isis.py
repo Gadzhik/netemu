@@ -9,13 +9,17 @@
 * Every router floods its LSP (sequence number, adjacent systems with the interface metric,
   IP prefixes of its IS-IS interfaces).  On a new adjacency the whole database is sent.
 * SPF (Dijkstra, two-way checked) gives ``i L2`` routes (administrative distance 115).
+* IPv6 (single topology, RFC 5308): interfaces enabled for IPv6 IS-IS (``ipv6 router isis``,
+  ``isis ipv6 enable``, Junos: automatically for family inet6) put their link-local address in the
+  hellos (TLV 232) and their IPv6 prefixes in the LSP (TLV 236).  The same SPF gives ``I2`` IPv6
+  routes whose next hop is the neighbour's link-local address.
 """
 from __future__ import annotations
 
 import heapq
 import re
 from dataclasses import dataclass, field
-from ipaddress import IPv4Address, IPv4Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
 from ..addresses import MacAddress
 from ..stack.ipv4 import Route
@@ -41,7 +45,8 @@ class IsisPdu:
     seen: tuple = ()               # IIH: system IDs heard on this interface
     ip: str = ""                   # IIH: interface IPv4 address (IP interface address TLV)
     hostname: str = ""
-    lsps: tuple = ()               # LSP: ((system id, seq, hostname, neighbours, prefixes), ...)
+    lsps: tuple = ()               # LSP: ((system id, seq, hostname, neighbours, prefixes, prefixes6), ...)
+    ip6: str = ""                  # IIH: IPv6 link-local address (TLV 232)
     label = "IS-IS"
 
     def summary(self) -> str:
@@ -52,12 +57,14 @@ class IsisPdu:
     def layer_lines(self) -> list[str]:
         if self.kind == "iih":
             return ["PDU type: L2 LAN IIH", f"System ID: {self.system_id}", f"Area address: {self.area}",
-                    f"IP interface address: {self.ip}", "IS neighbors: " + (", ".join(self.seen) or "-")]
+                    f"IP interface address: {self.ip or '-'}", f"IPv6 interface address: {self.ip6 or '-'}",
+                    "IS neighbors: " + (", ".join(self.seen) or "-")]
         out = ["PDU type: L2 LSP"]
-        for sid, seq, host, nbrs, pfx in self.lsps:
+        for sid, seq, host, nbrs, pfx, *rest in self.lsps:
             out.append(f"LSP {sid}.00-00 ({host}) seq 0x{seq:08x}")
             out += [f"  IS neighbor {n} metric {m}" for n, m in nbrs]
             out += [f"  IP prefix {p} metric {m}" for p, m in pfx]
+            out += [f"  IPv6 prefix {p} metric {m}" for p, m in (rest[0] if rest else ())]
         return out
 
 
@@ -69,15 +76,23 @@ class IsisConfig:
     passive: list = field(default_factory=list)
     metrics: dict = field(default_factory=dict)          # interface -> metric
     enabled: bool = True
+    interfaces6: list = field(default_factory=list)      # interfaces running IS-IS for IPv6
+    ipv6_all: bool = False                               # Junos: every IS-IS interface with family inet6
 
     def to_dict(self) -> dict:
-        return {"tag": self.tag, "net": self.net, "interfaces": list(self.interfaces), "passive": list(self.passive),
-                "metrics": dict(self.metrics), "enabled": self.enabled}
+        d = {"tag": self.tag, "net": self.net, "interfaces": list(self.interfaces), "passive": list(self.passive),
+             "metrics": dict(self.metrics), "enabled": self.enabled}
+        if self.interfaces6:
+            d["interfaces6"] = list(self.interfaces6)
+        if self.ipv6_all:
+            d["ipv6_all"] = True
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> "IsisConfig":
         return cls(str(d.get("tag", "1")), d.get("net"), list(d.get("interfaces", [])), list(d.get("passive", [])),
-                   dict(d.get("metrics", {})), bool(d.get("enabled", True)))
+                   dict(d.get("metrics", {})), bool(d.get("enabled", True)), list(d.get("interfaces6", [])),
+                   bool(d.get("ipv6_all", False)))
 
 
 @dataclass
@@ -89,6 +104,7 @@ class Adjacency:
     state: str                     # init | up
     last_seen: float
     up_since: float = 0.0
+    ip6: IPv6Address | None = None
 
 
 class IsisProcess:
@@ -99,6 +115,7 @@ class IsisProcess:
         self.adj: dict[tuple, Adjacency] = {}             # (port name, system id) -> Adjacency
         self.lsdb: dict[str, dict] = {}                   # system id -> {"seq", "hostname", "neighbors", "prefixes"}
         self.routes: list[Route] = []
+        self.routes6: list = []                           # Route6Info (I2)
         self.running = False
         self._seq = 0
         self._timer = None
@@ -114,8 +131,22 @@ class IsisProcess:
         p = parse_net(self.cfg.net or "")
         return p[0] if p else ""
 
-    def enabled_on(self, port) -> bool:
+    def enabled4(self, port) -> bool:
         return port.name in self.cfg.interfaces and port.ip is not None and port.is_up
+
+    def enabled6(self, port) -> bool:
+        if not port.is_up or not (port.name in self.cfg.interfaces6 or
+                                  (self.cfg.ipv6_all and port.name in self.cfg.interfaces)):
+            return False
+        ll = self.r.link_local(port) if hasattr(self.r, "link_local") else None
+        return ll is not None
+
+    def enabled_on(self, port) -> bool:
+        return self.enabled4(port) or self.enabled6(port)
+
+    def _ll(self, port) -> str:
+        ll = self.r.link_local(port) if self.enabled6(port) else None
+        return str(ll.ip) if ll is not None else ""
 
     def metric(self, port) -> int:
         return int(self.cfg.metrics.get(port.name, 10))
@@ -137,6 +168,7 @@ class IsisProcess:
         self.adj.clear()
         self.lsdb.clear()
         self.routes = []
+        self.routes6 = []
         self.r.routes_changed()
 
     def restart(self) -> None:
@@ -157,7 +189,8 @@ class IsisProcess:
         for p in self.r.ports.values():
             if self.enabled_on(p) and not self.passive(p):
                 seen = tuple(sorted(a.system_id for a in self.adj.values() if a.port is p))
-                self._send(p, IsisPdu("iih", self.system_id, self.area, seen, str(p.ip.ip), self.r.hostname))
+                self._send(p, IsisPdu("iih", self.system_id, self.area, seen,
+                                      str(p.ip.ip) if self.enabled4(p) else "", self.r.hostname, ip6=self._ll(p)))
         self._refresh(force=bool(lost))
         self._timer = self.engine.schedule(float(HELLO_MS), self._tick)
 
@@ -174,8 +207,11 @@ class IsisProcess:
     def _own_lsp(self) -> dict:
         nbrs = sorted((a.system_id, self.metric(a.port)) for a in self.adj.values() if a.state == "up")
         pfx = sorted((str(p.ip.network), self.metric(p) if not p.is_loopback else 0)
-                     for p in self.r.ports.values() if self.enabled_on(p))
-        return {"hostname": self.r.hostname, "neighbors": nbrs, "prefixes": pfx}
+                     for p in self.r.ports.values() if self.enabled4(p))
+        pfx6 = sorted({(str(a.network), self.metric(p) if not p.is_loopback else 0)
+                       for p in self.r.ports.values() if self.enabled6(p)
+                       for a in getattr(p, "ipv6", []) if not a.network.is_link_local})
+        return {"hostname": self.r.hostname, "neighbors": nbrs, "prefixes": pfx, "prefixes6": [list(x) for x in pfx6]}
 
     def _refresh(self, force: bool = False) -> None:
         if not self.running:
@@ -190,7 +226,8 @@ class IsisProcess:
 
     def _lsp_tuple(self, sid):
         e = self.lsdb[sid]
-        return (sid, e["seq"], e["hostname"], tuple(map(tuple, e["neighbors"])), tuple(map(tuple, e["prefixes"])))
+        return (sid, e["seq"], e["hostname"], tuple(map(tuple, e["neighbors"])), tuple(map(tuple, e["prefixes"])),
+                tuple(map(tuple, e.get("prefixes6", []))))
 
     def _flood(self, sids, except_port=None) -> None:
         lsps = tuple(self._lsp_tuple(s) for s in sids if s in self.lsdb)
@@ -213,6 +250,8 @@ class IsisProcess:
         now = self.engine.now
         key = (port.name, pdu.system_id)
         if pdu.kind == "iih":
+            if not ((pdu.ip and self.enabled4(port)) or (pdu.ip6 and self.enabled6(port))):
+                return                                     # no address family in common: no adjacency
             a = self.adj.get(key)
             if a is None:
                 a = self.adj[key] = Adjacency(pdu.system_id, port, IPv4Address(pdu.ip) if pdu.ip else None,
@@ -220,6 +259,7 @@ class IsisProcess:
             a.last_seen, a.hostname = now, pdu.hostname or a.hostname
             if pdu.ip:
                 a.ip = IPv4Address(pdu.ip)
+            a.ip6 = IPv6Address(pdu.ip6) if pdu.ip6 else None
             if self.system_id in pdu.seen and a.state != "up":
                 a.state, a.up_since = "up", now
                 self.r.mgmt.log(5, f"%CLNS-5-ADJCHANGE: ISIS: Adjacency to {a.hostname} ({port.name}) Up, new adjacency")
@@ -230,7 +270,7 @@ class IsisProcess:
         if key not in self.adj or self.adj[key].state != "up":
             return
         newer = []
-        for sid, seq, host, nbrs, pfx in pdu.lsps:
+        for sid, seq, host, nbrs, pfx, *rest in pdu.lsps:
             if sid == self.system_id:
                 if seq >= self._seq:                       # an old copy of ours survived: outdo it
                     self._seq = seq + 1
@@ -240,7 +280,8 @@ class IsisProcess:
             cur = self.lsdb.get(sid)
             if cur is None or seq > cur["seq"]:
                 self.lsdb[sid] = {"seq": seq, "hostname": host, "neighbors": [list(n) for n in nbrs],
-                                  "prefixes": [list(p) for p in pfx]}
+                                  "prefixes": [list(p) for p in pfx],
+                                  "prefixes6": [list(p) for p in (rest[0] if rest else ())]}
                 newer.append(sid)
         if newer:
             self._flood(newer, except_port=port)
@@ -285,6 +326,32 @@ class IsisProcess:
         ad = {"huawei": 15, "juniper": 18}.get(getattr(self.r, "vendor", ""), DISTANCE)
         routes = [Route(net, "i L2", a.port, a.ip, ad, m) for net, (m, a) in
                   sorted(best.items(), key=lambda x: (int(x[0].network_address), x[0].prefixlen))]
-        if [(r.network, r.next_hop, r.metric) for r in routes] != [(r.network, r.next_hop, r.metric) for r in self.routes]:
+        routes6 = self._spf6(dist, first)
+        key6 = [(r.network, r.next_hop, r.metric) for r in routes6]
+        if [(r.network, r.next_hop, r.metric) for r in routes] != [(r.network, r.next_hop, r.metric) for r in self.routes] \
+                or key6 != [(r.network, r.next_hop, r.metric) for r in self.routes6]:
             self.routes = routes
+            self.routes6 = routes6
             self.r.routes_changed()
+            self.engine.emit("routes_changed", self.r)
+
+    def _spf6(self, dist, first) -> list:
+        from .v6igp import Route6Info
+        own = {a.network for p in self.r.ports.values() for a in getattr(p, "ipv6", []) if p.is_up}
+        best: dict[IPv6Network, tuple] = {}
+        for sid, d in dist.items():
+            if sid == self.system_id:
+                continue
+            adj = next((a for a in self.adj.values() if a.system_id == first[sid] and a.state == "up"
+                        and a.ip6 is not None and self.enabled6(a.port)), None)
+            if adj is None:
+                continue
+            for pfx, m in self.lsdb.get(sid, {}).get("prefixes6", []):
+                net = IPv6Network(pfx)
+                if net in own:
+                    continue
+                total = d + int(m)
+                if net not in best or total < best[net][0]:
+                    best[net] = (total, adj)
+        return [Route6Info(net, a.port, a.ip6, m, "I2")
+                for net, (m, a) in sorted(best.items(), key=lambda x: (int(x[0].network_address), x[0].prefixlen))]

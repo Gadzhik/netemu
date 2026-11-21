@@ -655,11 +655,17 @@ end
 | `show ip eigrp interfaces` | IP-EIGRP interfaces |
 | `show ipv6 interface brief` | Brief summary of IPv6 status and configuration |
 | `show ipv6 route` | Show IPv6 route table entries |
+| `show ipv6 route eigrp` | EIGRP routes |
+| `show ipv6 route isis` | IS-IS routes |
+| `show ipv6 route ospf` | OSPF routes |
+| `show ipv6 route static` | Static routes |
+| `show ipv6 route connected` | Connected routes |
 | `show ipv6 neighbors` | Show IPv6 neighbor cache entries |
 | `show ipv6 dhcp binding` | Show DHCPv6 bindings |
 | `show ipv6 ospf neighbor` | Neighbor list |
 | `show ipv6 ospf database` | Database summary |
 | `show ipv6 rip` | RIP routing protocol status |
+| `show ipv6 eigrp neighbors` | IPv6 EIGRP neighbors |
 | `show running-config` | Current operating configuration |
 | `show startup-config` | Contents of startup configuration |
 | `show version` | System hardware and software status |
@@ -779,6 +785,7 @@ end
 | `[no] ipv6 route X:X:X:X::X/<0-128> IFACE X:X:X:X::X` | IPv6 address of next-hop |
 | `[no] ipv6 router ospf <1-65535>` | Process ID |
 | `[no] ipv6 router rip WORD` | User selected string identifying this process |
+| `[no] ipv6 router eigrp <1-65535>` | Autonomous System |
 | `[no] ipv6 dhcp pool WORD` | DHCP pool name |
 | `line vty <0-15>` | First Line number |
 | `line vty <0-15> <1-15>` | Last Line number |
@@ -887,6 +894,9 @@ end
 | `[no] ipv6 ospf <1-65535> area <0-4294967295>/A.B.C.D` | OSPF area ID |
 | `[no] ipv6 ospf cost <1-65535>` | Cost |
 | `[no] ipv6 rip WORD enable` | Enable RIP routing on interface |
+| `[no] ipv6 eigrp <1-65535>` | Autonomous system number |
+| `[no] ipv6 router isis` | IS-IS Routing for IPv6 |
+| `[no] ipv6 router isis WORD` | Routing process tag |
 | `[no] ipv6 dhcp server WORD` | Name of IPv6 DHCP pool |
 | `[no] isis metric <1-16777214>` | Default metric |
 | `[no] isis metric <1-16777214> LINE` | level |
@@ -1048,11 +1058,17 @@ end
 | `show ip ssh` | Information on SSH |
 | `show ipv6 interface brief` | Brief summary of IPv6 status and configuration |
 | `show ipv6 route` | Show IPv6 route table entries |
+| `show ipv6 route eigrp` | EIGRP routes |
+| `show ipv6 route isis` | IS-IS routes |
+| `show ipv6 route ospf` | OSPF routes |
+| `show ipv6 route static` | Static routes |
+| `show ipv6 route connected` | Connected routes |
 | `show ipv6 neighbors` | Show IPv6 neighbor cache entries |
 | `show ipv6 dhcp binding` | Show DHCPv6 bindings |
 | `show ipv6 ospf neighbor` | Neighbor list |
 | `show ipv6 ospf database` | Database summary |
 | `show ipv6 rip` | RIP routing protocol status |
+| `show ipv6 eigrp neighbors` | IPv6 EIGRP neighbors |
 | `show mac address-table` | MAC forwarding table |
 | `show running-config` | Current operating configuration |
 | `show spanning-tree` | Spanning tree topology |
@@ -1150,6 +1166,7 @@ end
 | `[no] ipv6 route X:X:X:X::X/<0-128> IFACE X:X:X:X::X` | IPv6 address of next-hop |
 | `[no] ipv6 router ospf <1-65535>` | Process ID |
 | `[no] ipv6 router rip WORD` | User selected string identifying this process |
+| `[no] ipv6 router eigrp <1-65535>` | Autonomous System |
 | `[no] ipv6 dhcp pool WORD` | DHCP pool name |
 | `line vty <0-15>` | First Line number |
 | `line vty <0-15> <1-15>` | Last Line number |
@@ -1251,6 +1268,9 @@ end
 | `[no] ipv6 ospf <1-65535> area <0-4294967295>/A.B.C.D` | OSPF area ID |
 | `[no] ipv6 ospf cost <1-65535>` | Cost |
 | `[no] ipv6 rip WORD enable` | Enable RIP routing on interface |
+| `[no] ipv6 eigrp <1-65535>` | Autonomous system number |
+| `[no] ipv6 router isis` | IS-IS Routing for IPv6 |
+| `[no] ipv6 router isis WORD` | Routing process tag |
 | `[no] ipv6 dhcp server WORD` | Name of IPv6 DHCP pool |
 | `[no] shutdown` | Shutdown the selected interface |
 | `[no] spanning-tree portfast` | Portfast mode |

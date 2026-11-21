@@ -1440,7 +1440,7 @@ class JunosSession(TreeSession):
     # -- IS-IS (candidate) ---------------------------------------------------------------------
     def _isis_cand(self):
         return self.candidate.setdefault("isis", {"tag": "1", "net": None, "interfaces": [], "passive": [],
-                                                  "metrics": {}, "enabled": True})
+                                                  "metrics": {}, "enabled": True, "ipv6_all": True})
 
     def cfg_isis(self, text, delete):
         if delete:
@@ -2878,6 +2878,27 @@ def render_config(device, cfg: dict) -> str:
                     lines.append(f"            interface {lname};")
             lines.append("        }")
         lines += ["    }", "}"]
+    isis_c = cfg.get("isis")
+    if isis_c and isis_c.get("interfaces"):
+        block = ["    isis {", "        level 1 disable;"]
+        for ifname in isis_c["interfaces"]:
+            lname = ifname if "." in ifname else ifname + ".0"
+            if ifname in isis_c.get("passive", []):
+                block.append(f"        interface {lname} {{ passive; }}")
+            elif ifname in isis_c.get("metrics", {}):
+                block.append(f"        interface {lname} {{ level 2 metric {isis_c['metrics'][ifname]}; }}")
+            else:
+                block.append(f"        interface {lname};")
+        block.append("    }")
+        if "protocols {" in lines:
+            depth, i = 0, lines.index("protocols {")
+            for j in range(i, len(lines)):
+                depth += lines[j].count("{") - lines[j].count("}")
+                if depth == 0:
+                    lines[j:j] = block
+                    break
+        else:
+            lines += ["protocols {"] + block + ["}"]
     ex = cfg.get("extra", {})
     if ex.get("filters"):
         lines += ["firewall {", "    family inet {"]
