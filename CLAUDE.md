@@ -141,6 +141,10 @@ python -m venv .venv
 - Wide widgets inside docks force the main window layout (the simulation filter row once made the dock
   about 1250 px wide); use grids or wrapping.
 - `QSettings` stores the UI language, theme and scale. GUI tests restore light theme / 100 %.
+- Keep app-wide Qt changes (`QApplication.setFont`, palette) out of `test_gui.py`: after the many windows
+  its tests leave behind they crashed Windows + Python 3.11 in CI (heap corruption). The theme/scale test
+  lives in `tests/test_appearance.py`. Close Qt sockets with `classroom.close_socket()` (block signals,
+  abort, deleteLater), never a bare `disconnectFromHost()` on an object about to be dropped.
 
 ## History (what has been built, in order)
 1. **MVP**: canvas, cables, Ethernet/ARP/IPv4/ICMP, static routing, Cisco CLI, save/load, simulation mode,
