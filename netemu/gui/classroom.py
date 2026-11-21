@@ -14,6 +14,18 @@ from ..i18n import tr
 CLASS_PORT = 47900
 
 
+def close_socket(s) -> None:
+    """Drop a connection without letting its signals reach handlers of objects being torn down.
+
+    A graceful disconnectFromHost() emits 'disconnected' later, possibly while the Python owner is
+    already being destroyed; that corrupted the heap on Windows. Block the signals, abort, delete later."""
+    if s is None:
+        return
+    s.blockSignals(True)
+    s.abort()
+    s.deleteLater()
+
+
 def _send(sock, obj) -> None:
     if sock is not None and sock.state() == QTcpSocket.ConnectedState:
         sock.write((json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
@@ -37,8 +49,11 @@ class TeacherClass(QObject):
         return True
 
     def stop(self) -> None:
+        self.blockSignals(True)
         for s in list(self.clients):
-            s.disconnectFromHost()
+            close_socket(s)
+        self.clients.clear()
+        self.server.blockSignals(True)
         self.server.close()
 
     def redistribute(self, assignment: dict, title: str) -> None:
@@ -107,9 +122,13 @@ class StudentClass(QObject):
         self.sock.connectToHost(address, port)
 
     def stop(self) -> None:
-        self.sock.disconnectFromHost()
+        self.blockSignals(True)
+        close_socket(self.sock)
+        self.sock = None
 
     def report(self, results) -> None:
+        if self.sock is None:
+            return
         _send(self.sock, {"progress": [[c.text, bool(ok), d] for c, ok, d in results]})
 
     def _read(self) -> None:

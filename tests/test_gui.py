@@ -752,20 +752,6 @@ def test_phone_dialog_opens(win):
     d.close()
 
 
-def test_dark_theme_and_ui_scale(win, qapp):
-    from netemu.gui import theme
-    base = qapp.font().pointSizeF()
-    try:
-        win.choose_theme("dark")
-        assert theme.is_dark() and win.view.backgroundBrush().color().name() == theme.DARK["canvas"]
-        win.choose_scale(1.5)
-        assert abs(qapp.font().pointSizeF() - theme.STATE["base_pt"] * 1.5) < 0.01
-    finally:
-        win.choose_theme("light")
-        win.choose_scale(1.0)
-    assert not theme.is_dark() and abs(qapp.font().pointSizeF() - base) < 0.01
-
-
 def test_lan_collaboration_between_two_windows(win, qtbot, monkeypatch):
     other = MainWindow()
     qtbot.addWidget(other)

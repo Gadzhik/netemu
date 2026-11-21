@@ -80,16 +80,18 @@ class CollabSession(QObject):
         self.statusChanged.emit("connecting")
 
     def stop(self) -> None:
+        from .classroom import close_socket
         self.timer.stop()
         for s in list(self.clients):
-            s.disconnectFromHost()
+            close_socket(s)
         self.clients.clear()
         if self.server is not None:
+            self.server.blockSignals(True)
             self.server.close()
             self.server = None
         if self.sock is not None:
             s, self.sock = self.sock, None
-            s.disconnectFromHost()
+            close_socket(s)
         self.statusChanged.emit("off")
 
     # -- network --------------------------------------------------------------------------
