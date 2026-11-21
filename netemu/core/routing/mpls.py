@@ -239,14 +239,20 @@ class Mpls:
 
     def receive(self, frame, port) -> None:
         m = frame.payload
-        if not isinstance(m, MplsPacket) or not m.labels or not self.running:
+        if not isinstance(m, MplsPacket) or not m.labels:
             return
         top = m.labels[0]
         ttl = m.ttl - 1
-        entry = self.lfib.get(top)
         if ttl <= 0:
             self._ttl_expired(m, port)
             return
+        if "_te" in self.r.__dict__:
+            from .te import te_switch
+            if te_switch(self.r, m, ttl, port):
+                return
+        if not self.running:
+            return
+        entry = self.lfib.get(top)
         vrf = self.r.vrf_for_label(top) if entry is None and hasattr(self.r, "vrf_for_label") else None
         if vrf is not None and isinstance(m.inner, IPv4Packet):              # L3VPN egress: VPN label -> VRF
             with self.r.in_vrf(vrf):
@@ -267,10 +273,16 @@ class Mpls:
             return
         self._send_labelled(oport, nh, MplsPacket((out,) + m.labels[1:], ttl, m.inner))
 
+    def receive_stack(self, mp, port) -> None:
+        """Handle an inner label stack (after a TE tail end popped its label)."""
+        from types import SimpleNamespace
+        self.receive(SimpleNamespace(payload=replace(mp, ttl=mp.ttl + 1)), port)
+
     def _send_labelled(self, port, next_hop, mp) -> bool:
         from ..packets import EthernetFrame
         e = self.r.arp.lookup(next_hop, self.engine.now)
         if e is None or e.port is not port:
+            self.r._arp_prime(port, next_hop)              # resolve for the next packets
             return False
         port.send(EthernetFrame(port.mac, e.mac, ETH_MPLS, mp))
         return True

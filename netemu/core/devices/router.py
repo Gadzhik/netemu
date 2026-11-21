@@ -91,7 +91,18 @@ class Router(IpStack, Ip6Stack, Device):
             out += [r for r in self.isis.routes if r.port is not None and r.port.is_up]
         if self.bgp is not None:
             out += self.bgp.routes          # recursive: resolved through the IGP at lookup time
+        if "_te" in self.__dict__:
+            from ..routing.te import autoroute
+            out = autoroute(self, out)
         return out
+
+    def _arp_prime(self, port, ip) -> None:
+        """Resolve a next hop ahead of labelled traffic (RSVP-TE hops, LDP neighbours)."""
+        from ..packets import ETH_ARP, ArpPacket
+        from ..addresses import MacAddress
+        if self.arp.lookup(ip, self.engine.now) is None and port.ip is not None and port.is_up:
+            self._send_frame(port, MacAddress(0xFFFFFFFFFFFF), ETH_ARP,
+                             ArpPacket("request", port.mac, port.ip.ip, MacAddress(0), ip))
 
     def rip_distance(self) -> int:
         return 100 if self.vendor in ("huawei", "juniper") else 120
@@ -872,6 +883,9 @@ class Router(IpStack, Ip6Stack, Device):
         self.mgmt.apply(cfg.get("mgmt"))
         self.cme.apply(cfg.get("cme"))
         self.mpls.apply(cfg.get("mpls"))
+        from ..routing.te import ensure_timer, te_tunnels
+        if te_tunnels(self):
+            ensure_timer(self)
         from ..security.stateful import ZoneFirewall
         self.zfw = ZoneFirewall.from_dict(cfg.get("zfw"))
         from ..routing.fhrp import FhrpGroup

@@ -651,6 +651,8 @@ end
 | `show ip ssh` | Information on SSH |
 | `show ip vrf` | VPN Routing/Forwarding instance information |
 | `show ip vrf brief` | Brief VPN Routing/Forwarding instance information |
+| `show ip rsvp interface` | RSVP interface information |
+| `show ip explicit-paths` | Show the explicit paths |
 | `show ip eigrp neighbors` | IP-EIGRP neighbors |
 | `show ip eigrp topology` | IP-EIGRP Topology Table |
 | `show ip eigrp interfaces` | IP-EIGRP interfaces |
@@ -676,6 +678,8 @@ end
 | `show isis neighbors` | IS-IS neighbors |
 | `show isis database` | IS-IS link state database |
 | `show clns neighbors` | CLNS neighbor adjacencies |
+| `show mpls traffic-eng tunnels` | Traffic Engineering tunnels |
+| `show mpls traffic-eng tunnels brief` | Brief summary of tunnel status and configuration |
 | `show mpls ldp neighbor` | Display LDP neighbor information |
 | `show mpls ldp bindings` | Show the LDP Label Information Base (LIB) |
 | `show mpls forwarding-table` | Show the Label Forwarding Information Base (LFIB) |
@@ -781,6 +785,8 @@ end
 | `ip domain-name WORD` | Default domain name |
 | `ip ssh version <1-2>` | Protocol version |
 | `ip vrf WORD` | VRF name |
+| `ip explicit-path name WORD` | Explicit path name |
+| `ip explicit-path name WORD enable` | Enable the path |
 | `[no] ipv6 unicast-routing` | Enable unicast routing |
 | `[no] ipv6 route X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 route X:X:X:X::X/<0-128> X:X:X:X::X` | IPv6 address of next-hop |
@@ -808,6 +814,9 @@ end
 | `[no] mpls ldp router-id IFACE` | Interface |
 | `[no] mpls ldp router-id IFACE force` | Forcibly change the LDP router id |
 | `[no] mpls ip` | Dynamic MPLS forwarding for IP |
+| `[no] mpls traffic-eng tunnels` | Enable MPLS Traffic Engineering tunnels |
+| `[no] mpls traffic-eng router-id IFACE` | Interface |
+| `[no] mpls traffic-eng area <0-4294967295>` | OSPF area ID |
 | `[no] nat64 prefix stateful X:X:X:X::X/<0-128>` | Stateful prefix (/96) |
 | `[no] nat64 v4 pool WORD A.B.C.D A.B.C.D` | End |
 | `[no] nat64 v6v4 list ACL pool POOL overload` | IPv6 to IPv4 mapping |
@@ -891,6 +900,9 @@ end
 | `ip vrf forwarding WORD` | VRF name |
 | `ip router isis` | IS-IS Routing for IP |
 | `ip router isis WORD` | Routing process tag |
+| `ip rsvp bandwidth` | RSVP reservable bandwidth (KBPS) |
+| `ip rsvp bandwidth <1-10000000>` | Reservable bandwidth (KBPS) on interface |
+| `ip unnumbered IFACE` | Interface |
 | `[no] ipv6 address X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 enable` | Enable IPv6 on interface |
 | `[no] ipv6 nd ra suppress` | Suppress IPv6 Router Advertisements |
@@ -905,6 +917,9 @@ end
 | `[no] isis metric <1-16777214> LINE` | level |
 | `[no] isis circuit-type` | Configure circuit type for interface |
 | `[no] isis circuit-type LINE` | Configure circuit type for interface |
+| `[no] mpls traffic-eng tunnels` | Enable MPLS Traffic Engineering tunnels |
+| `[no] mpls traffic-eng router-id IFACE` | Interface |
+| `[no] mpls traffic-eng area <0-4294967295>` | OSPF area ID |
 | `[no] mpls ip` | Configure dynamic MPLS forwarding for IP |
 | `[no] mpls label protocol ldp` | Use LDP (default) |
 | `[no] nat64 enable` | Enable NAT64 on the interface |
@@ -921,6 +936,13 @@ end
 | `[no] tunnel destination A.B.C.D` | ip address |
 | `[no] tunnel mode gre` | generic route encapsulation protocol |
 | `[no] tunnel mode gre ip` | over IP |
+| `[no] tunnel mode mpls traffic-eng` | Traffic engineering tunnels |
+| `[no] tunnel mpls traffic-eng bandwidth <0-4294967295>` | Bandwidth requirement in kbps |
+| `[no] tunnel mpls traffic-eng path-option <1-1000>` | The preference for this path option |
+| `[no] tunnel mpls traffic-eng path-option <1-1000> dynamic` | setup based on dynamically calculated path |
+| `[no] tunnel mpls traffic-eng path-option <1-1000> explicit name WORD` | Explicit path name |
+| `[no] tunnel mpls traffic-eng autoroute announce` | announce tunnel tail as an IGP shortcut |
+| `[no] tunnel mpls traffic-eng priority LINE` | setup and hold priority |
 | `[no] tunnel protection ipsec profile WORD` | Name |
 | `[no] vrf forwarding` | Configure forwarding table |
 | `[no] vrf forwarding WORD` | VRF name |

@@ -211,6 +211,9 @@ class Device:
         if p.is_tunnel:
             d.update(tunnel=True, short=p.short, source=p.source,
                      destination=str(p.destination) if p.destination else None, ipsec_key=p.ipsec_key)
+            if getattr(p, "tmode", "gre") != "gre":
+                d.update(tunnel_mode=p.tmode, te={k: (list(map(list, v)) if k == "options" else v)
+                                                 for k, v in p.te.items()})
         if p.channel_group is not None:
             d.update(channel_group=p.channel_group, channel_mode=p.channel_mode)
         if p.psec is not None:
@@ -283,6 +286,8 @@ class Device:
                 p.source = icfg.get("source")
                 p.destination = _A(icfg["destination"]) if icfg.get("destination") else None
                 p.ipsec_key = icfg.get("ipsec_key")
+                p.tmode = icfg.get("tunnel_mode", "gre")
+                p.te = {k: ([tuple(o) for o in v] if k == "options" else v) for k, v in (icfg.get("te") or {}).items()}
             if p is None and icfg.get("channel"):
                 p = self.add_channel(int(icfg["group"]), name, icfg.get("short"))
             if p is None and icfg.get("svi"):

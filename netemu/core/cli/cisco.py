@@ -18,6 +18,7 @@ PROMPTS = {"user": ">", "priv": "#", "config": "(config)#", "config-if": "(confi
            "config-router-af-vpn": "(config-router-af)#", "config-router-af-vrf": "(config-router-af)#",
            "config-router-rip": "(config-router)#", "config-router-eigrp": "(config-router)#",
            "config-vrf": "(config-vrf)#", "config-router-isis": "(config-router)#",
+           "cfg-ip-expl-path": "(cfg-ip-expl-path)#",
            "config-server-tacacs": "(config-server-tacacs)#", "config-radius-server": "(config-radius-server)#",
            "config-sec-zone": "(config-sec-zone)#", "config-sec-zone-pair": "(config-sec-zone-pair)#",
            "config-cmap-insp": "(config-cmap)#", "config-pmap-insp": "(config-pmap)#",
@@ -81,7 +82,7 @@ class CiscoSession(TreeSession):
     shows_console = True        # %OSPF-5-ADJCHG and similar messages appear on the console
     negate_modes = ("config-line", "config", "config-if", "config-subif", "config-vlan", "config-router",
                     "config-router-bgp", "config-router-af", "dhcp-config", "config-router-rip",
-                    "config-router-af-vpn", "config-router-af-vrf",
+                    "config-router-af-vpn", "config-router-af-vrf", "cfg-ip-expl-path",
                     "config-std-nacl", "config-ext-nacl", "config-router-eigrp", "config-cmap", "config-pmap",
                     "config-pmap-c", "config-telephony", "config-ephone-dn", "config-ephone", "config-isakmp",
                     "cfg-crypto-trans", "ipsec-profile", "config-rtr6", "config-dhcpv6", "config-vrf",
@@ -91,6 +92,7 @@ class CiscoSession(TreeSession):
                     "config-router": "config", "config-std-nacl": "config", "config-ext-nacl": "config",
                     "config-router-bgp": "config", "config-router-af": "config-router-bgp",
                     "config-router-af-vpn": "config-router-bgp", "config-router-af-vrf": "config-router-bgp",
+                    "cfg-ip-expl-path": "config",
                     "dhcp-config": "config", "config-router-rip": "config", "config-line": "config",
                     "config-router-eigrp": "config", "config-vrf": "config", "config-router-isis": "config",
                     "config-server-tacacs": "config", "config-radius-server": "config",
@@ -450,7 +452,34 @@ class CiscoSession(TreeSession):
                      P.arg(P.IpArg(), "ip address", handler=lambda s, a, n: s.tun("destination", a[0]))),
                 P.kw("mode", "tunnel encapsulation method",
                      P.kw("gre", "generic route encapsulation protocol",
-                          P.kw("ip", "over IP", handler=lambda s, a, n: None), handler=lambda s, a, n: None)),
+                          P.kw("ip", "over IP", handler=lambda s, a, n: s.te_mode("gre")),
+                          handler=lambda s, a, n: s.te_mode("gre")),
+                     P.kw("mpls", "MPLS encapsulations", P.kw("traffic-eng", "Traffic engineering tunnels",
+                          handler=lambda s, a, n: s.te_mode("te")))),
+                P.kw("mpls", "MPLS tunnel commands", P.kw("traffic-eng", "Traffic engineering tunnel commands",
+                     P.kw("bandwidth", "Specify tunnel bandwidth requirement",
+                          P.arg(P.NumArg(0, 4294967295, "<0-4294967295>"), "Bandwidth requirement in kbps",
+                                handler=lambda s, a, n: s.te_set("bandwidth", None if n else int(a[0])), negatable=True),
+                          negatable=True),
+                     P.kw("path-option", "Primary path setup option",
+                          P.arg(P.NumArg(1, 1000, "<1-1000>"), "The preference for this path option",
+                                P.kw("dynamic", "setup based on dynamically calculated path",
+                                     handler=lambda s, a, n: s.te_option(a[0], "dynamic", None, n), negatable=True),
+                                P.kw("explicit", "setup based on preconfigured path",
+                                     P.kw("name", "Specify an explicit path by name",
+                                          P.arg(P.WordArg("WORD"), "Explicit path name",
+                                                handler=lambda s, a, n: s.te_option(a[0], "explicit", a[1], n),
+                                                negatable=True)), negatable=True),
+                                handler=lambda s, a, n: s.te_option(a[0], None, None, True) if n else
+                                s.err_incomplete("", 0), negatable=True),
+                          negatable=True),
+                     P.kw("autoroute", "define tunnel routing properties",
+                          P.kw("announce", "announce tunnel tail as an IGP shortcut",
+                               handler=lambda s, a, n: s.te_set("autoroute", not n), negatable=True), negatable=True),
+                     P.kw("priority", "Specify tunnel priority",
+                          P.arg(P.LineArg(), "setup and hold priority", handler=lambda s, a, n: None, negatable=True),
+                          negatable=True),
+                     negatable=True), negatable=True),
                 P.kw("protection", "Enable tunnel protection",
                      P.kw("ipsec", "IPsec", P.kw("profile", "Determine the ipsec policy profile to use",
                           P.arg(P.WordArg("WORD"), "Name", handler=lambda s, a, n: s.tun_protect(a[0], n),
@@ -3065,7 +3094,17 @@ class CiscoSession(TreeSession):
 
     # -- MPLS / LDP ------------------------------------------------------------------------------
     def _add_mpls_trees(self, t):
+        te_kw = lambda fn: P.kw("traffic-eng", "Configure Traffic Engineering parameters",
+                                P.kw("tunnels", "Enable MPLS Traffic Engineering tunnels", handler=fn, negatable=True),
+                                P.kw("router-id", "Traffic Engineering stable IP address for system",
+                                     P.arg(P.IfaceArg(), "Interface", handler=lambda s, a, n: None, negatable=True),
+                                     negatable=True),
+                                P.kw("area", "configure an ospf area to run MPLS Traffic Engineering",
+                                     P.arg(P.WordArg("<0-4294967295>"), "OSPF area ID", handler=lambda s, a, n: None,
+                                           negatable=True), negatable=True),
+                                negatable=True)
         t["config-if"].append(P.kw("mpls", "Configure MPLS interface parameters",
+            te_kw(lambda s, a, n: s.te_link(n)),
             P.kw("ip", "Configure dynamic MPLS forwarding for IP", handler=lambda s, a, n: s.if_mpls(n), negatable=True),
             P.kw("label", "Label protocol", P.kw("protocol", "Configure label/tag distribution protocol (LDP)",
                  P.kw("ldp", "Use LDP (default)", handler=lambda s, a, n: None, negatable=True))), negatable=True))
@@ -3077,9 +3116,48 @@ class CiscoSession(TreeSession):
                  P.arg(P.IfaceArg(), "Interface",
                        P.kw("force", "Forcibly change the LDP router id", handler=lambda s, a, n: s.mpls_rid(a[0], n)),
                        handler=lambda s, a, n: s.mpls_rid(a[0], n), negatable=True), negatable=True), negatable=True),
-            P.kw("ip", "Dynamic MPLS forwarding for IP", handler=lambda s, a, n: None, negatable=True), negatable=True))
+            P.kw("ip", "Dynamic MPLS forwarding for IP", handler=lambda s, a, n: None, negatable=True),
+            te_kw(lambda s, a, n: s.te_global(n)), negatable=True))
+        rtr = t.get("config-router")
+        if rtr is not None:
+            rtr.append(P.kw("mpls", "Configure MPLS routing protocol parameters", te_kw(lambda s, a, n: None),
+                            negatable=True))
+        ifip = next(x for x in t["config-if"] if x.word == "ip")
+        ifip.children += [
+            P.kw("rsvp", "RSVP Interface Commands", P.kw("bandwidth", "RSVP reservable bandwidth (KBPS)",
+                 P.arg(P.NumArg(1, 10000000, "<1-10000000>"), "Reservable bandwidth (KBPS) on interface",
+                       handler=lambda s, a, n: s.rsvp_bw(None if n else int(a[0])), negatable=True),
+                 handler=lambda s, a, n: s.rsvp_bw(None if n else 75000), negatable=True), negatable=True),
+            P.kw("unnumbered", "Enable IP processing without an explicit address",
+                 P.arg(P.IfaceArg(), "Interface", handler=lambda s, a, n: None, negatable=True), negatable=True)]
+        ipg = next(x for x in t["config"] if x.word == "ip")
+        ipg.children.append(P.kw("explicit-path", "Configure explicit-path",
+            P.kw("name", "Specify explicit-path by name",
+                 P.arg(P.WordArg("WORD"), "Explicit path name",
+                       P.kw("enable", "Enable the path", handler=lambda s, a, n: s.expl_path(a[0], n), negatable=True),
+                       handler=lambda s, a, n: s.expl_path(a[0], n), negatable=True), negatable=True), negatable=True))
+        de = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
+        t["cfg-ip-expl-path"] = sorted(de + [
+            P.kw("exit", "Exit from explicit-path configuration mode", handler=lambda s, a, n: s.set_mode("config")),
+            P.kw("next-address", "Specify the next address in the path",
+                 P.kw("loose", "Next hop is loose", P.arg(P.IpArg(), "IP address of the next hop",
+                      handler=lambda s, a, n: s.expl_hop("loose:" + str(a[0]), n), negatable=True)),
+                 P.kw("strict", "Next hop is strict", P.arg(P.IpArg(), "IP address of the next hop",
+                      handler=lambda s, a, n: s.expl_hop(a[0], n), negatable=True)),
+                 P.arg(P.IpArg(), "IP address of the next hop", handler=lambda s, a, n: s.expl_hop(a[0], n),
+                       negatable=True), negatable=True)], key=lambda x: x.word or "")
         show = next(x for x in t["priv"] if x.word == "show")
+        sip = next(x for x in show.children if x.word == "ip")
+        sip.children += [
+            P.kw("rsvp", "RSVP information", P.kw("interface", "RSVP interface information",
+                 handler=lambda s, a, n: s.show_rsvp())),
+            P.kw("explicit-paths", "Show the explicit paths", handler=lambda s, a, n: s.show_expl())]
         show.children.append(P.kw("mpls", "MPLS information",
+            P.kw("traffic-eng", "Traffic engineering information",
+                 P.kw("tunnels", "Traffic Engineering tunnels",
+                      P.kw("brief", "Brief summary of tunnel status and configuration",
+                           handler=lambda s, a, n: s.show_te(True)),
+                      handler=lambda s, a, n: s.show_te(False))),
             P.kw("ldp", "Label Distribution Protocol information",
                  P.kw("neighbor", "Display LDP neighbor information", handler=lambda s, a, n: s.show_mpls("neighbor")),
                  P.kw("bindings", "Show the LDP Label Information Base (LIB)",
@@ -3087,6 +3165,160 @@ class CiscoSession(TreeSession):
             P.kw("forwarding-table", "Show the Label Forwarding Information Base (LFIB)",
                  handler=lambda s, a, n: s.show_mpls("forwarding")),
             P.kw("interfaces", "Per-interface MPLS forwarding information", handler=lambda s, a, n: s.show_mpls("interfaces"))))
+
+    # -- MPLS traffic engineering -------------------------------------------------------------------
+    def _te_kick(self):
+        from ..routing.te import kick
+        kick(self.device)
+        for p in self.device.ports.values():
+            peer = p.peer
+            if peer is not None and hasattr(peer.device, "mpls"):
+                from ..routing.te import te_tunnels
+                if te_tunnels(peer.device):
+                    kick(peer.device)
+
+    def te_global(self, negate):
+        from ..routing.te import te_of
+        te_of(self.device).cfg["enabled"] = not negate
+        self._te_kick()
+        return None
+
+    def te_link(self, negate):
+        from ..routing.te import te_of
+        links = te_of(self.device).cfg.setdefault("links", {})
+        if negate:
+            links.pop(self.iface.name, None)
+        else:
+            links[self.iface.name] = True
+        self._te_kick()
+        return None
+
+    def rsvp_bw(self, kbps):
+        from ..routing.te import te_of
+        rsvp = te_of(self.device).cfg.setdefault("rsvp", {})
+        if kbps is None:
+            rsvp.pop(self.iface.name, None)
+        else:
+            rsvp[self.iface.name] = kbps
+        self._te_kick()
+        return None
+
+    def expl_path(self, name, negate):
+        paths = self.device.extra.setdefault("explicit_paths", {})
+        if negate:
+            paths.pop(name, None)
+            return None
+        paths.setdefault(name, [])
+        self._expl, self.mode = name, "cfg-ip-expl-path"
+        return None
+
+    def expl_hop(self, ip, negate):
+        hops = self.device.extra["explicit_paths"][self._expl]
+        if negate:
+            if ip in hops:
+                hops.remove(ip)
+        elif ip not in hops:
+            hops.append(ip)
+        return f"Explicit Path name {self._expl}:\n" + "\n".join(
+            f"    {i}: next-address {h.replace('loose:', 'loose ')}" for i, h in enumerate(hops, 1))
+
+    def te_mode(self, mode):
+        if not getattr(self.iface, "is_tunnel", False):
+            return self.err_invalid(self.prompt, 0)
+        self.iface.tmode = mode
+        if mode == "te":
+            from ..routing.te import kick
+            kick(self.device)
+        return None
+
+    def te_set(self, key, value):
+        if not getattr(self.iface, "is_tunnel", False):
+            return self.err_invalid(self.prompt, 0)
+        if value is None or value is False:
+            self.iface.te.pop(key, None)
+        else:
+            self.iface.te[key] = value
+        from ..routing.te import kick, teardown
+        teardown(self.device, self.iface.name)                 # re-signal with the new parameters
+        kick(self.device)
+        self.device.routes_changed()
+        return None
+
+    def te_option(self, num, kind, name, negate):
+        if not getattr(self.iface, "is_tunnel", False):
+            return self.err_invalid(self.prompt, 0)
+        opts = [o for o in self.iface.te.get("options", []) if int(o[0]) != int(num)]
+        if not negate:
+            opts.append((int(num), kind, name))
+        self.iface.te["options"] = sorted(opts, key=lambda o: int(o[0]))
+        from ..routing.te import kick
+        kick(self.device)
+        return None
+
+    def show_te(self, brief):
+        from ..routing.te import te_of, te_tunnels
+        st = te_of(self.device)
+        tuns = te_tunnels(self.device)
+        if brief:
+            lines = ["Signalling Summary:", "    LSP Tunnels Process:            running", "    RSVP Process:                   running",
+                     "    Forwarding:                     enabled",
+                     "TUNNEL NAME                      DESTINATION      UP IF     DOWN IF   STATE/PROT"]
+            for t in tuns:
+                lsp = st.lsps.get(t.name)
+                up_if = "-"
+                out_if = lsp.first[1].short if lsp else "-"
+                lines.append(f"{self.device.hostname + '_t' + t.name.lower().replace('tunnel', ''):<33}"
+                             f"{str(t.destination or ''):<17}{up_if:<10}{out_if:<10}"
+                             f"{'up/up' if t.is_up else ('admin-down' if not t.admin_up else 'up/down')}")
+            lines.append(f"Displayed {len(tuns)} (of {len(tuns)}) heads, 0 (of 0) midpoints, 0 (of 0) tails")
+            return "\n".join(lines)
+        out = []
+        for t in tuns:
+            lsp = st.lsps.get(t.name)
+            tid = t.name.lower().replace("tunnel", "")
+            opt_lines = []
+            for num, kind, name in t.te.get("options", []):
+                tag = f"type {kind}" + (f" {name}" if name else "")
+                if lsp is not None and lsp.option == int(num):
+                    tag += f" (Basis for Setup, path weight {lsp.weight})"
+                opt_lines.append(f"    path option {num}, {tag}")
+            out += [f"Name: {self.device.hostname}_t{tid:<28}({t.name}) Destination: {t.destination}",
+                    "  Status:",
+                    f"    Admin: {'up' if t.admin_up else 'admin-down':<11}Oper: {'up' if t.is_up else 'down':<7}"
+                    f"Path: {'valid' if lsp else 'not valid':<11}Signalling: {'connected' if lsp else 'Down'}"]
+            out += opt_lines
+            out += ["", "  Config Parameters:",
+                    f"    Bandwidth: {t.te.get('bandwidth', 0):<9}kbps (Global)  Priority: 7  7   Affinity: 0x0/0xFFFF",
+                    f"    AutoRoute: {'enabled ' if t.te.get('autoroute') else 'disabled'}  LockDown: disabled"]
+            if lsp is not None:
+                hops = " ".join(str(nh) for _, _, nh, _ in lsp.hops)
+                out += ["", "  InLabel  :  -", f"  OutLabel : {lsp.first[1].name}, {lsp.first[3]}",
+                        "  RSVP Signalling Info:",
+                        f"       Src {self.device.mpls.lsr_id()}, Dst {t.destination}, Tun_Id {tid}, "
+                        f"Tun_Instance {lsp.instance}",
+                        "    RSVP Path Info:", f"      Explicit Route: {hops}",
+                        "    RSVP Resv Info:", f"      Record   Route:  {hops}",
+                        f"      Fspec: ave rate={lsp.bandwidth} kbits, burst=1000 bytes, peak rate={lsp.bandwidth} kbits"]
+            out.append("")
+        return "\n".join(out) if out else "% No TE tunnels"
+
+    def show_rsvp(self):
+        from ..routing.te import te_of
+        st = te_of(self.device)
+        lines = ["interface    rsvp       allocated  i/f max  flow max sub max  VRF"]
+        for name, cap in st.cfg.get("rsvp", {}).items():
+            p = self.device.ports.get(name)
+            if p is not None:
+                lines.append(f"{p.short:<13}{'ena':<11}{str(st.reserved.get(name, 0)) + 'K':<11}{str(cap) + 'K':<9}"
+                             f"{str(cap) + 'K':<9}{'0':<9}")
+        return "\n".join(lines)
+
+    def show_expl(self):
+        out = []
+        for name, hops in self.device.extra.get("explicit_paths", {}).items():
+            out.append(f"PATH {name} (strict source route, path complete, generation 1)")
+            out += [f"    {i}: next-address {h.replace('loose:', 'loose ')}" for i, h in enumerate(hops, 1)]
+        return "\n".join(out)
 
     def if_mpls(self, negate):
         m = self.device.mpls
@@ -4770,6 +5002,21 @@ def render_running(device, cfg: dict) -> str:
             lines += [" authentication port-control auto", " dot1x pae authenticator"]
         if name in (cfg.get("mpls") or {}).get("interfaces", []):
             lines.append(" mpls ip")
+        _te = (cfg.get("extra") or {}).get("te") or {}
+        if name in _te.get("links", {}):
+            lines.append(" mpls traffic-eng tunnels")
+        if name in _te.get("rsvp", {}):
+            lines.append(f" ip rsvp bandwidth {_te['rsvp'][name]}")
+        if ic.get("tunnel_mode") == "te":
+            tec = ic.get("te") or {}
+            lines.append(" tunnel mode mpls traffic-eng")
+            if tec.get("autoroute"):
+                lines.append(" tunnel mpls traffic-eng autoroute announce")
+            if tec.get("bandwidth"):
+                lines.append(f" tunnel mpls traffic-eng bandwidth {tec['bandwidth']}")
+            for num, kind, pname in tec.get("options", []):
+                lines.append(f" tunnel mpls traffic-eng path-option {num} " +
+                             ("dynamic" if kind == "dynamic" else f"explicit name {pname}"))
         _isis = cfg.get("isis") or {}
         if name in _isis.get("interfaces", []):
             lines.append(" ip router isis" + ("" if _isis.get("tag", "1") == "1" else " " + _isis["tag"]))
@@ -4916,6 +5163,13 @@ def render_running(device, cfg: dict) -> str:
             lines.append("mpls label protocol ldp")
             if mp.get("router_id"):
                 lines.append(f"mpls ldp router-id {mp['router_id']} force")
+            lines.append("!")
+        te_g = (cfg.get("extra") or {}).get("te") or {}
+        if te_g.get("enabled"):
+            lines += ["mpls traffic-eng tunnels", "!"]
+        for pname, hops in ((cfg.get("extra") or {}).get("explicit_paths") or {}).items():
+            lines.append(f"ip explicit-path name {pname} enable")
+            lines += [f" next-address {h.replace('loose:', 'loose ')}" for h in hops]
             lines.append("!")
         isis = cfg.get("isis")
         if isis and isis.get("net"):

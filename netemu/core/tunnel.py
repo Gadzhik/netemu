@@ -58,6 +58,8 @@ class TunnelPort(Port):
         self.destination: IPv4Address | None = None
         self.ipsec_key: str | None = None          # None: plain GRE
         self.counters = {"encaps": 0, "decaps": 0, "drops": 0}
+        self.tmode = "gre"                         # gre | te (MPLS traffic engineering, see routing/te.py)
+        self.te: dict = {}                         # bandwidth, options [(n, kind, name)], autoroute
 
     @property
     def link(self):
@@ -84,6 +86,9 @@ class TunnelPort(Port):
     def is_up(self) -> bool:
         if not (self.admin_up and self.device.powered and self.destination is not None):
             return False
+        if self.tmode == "te":
+            from .routing.te import te_of
+            return self.name in te_of(self.device).lsps
         if getattr(self, "_checking", False):
             return False                     # asked while resolving our own destination: not via us
         self._checking = True
@@ -106,6 +111,11 @@ class TunnelPort(Port):
         if not self.is_up or not isinstance(pkt, IPv4Packet):
             self.drops += 1
             return False
+        if self.tmode == "te":
+            from .routing.te import tunnel_send
+            self.tx_frames += 1
+            self.counters["encaps"] += 1
+            return tunnel_send(self, pkt)
         self.tx_frames += 1
         self.counters["encaps"] += 1
         payload, proto = GrePacket(pkt), PROTO_GRE
