@@ -199,6 +199,7 @@ class Device:
 
     def _port_config(self, p: Port) -> dict[str, Any]:
         d: dict[str, Any] = {"admin_up": p.admin_up, "ip": str(p.ip) if p.ip else None,
+                             **({"ip2": [str(a) for a in p.ip2]} if getattr(p, "ip2", None) else {}),
                              "description": p.description}
         if p.is_sub:
             d.update(parent=p.parent.name, vlan=p.vlan, native=p.native, arp_broadcast=p.arp_broadcast)
@@ -301,6 +302,7 @@ class Device:
             if p is None:
                 continue
             p.ip = IPv4Interface(icfg["ip"]) if icfg.get("ip") else None
+            p.ip2 = [IPv4Interface(a) for a in icfg.get("ip2", [])]
             p.description = icfg.get("description", "")
             if p.is_sub:
                 p.vlan = icfg.get("vlan")

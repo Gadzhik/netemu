@@ -490,11 +490,12 @@ class MikrotikSession(CliSession):
 
     # -- /ip address -----------------------------------------------------------------------
     def _addresses(self):
-        return [p for p in self.device.ports.values() if p.ip is not None]
+        """[(port, address)] - RouterOS allows several addresses per interface."""
+        return [(p, a) for p in self.device.ports.values() if p.ip is not None for a in [p.ip] + list(p.ip2)]
 
     def addr_print(self):
-        rows = [[str(i), " ", p.ip.with_prefixlen, str(p.ip.network.network_address), p.name]
-                for i, p in enumerate(self._addresses())]
+        rows = [[str(i), " ", a.with_prefixlen, str(a.network.network_address), p.name]
+                for i, (p, a) in enumerate(self._addresses())]
         return "Flags: D - DYNAMIC; I - INVALID\nColumns: ADDRESS, NETWORK, INTERFACE\n" + table(
             ["#", " ", "ADDRESS", "NETWORK", "INTERFACE"], rows, gap=1)
 
@@ -515,11 +516,15 @@ class MikrotikSession(CliSession):
             iface = IPv4Interface(text)
         except ValueError:
             raise _MtError("invalid value for argument address")
-        if p.ip == iface:
+        if p.ip == iface or iface in p.ip2:
             raise _MtError("failure: already have such address")
         other = overlapping_port(self.device, p, iface)
         if other is not None and other.ip.network == iface.network:
             raise _MtError("failure: already have address with such network on another interface")
+        if p.ip is not None and p.ip.network != iface.network:
+            p.ip2.append(iface)                     # another subnet on the same interface
+            self.device.routes_changed()
+            return None
         p.ip = iface
         self.device.arp.flush_port(p)
         return None
@@ -534,8 +539,13 @@ class MikrotikSession(CliSession):
                 if not n.isdigit() or int(n) >= len(addrs):
                     raise _MtError("no such item")
                 targets.append(addrs[int(n)])
-        for p in targets:
-            p.ip = None
+        for p, a in targets:
+            if a in p.ip2:
+                p.ip2.remove(a)
+            elif p.ip2:
+                p.ip = p.ip2.pop(0)
+            else:
+                p.ip = None
             self.device.arp.flush_port(p)
         return None
 
@@ -2210,8 +2220,8 @@ class MikrotikSession(CliSession):
             addrs = self._addresses()
             if addrs:
                 lines.append("/ip address")
-                lines += [f"add address={p.ip.with_prefixlen} interface={p.name} "
-                          f"network={p.ip.network.network_address}" for p in addrs]
+                lines += [f"add address={a.with_prefixlen} interface={p.name} "
+                          f"network={a.network.network_address}" for p, a in addrs]
             if d.static_routes:
                 lines.append("/ip route")
                 for s in d.static_routes:

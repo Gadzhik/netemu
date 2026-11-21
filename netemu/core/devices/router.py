@@ -660,9 +660,10 @@ class Router(IpStack, Ip6Stack, Device):
             if getattr(p, "vrf", None) != self.vrf_ctx:
                 continue
             if p.ip is not None and p.is_up:
-                out.append(Route(p.ip.network, "C", p))
-                if p.ip.network.prefixlen < 32:
-                    out.append(Route(IPv4Network(f"{p.ip.ip}/32"), "L", p))
+                for a in [p.ip] + list(p.ip2):
+                    out.append(Route(a.network, "C", p))
+                    if a.network.prefixlen < 32:
+                        out.append(Route(IPv4Network(f"{a.ip}/32"), "L", p))
         return out
 
     def _resolve(self, dst: IPv4Address, depth: int = 0, exclude=None, no_bgp: bool = False):

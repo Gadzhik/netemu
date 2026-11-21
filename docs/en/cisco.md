@@ -896,6 +896,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `ip ospf priority <0-255>` | Router priority |
 | `ip address` | Set the IP address of an interface |
 | `ip address A.B.C.D A.B.C.D` | IP subnet mask |
+| `ip address A.B.C.D A.B.C.D secondary` | Make this IP address a secondary address |
 | `ip vrf forwarding` | Configure forwarding table |
 | `ip vrf forwarding WORD` | VRF name |
 | `ip router isis` | IS-IS Routing for IP |
@@ -1286,6 +1287,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `ip ospf priority <0-255>` | Router priority |
 | `ip address` | Set the IP address of an interface |
 | `ip address A.B.C.D A.B.C.D` | IP subnet mask |
+| `ip address A.B.C.D A.B.C.D secondary` | Make this IP address a secondary address |
 | `ip dhcp snooping trust` | DHCP Snooping trust config |
 | `[no] ipv6 address X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 enable` | Enable IPv6 on interface |

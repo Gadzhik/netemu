@@ -744,6 +744,9 @@ class HuaweiSession(TreeSession):
                                    P.kw("address", "Configure the IP address of an interface",
                                         P.arg(P.IpArg(), "IP address",
                                               P.arg(P.MaskOrLenArg(), "IP mask or mask length",
+                                                    P.kw("sub", "Indicate a subordinate address",
+                                                         handler=lambda s, a, n: s.if_ip2(a[0], a[1], n),
+                                                         negatable=True),
                                                     handler=lambda s, a, n: s.if_ip(a[0], a[1], n),
                                                     negatable=True)),
                                         handler=lambda s, a, n: s.if_ip(None, None, n) if n else s.err_incomplete(s.prompt, 0),
@@ -2497,6 +2500,11 @@ class HuaweiSession(TreeSession):
         self.device.arp.flush_port(p)
         return None
 
+    def if_ip2(self, ip, mask, negate):
+        from .base import secondary_cmd
+        return secondary_cmd(self.device, self.iface, make_interface(ip, mask), negate,
+                             "Error: The specified IP address conflicts with another address.")
+
     def route_static(self, net, mask, nh, port, pref, negate):
         try:
             network = IPv4Network(f"{net}/{mask}")
@@ -2896,6 +2904,9 @@ def render_current(device, cfg: dict) -> str:
         if l3 and ic.get("ip"):
             i = IPv4Interface(ic["ip"])
             lines.append(f" ip address {i.ip} {i.netmask}")
+            for a2 in ic.get("ip2", []):
+                i2 = IPv4Interface(a2)
+                lines.append(f" ip address {i2.ip} {i2.netmask} sub")
         if l3 and (ic.get("ipv6") or ic.get("ipv6_enabled")):
             lines.append(" ipv6 enable")
             lines += [f" ipv6 address {a.upper()}" for a in ic.get("ipv6", [])]

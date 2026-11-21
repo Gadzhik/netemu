@@ -1267,6 +1267,8 @@ class CiscoSession(TreeSession):
                             P.kw("address", "Set the IP address of an interface",
                                  P.arg(P.IpArg(), "IP address",
                                        P.arg(P.MaskArg(), "IP subnet mask",
+                                             P.kw("secondary", "Make this IP address a secondary address",
+                                                  handler=lambda s, a, n: s.if_ip2(a[0], a[1], n), negatable=True),
                                              handler=lambda s, a, n: s.if_ip(a[0], a[1], n),
                                              negatable=True)),
                                  handler=lambda s, a, n: s.if_ip(None, None, n) if n else s.err_incomplete("", 0),
@@ -4424,6 +4426,7 @@ class CiscoSession(TreeSession):
                     "or ISL vLAN.")
         if negate:
             p.ip = None
+            p.ip2 = []
             self.device.arp.flush_port(p)
             return None
         iface = make_interface(ip, mask)
@@ -4435,6 +4438,14 @@ class CiscoSession(TreeSession):
         p.ip = iface
         self.device.arp.flush_port(p)
         return None
+
+    def if_ip2(self, ip, mask, negate):
+        from .base import secondary_cmd
+        if self._l2_only():
+            return self._l2_only()
+        iface = make_interface(ip, mask)
+        return secondary_cmd(self.device, self.iface, iface, negate,
+                             f"% {iface.network.network_address} overlaps with {self.iface.name}")
 
     def ip_route(self, net, mask, next_hop, port, distance, negate):
         try:
@@ -5100,6 +5111,9 @@ def render_running(device, cfg: dict) -> str:
             if ic.get("ip"):
                 i = IPv4Interface(ic["ip"])
                 lines.append(f" ip address {i.ip} {i.netmask}")
+                for a2 in ic.get("ip2", []):
+                    i2 = IPv4Interface(a2)
+                    lines.append(f" ip address {i2.ip} {i2.netmask} secondary")
             else:
                 lines.append(" no ip address")
             for a in ic.get("ipv6", []):

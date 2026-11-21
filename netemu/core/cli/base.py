@@ -202,8 +202,28 @@ class TreeSession(CliSession):
 def overlapping_port(device, port, iface: IPv4Interface):
     """Return another port whose subnet overlaps *iface*, or None."""
     for p in device.ports.values():
-        if p is not port and p.ip is not None and p.ip.network.overlaps(iface.network):
+        if p is port or p.ip is None:
+            continue
+        if any(a.network.overlaps(iface.network) for a in [p.ip] + list(getattr(p, "ip2", []))):
             return p
+    return None
+
+
+def secondary_cmd(device, port, iface, negate, overlap_msg):
+    """Add/remove a secondary address; returns an error text or None."""
+    if negate:
+        port.ip2 = [a for a in port.ip2 if a != iface]
+        device.arp.flush_port(port)
+        return None
+    if port.ip is None:
+        return "% Primary address not configured" if overlap_msg.startswith("%") else \
+            "Error: Please configure the primary address first."
+    if any(a.network.overlaps(iface.network) for a in [port.ip] + port.ip2) or \
+            overlapping_port(device, port, iface) is not None:
+        return overlap_msg
+    port.ip2.append(iface)
+    device.arp.flush_port(port)
+    device.routes_changed()
     return None
 
 

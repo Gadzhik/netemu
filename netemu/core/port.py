@@ -35,6 +35,7 @@ class Port:
         self.link: Link | None = None
         self.admin_up = admin_up
         self.ip: IPv4Interface | None = None
+        self.ip2: list = []                      # secondary IPv4 addresses (routers)
         self.description = ""
         self.tx_frames = 0
         self.rx_frames = 0

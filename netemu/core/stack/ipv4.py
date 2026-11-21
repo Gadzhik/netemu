@@ -92,11 +92,20 @@ class IpStack:
         return [p for p in self.ports.values() if p.ip is not None]
 
     def owns_ip(self, ip: IPv4Address) -> bool:
-        return any(p.ip.ip == ip for p in self.ip_ports())
+        return any(p.ip.ip == ip or any(s.ip == ip for s in p.ip2) for p in self.ip_ports())
+
+    @staticmethod
+    def port_ifaces(port) -> list:
+        """Primary and secondary addresses of a port."""
+        return ([port.ip] if port.ip is not None else []) + list(getattr(port, "ip2", []))
+
+    def iface_for(self, port, ip):
+        """The address of *port* whose subnet holds *ip* (primary when none does)."""
+        return next((a for a in self.port_ifaces(port) if ip in a.network), port.ip)
 
     def port_for_own_ip(self, ip: IPv4Address) -> "Port | None":
         for p in self.ip_ports():
-            if p.ip.ip == ip:
+            if p.ip.ip == ip or any(s.ip == ip for s in p.ip2):
                 return p
         return None
 
@@ -138,13 +147,14 @@ class IpStack:
         if port.ip is None:
             return
         now = self.engine.now
-        sender_in_subnet = arp.sender_ip in port.ip.network
+        nets = self.port_ifaces(port)
+        sender_in_subnet = any(arp.sender_ip in a.network for a in nets)
         if arp.op == "request":
-            if arp.target_ip == port.ip.ip or self.answers_arp_for(arp.target_ip, port):
+            if any(arp.target_ip == a.ip for a in nets) or self.answers_arp_for(arp.target_ip, port):
                 if sender_in_subnet:
                     self._learn(arp.sender_ip, arp.sender_mac, port)
                 self._send_arp_reply(port, arp)
-            elif self.proxy_arp and arp.target_ip not in port.ip.network:
+            elif self.proxy_arp and not any(arp.target_ip in a.network for a in nets):
                 r = self.route_lookup(arp.target_ip)
                 if r is not None and r[0] is not port:
                     if sender_in_subnet:
@@ -153,7 +163,7 @@ class IpStack:
             elif sender_in_subnet and self.arp.lookup(arp.sender_ip, now):
                 self._learn(arp.sender_ip, arp.sender_mac, port)
         elif arp.op == "reply":
-            if arp.target_ip == port.ip.ip or arp.target_mac == port.mac:
+            if any(arp.target_ip == a.ip for a in nets) or arp.target_mac == port.mac:
                 self._learn(arp.sender_ip, arp.sender_mac, port)
 
     def _learn(self, ip: IPv4Address, mac, port: "Port") -> None:
@@ -286,7 +296,8 @@ class IpStack:
             self._arp_pending[key].append(pkt)
             return True
         self._arp_pending[key] = [pkt]
-        req = ArpPacket("request", port.mac, port.ip.ip if port.ip else ZERO_MAC_IP,
+        src_if = self.iface_for(port, next_hop)
+        req = ArpPacket("request", port.mac, src_if.ip if src_if is not None else ZERO_MAC_IP,
                         MacAddress(0), next_hop)
         self._send_frame(port, BROADCAST_MAC, ETH_ARP, req)
         self.engine.schedule(ARP_REQUEST_TIMEOUT_MS, self._arp_timeout, key)
@@ -300,7 +311,7 @@ class IpStack:
         r = self.route_lookup(dst) if not self.owns_ip(dst) else (self.port_for_own_ip(dst), dst)
         if r is None or r[0].ip is None or not r[0].is_up:
             return None
-        src = r[0].ip.ip
+        src = self.iface_for(r[0], r[1] if r[1] is not None else dst).ip
         pkt = IPv4Packet(src, dst, self.default_ttl if ttl is None else ttl, payload,
                          ident=next(self._ip_ident))
         return src if self.send_ip(pkt) else None

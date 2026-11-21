@@ -806,14 +806,29 @@ class JunosSession(TreeSession):
                 ic["ip"] = str(IPv4Interface(prefix))
             return None
         ic = self._icfg(port)
+        extra = ic.setdefault("ip2", [])
         if delete:
-            if prefix is None or (ic.get("ip") and IPv4Interface(ic["ip"]) == IPv4Interface(prefix)):
-                ic["ip"] = None
+            if prefix is None:
+                ic["ip"], ic["ip2"] = None, []
+                return None
+            a = str(IPv4Interface(prefix))
+            if a in extra:
+                extra.remove(a)
+                return None
+            if ic.get("ip") and IPv4Interface(ic["ip"]) == IPv4Interface(prefix):
+                ic["ip"] = extra.pop(0) if extra else None          # the next address becomes primary
                 return None
             return "warning: statement not found"
         if not self.is_router:
             return "error: family inet is not supported on switch ports of this platform"
-        ic["ip"] = str(IPv4Interface(prefix))
+        a = str(IPv4Interface(prefix))
+        if ic.get("ip") and a != ic["ip"]:
+            if IPv4Interface(a).network == IPv4Interface(ic["ip"]).network:
+                ic["ip"] = a                                         # same subnet: replace
+            elif a not in extra:
+                extra.append(a)                                      # another subnet: additional address
+            return None
+        ic["ip"] = a
         return None
 
     # -- IPv6 ---------------------------------------------------------------------------
@@ -2760,6 +2775,7 @@ def render_config(device, cfg: dict) -> str:
                         lines.append("                    }")
                     lines.append("                }")
                 lines += ([] if vr else [f"                address {IPv4Interface(ic['ip']).with_prefixlen};"]) + [
+                          f"                address {IPv4Interface(a2).with_prefixlen};" for a2 in ic.get("ip2", [])] + [
                           "            }", "        }"]
             lines += switching(ic)
             for sname, sic in subs.get(name, []):

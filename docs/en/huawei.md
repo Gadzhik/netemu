@@ -650,6 +650,7 @@ Check: `display traffic policy statistics`, `display nat64 session all`, `displa
 | `[undo] interface Tunnel <slot/card/port>` | Tunnel interface |
 | `ip address` | Configure the IP address of an interface |
 | `ip address A.B.C.D MASK/LEN` | IP mask or mask length |
+| `ip address A.B.C.D MASK/LEN sub` | Indicate a subordinate address |
 | `[undo] ipv6 enable` | Enable IPv6 on the interface |
 | `[undo] ipv6 address X:X:X:X::X/<0-128>` | IPv6 address/prefix length |
 | `[undo] ipv6 address X:X:X:X::X INTEGER<1-128>` | Prefix length |
@@ -950,6 +951,7 @@ Check: `display traffic policy statistics`, `display nat64 session all`, `displa
 | `[undo] interface Eth-Trunk <0-63>` | Ethernet trunk interface |
 | `ip address` | Configure the IP address of an interface |
 | `ip address A.B.C.D MASK/LEN` | IP mask or mask length |
+| `ip address A.B.C.D MASK/LEN sub` | Indicate a subordinate address |
 | `[undo] ipv6 enable` | Enable IPv6 on the interface |
 | `[undo] ipv6 address X:X:X:X::X/<0-128>` | IPv6 address/prefix length |
 | `[undo] ipv6 address X:X:X:X::X INTEGER<1-128>` | Prefix length |
