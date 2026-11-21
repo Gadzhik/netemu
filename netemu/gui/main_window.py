@@ -241,6 +241,20 @@ class MainWindow(QMainWindow):
         self.teacher = False
         self._sync_teacher_actions()
 
+        m = mb.addMenu(tr("&Класс"))
+        self.act_class_open = self._act("Открыть класс и раздать задание…", self.class_open)
+        self.act_class_resend = self._act("Раздать задание заново", self.class_resend)
+        self.act_class_report = self._act("Сохранить отчёт класса…", self.class_report)
+        self.act_class_join = self._act("Подключиться к классу…", self.class_join)
+        self.act_class_leave = self._act("Закрыть / покинуть класс", self.class_leave)
+        for a in (self.act_class_open, self.act_class_resend, self.act_class_report):
+            m.addAction(a)
+        m.addSeparator()
+        for a in (self.act_class_join, self.act_class_leave):
+            m.addAction(a)
+        self.teacher_class = self.student_class = None
+        self.roster_dock = None
+
         m = mb.addMenu(tr("&Совместная работа"))
         self.act_collab_host = self._act("Начать сессию…", self.collab_host)
         self.act_collab_join = self._act("Подключиться…", self.collab_join)
@@ -671,6 +685,109 @@ class MainWindow(QMainWindow):
         self._help.activateWindow()
         return self._help
 
+    # -- classroom mode ---------------------------------------------------------------------------
+    def class_open(self, port: int | None = None) -> bool:
+        from .classroom import CLASS_PORT, RosterPanel, TeacherClass
+        from .collab import local_addresses
+        lab = self.topology.lab
+        if lab is None or not lab.checks:
+            QMessageBox.information(self, tr("Класс"), tr("Сначала откройте или создайте задание с проверками."))
+            return False
+        if port is None:
+            port, ok = QInputDialog.getInt(self, tr("Класс"), tr("TCP-порт класса:"), CLASS_PORT, 1024, 65535)
+            if not ok:
+                return False
+        self.class_leave()
+        data = self._assignment()
+        t = TeacherClass(data, lab.title)
+        if not t.start(port):
+            QMessageBox.warning(self, tr("Класс"), tr("Не удалось открыть порт {port}.", port=port))
+            return False
+        self.teacher_class = t
+        self.roster_dock = QDockWidget(tr("Класс"), self)
+        self.roster_dock.setObjectName("classroom")
+        self.roster_dock.setWidget(RosterPanel(t))
+        self.addDockWidget(Qt.RightDockWidgetArea, self.roster_dock)
+        if self.isVisible():
+            QMessageBox.information(self, tr("Класс"), tr(
+                "Класс открыт. Ученики выбирают «Класс → Подключиться к классу…» и вводят:\n\nадрес: {addr}\n"
+                "порт: {port}\nPIN: {pin}", addr=", ".join(local_addresses()), port=port, pin=t.pin))
+        return True
+
+    def _assignment(self) -> dict:
+        """The project as handed out: the teacher's solution, script and attempts stay here."""
+        data = persistence.topology_to_dict(self.topology)
+        lab = dict(data.get("lab") or {})
+        for k in ("solution", "script", "faults", "attempts", "secret", "password"):
+            lab.pop(k, None)
+        data["lab"] = lab
+        return data
+
+    def class_resend(self) -> None:
+        if self.teacher_class is not None and self.topology.lab is not None:
+            self.teacher_class.redistribute(self._assignment(), self.topology.lab.title)
+
+    def class_report(self, path: str | None = None) -> str | None:
+        if self.teacher_class is None:
+            return None
+        if path is None:
+            path, _ = QFileDialog.getSaveFileName(self, tr("Сохранить отчёт класса"), "class-report.html", "HTML (*.html)")
+            if not path:
+                return None
+        Path(path).write_text(self.teacher_class.roster.report_html(), encoding="utf-8")
+        return path
+
+    def class_join(self, address: str | None = None, port: int | None = None, pin: str | None = None,
+                   name: str | None = None) -> None:
+        from .classroom import CLASS_PORT, StudentClass
+        if address is None:
+            text, ok = QInputDialog.getText(self, tr("Класс"), tr("Адрес преподавателя (IP или IP:порт):"))
+            if not ok or not text.strip():
+                return
+            host, _, p = text.strip().partition(":")
+            address, port = host, int(p) if p.isdigit() else CLASS_PORT
+            pin, ok = QInputDialog.getText(self, tr("Класс"), tr("PIN класса:"))
+            if not ok:
+                return
+            name, ok = QInputDialog.getText(self, tr("Класс"), tr("Фамилия и имя:"))
+            if not ok:
+                return
+        if not self.maybe_save():
+            return
+        self.class_leave()
+        s = StudentClass((name or "").strip() or "Student")
+        s.assigned.connect(self._class_assigned)
+        s.status.connect(lambda st: self.statusBar().showMessage(
+            {"joined": tr("Вы в классе: {name}", name=s.name), "lost": tr("Связь с классом потеряна"),
+             "error": tr("Не удалось подключиться к классу")}.get(st, st), 8000))
+        s.join(address, port or CLASS_PORT, (pin or "").strip())
+        self.student_class = s
+
+    def _class_assigned(self, data: dict) -> None:
+        self._reset()
+        persistence.topology_from_dict(data, self.topology)
+        self.topology.undo.reset()
+        self.scene.load_annotations()
+        self.file_path = None
+        self._saved_snapshot = self._snapshot()
+        self._update_title()
+        self.center_view()
+        self.teacher = False
+        self._sync_teacher_actions()
+        self.show_lab()
+
+    def class_leave(self) -> None:
+        if self.teacher_class is not None:
+            self.teacher_class.stop()
+            self.teacher_class = None
+        if self.roster_dock is not None:
+            self.removeDockWidget(self.roster_dock)
+            self.roster_dock.deleteLater()
+            self.roster_dock = None
+        if self.student_class is not None:
+            self.student_class.stop()
+            self.student_class = None
+
     # -- LAN collaboration ----------------------------------------------------------------------
     def _collab(self):
         if self.collab is None:
@@ -774,6 +891,8 @@ class MainWindow(QMainWindow):
         self._shut = True
         if getattr(self, "collab", None) is not None:
             self.collab.stop()
+        if hasattr(self, "teacher_class"):
+            self.class_leave()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()

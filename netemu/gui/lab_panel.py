@@ -116,6 +116,9 @@ class LabPanel(QWidget):
             self.checks.addItem(it)
             passed += ok
         self.progress.setValue(passed)
+        sc = getattr(self.window, "student_class", None)
+        if sc is not None:
+            sc.report(results)                       # classroom mode: the teacher sees the progress
         pct = round(100 * passed / max(1, len(results)))
         self.window.statusBar().showMessage(tr("Проверка задания: {p} из {n} ({pct}%)", p=passed, n=len(results), pct=pct),
                                             10000)

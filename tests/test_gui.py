@@ -789,3 +789,32 @@ def test_lan_collaboration_between_two_windows(win, qtbot, monkeypatch):
     finally:
         other.shutdown()
         win.collab_stop()
+
+
+def test_classroom_hand_out_and_progress(win, qtbot, monkeypatch, tmp_path):
+    from netemu.gui.lab_panel import builtin_labs
+    monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
+    path = next(p for t, p, k in builtin_labs() if "01-vlan" in p.name)
+    win.open_builtin_lab(path)
+    win._saved_snapshot = win._snapshot()
+    port = 48000 + (id(win) % 1500)
+    assert win.class_open(port)
+    student = MainWindow()
+    qtbot.addWidget(student)
+    try:
+        student.class_join("127.0.0.1", port, win.teacher_class.pin, "Ivanov")
+        qtbot.waitUntil(lambda: student.topology.lab is not None, timeout=5000)
+        assert student.topology.lab.title == win.topology.lab.title
+        assert not student.topology.lab.script                       # the solution stays with the teacher
+        qtbot.waitUntil(lambda: "Ivanov" in win.teacher_class.roster.students, timeout=5000)
+        from netemu.core.lab import apply_script
+        apply_script(student.topology, win.topology.lab.script)
+        student.check_lab()
+        qtbot.waitUntil(lambda: win.teacher_class.roster.students["Ivanov"].total > 0, timeout=5000)
+        st = win.teacher_class.roster.students["Ivanov"]
+        assert st.passed == st.total == len(win.topology.lab.checks)
+        out = win.class_report(str(tmp_path / "class.html"))
+        assert "Ivanov" in (tmp_path / "class.html").read_text(encoding="utf-8") and out
+    finally:
+        student.shutdown()
+        win.class_leave()
