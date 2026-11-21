@@ -109,8 +109,10 @@ class LabPanel(QWidget):
         self.checks.clear()
         passed = 0
         texts = lab.localized(language())[2]
+        from ..core.diagnose import hints_for
         for (c, ok, detail), text in zip(results, texts):
-            it = QListWidgetItem(f"{PASS if ok else FAIL}  {text}")
+            hint = "" if ok else " ".join(hints_for(self.window.topology, c)[:2])
+            it = QListWidgetItem(f"{PASS if ok else FAIL}  {text}" + (f"\n      💡 {hint}" if hint else ""))
             it.setToolTip(detail)
             it.setForeground(QColor("#2e7d32") if ok else QColor("#c62828"))
             self.checks.addItem(it)

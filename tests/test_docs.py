@@ -112,7 +112,7 @@ def test_doc_examples_configure_what_they_say():
 
 def test_every_gui_string_has_english_translation():
     used = set()
-    for path in (ROOT / "netemu" / "gui").glob("*.py"):
+    for path in [*(ROOT / "netemu" / "gui").glob("*.py"), ROOT / "netemu" / "core" / "diagnose.py"]:
         src = path.read_text(encoding="utf-8")
         for m in re.finditer(r'(?:\btr|_act)\(((?:\s*"(?:[^"\\]|\\.)*"\s*)+)', src):
             parts = re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(1))
