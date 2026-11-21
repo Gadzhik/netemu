@@ -1,0 +1,212 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "5dd99db79051",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 150,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R1",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.12.1/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "71120ccb1fa1",
+   "model": "cisco-2911",
+   "name": "R2",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R2",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.12.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": "10.0.23.1/30",
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "db9c1e2e8552",
+   "model": "cisco-2911",
+   "name": "R3",
+   "x": 650,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R3",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.3.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.23.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "95345c1c97fe",
+   "model": "pc",
+   "name": "PC1",
+   "x": 150,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "469c4caa9e35",
+   "model": "pc",
+   "name": "PC3",
+   "x": 650,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC3",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.3.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.3.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "5dd99db79051",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "71120ccb1fa1",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "71120ccb1fa1",
+    "GigabitEthernet0/2"
+   ],
+   "b": [
+    "db9c1e2e8552",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "95345c1c97fe",
+    "FastEthernet0"
+   ],
+   "b": [
+    "5dd99db79051",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "469c4caa9e35",
+    "FastEthernet0"
+   ],
+   "b": [
+    "db9c1e2e8552",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "OSPF в одной зоне",
+  "text": "Адреса на интерфейсах уже настроены. Сети PC1 (192.168.1.0/24) и PC3 (192.168.3.0/24) пока не знают друг о друге.\n\n1. Включите OSPF (процесс 1, зона 0) на R1, R2 и R3 для всех их сетей.\n2. Проверьте соседство: `show ip ospf neighbor`, у R2 должно быть два соседа.\n3. Убедитесь, что маршрут к 192.168.3.0/24 появился на R1 с кодом O, и PC1 видит PC3.",
+  "checks": [
+   "ospf R2 2 | У R2 два соседа OSPF",
+   "route R1 192.168.3.0/24 | R1 знает сеть PC3",
+   "route R3 192.168.1.0/24 | R3 знает сеть PC1",
+   "ping PC1 192.168.3.10 | PC1 видит PC3"
+  ],
+  "translations": {
+   "en": {
+    "title": "Single-area OSPF",
+    "text": "The interface addresses are configured. The networks of PC1 (192.168.1.0/24) and PC3 (192.168.3.0/24) do not know about each other yet.\n\n1. Enable OSPF (process 1, area 0) on R1, R2 and R3 for all their networks.\n2. Check the adjacencies with `show ip ospf neighbor`: R2 must have two neighbours.\n3. Make sure R1 has an O route to 192.168.3.0/24 and PC1 reaches PC3.",
+    "checks": [
+     "R2 has two OSPF neighbours",
+     "R1 knows PC3's network",
+     "R3 knows PC1's network",
+     "PC1 reaches PC3"
+    ]
+   }
+  },
+  "solution": "Достаточно двух команд network на каждом маршрутизаторе.",
+  "script": {
+   "R1": "enable\nconfigure terminal\nrouter ospf 1\nnetwork 192.168.0.0 0.0.255.255 area 0\nnetwork 10.0.0.0 0.255.255.255 area 0\nend",
+   "R2": "enable\nconfigure terminal\nrouter ospf 1\nnetwork 192.168.0.0 0.0.255.255 area 0\nnetwork 10.0.0.0 0.255.255.255 area 0\nend",
+   "R3": "enable\nconfigure terminal\nrouter ospf 1\nnetwork 192.168.0.0 0.0.255.255 area 0\nnetwork 10.0.0.0 0.255.255.255 area 0\nend"
+  }
+ }
+}

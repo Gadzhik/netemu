@@ -1,0 +1,221 @@
+{
+  "format": "netemu",
+  "version": 1,
+  "devices": [
+    {
+      "id": "b66c4dfae3b8",
+      "model": "cisco-2911",
+      "name": "R1",
+      "x": -120,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.1.1/24",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      },
+      "startup": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.1.1/24",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      }
+    },
+    {
+      "id": "5e90f8b03458",
+      "model": "cisco-2911",
+      "name": "R2",
+      "x": 120,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "R2",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.2.1/24",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.0.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      },
+      "startup": {
+        "hostname": "R2",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.2.1/24",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.0.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      }
+    },
+    {
+      "id": "8b0e7e16b4a0",
+      "model": "pc",
+      "name": "PC0",
+      "x": -360,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "PC0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.1.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.1.1",
+        "dns": null
+      },
+      "startup": {
+        "hostname": "PC0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.1.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.1.1",
+        "dns": null
+      }
+    },
+    {
+      "id": "23100680ec62",
+      "model": "pc",
+      "name": "PC1",
+      "x": 360,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "PC1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.2.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.2.1",
+        "dns": null
+      },
+      "startup": {
+        "hostname": "PC1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.2.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.2.1",
+        "dns": null
+      }
+    }
+  ],
+  "links": [
+    {
+      "a": [
+        "8b0e7e16b4a0",
+        "FastEthernet0"
+      ],
+      "b": [
+        "b66c4dfae3b8",
+        "GigabitEthernet0/0"
+      ]
+    },
+    {
+      "a": [
+        "b66c4dfae3b8",
+        "GigabitEthernet0/1"
+      ],
+      "b": [
+        "5e90f8b03458",
+        "GigabitEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "23100680ec62",
+        "FastEthernet0"
+      ],
+      "b": [
+        "5e90f8b03458",
+        "GigabitEthernet0/0"
+      ]
+    }
+  ],
+  "lab": {
+    "title": "OSPF: две сети / two LANs",
+    "text": "**Задача.** Две сети соединены маршрутизаторами R1 и R2, адреса уже настроены. Настройте OSPF (процесс 1, зона 0) на обоих маршрутизаторах так, чтобы PC0 и PC1 видели друг друга.\n\n**Task.** Two LANs are joined by routers R1 and R2; addresses are already configured. Configure OSPF (process 1, area 0) on both routers so that PC0 and PC1 reach each other.\n\nПодсказка / Hint: `router ospf 1`, `network … area 0`, `show ip ospf neighbor`.",
+    "checks": [
+      "ospf R1 1 | R1: OSPF-сосед / OSPF neighbour",
+      "ospf R2 1 | R2: OSPF-сосед / OSPF neighbour",
+      "route R1 192.168.2.0/24 | R1 знает сеть PC1 / R1 knows the PC1 LAN",
+      "route R2 192.168.1.0/24 | R2 знает сеть PC0 / R2 knows the PC0 LAN",
+      "ping PC0 192.168.2.10 | PC0 пингует PC1 / PC0 pings PC1"
+    ]
+  }
+}

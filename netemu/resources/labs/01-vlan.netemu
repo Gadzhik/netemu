@@ -1,0 +1,320 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "2648b2a57f31",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 200,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "685457b3e32d",
+   "model": "pc",
+   "name": "PC1",
+   "x": 160,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.11/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "ef5aca459ae2",
+   "model": "pc",
+   "name": "PC2",
+   "x": 320,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.12/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "dd8a2d49d8e8",
+   "model": "pc",
+   "name": "PC3",
+   "x": 480,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC3",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.13/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "cb5a78e886ad",
+   "model": "pc",
+   "name": "PC4",
+   "x": 640,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC4",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.14/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "685457b3e32d",
+    "FastEthernet0"
+   ],
+   "b": [
+    "2648b2a57f31",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "ef5aca459ae2",
+    "FastEthernet0"
+   ],
+   "b": [
+    "2648b2a57f31",
+    "FastEthernet0/2"
+   ]
+  },
+  {
+   "a": [
+    "dd8a2d49d8e8",
+    "FastEthernet0"
+   ],
+   "b": [
+    "2648b2a57f31",
+    "FastEthernet0/3"
+   ]
+  },
+  {
+   "a": [
+    "cb5a78e886ad",
+    "FastEthernet0"
+   ],
+   "b": [
+    "2648b2a57f31",
+    "FastEthernet0/4"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "VLAN: разделение отделов",
+  "text": "Отдел продаж (PC1, PC2) и отдел кадров (PC3, PC4) подключены к одному коммутатору и пока видят друг друга.\n\n1. Создайте на **SW1** VLAN 10 с именем `SALES` и VLAN 20 с именем `HR`.\n2. Порты Fa0/1–Fa0/2 переведите в режим access во VLAN 10, порты Fa0/3–Fa0/4 во VLAN 20.\n3. Убедитесь, что PC1 видит PC2, а PC3 из другого отдела больше не отвечает.\n\nАдреса ПК уже заданы: 192.168.1.11–14/24.",
+  "checks": [
+   "vlan SW1 10 | На SW1 есть VLAN 10",
+   "vlan SW1 20 | На SW1 есть VLAN 20",
+   "access SW1 Fa0/1 10 | Fa0/1 во VLAN 10",
+   "access SW1 Fa0/2 10 | Fa0/2 во VLAN 10",
+   "access SW1 Fa0/3 20 | Fa0/3 во VLAN 20",
+   "access SW1 Fa0/4 20 | Fa0/4 во VLAN 20",
+   "ping PC1 192.168.1.12 | PC1 видит PC2",
+   "ping PC3 192.168.1.14 | PC3 видит PC4",
+   "noping PC1 192.168.1.13 | PC1 не видит PC3 (другой VLAN)"
+  ],
+  "translations": {
+   "en": {
+    "title": "VLAN: separating departments",
+    "text": "Sales (PC1, PC2) and HR (PC3, PC4) share one switch and can still see each other.\n\n1. On **SW1** create VLAN 10 named `SALES` and VLAN 20 named `HR`.\n2. Make Fa0/1–Fa0/2 access ports in VLAN 10 and Fa0/3–Fa0/4 access ports in VLAN 20.\n3. Check that PC1 reaches PC2 while PC3 from the other department no longer answers.\n\nThe PC addresses are already set: 192.168.1.11–14/24.",
+    "checks": [
+     "SW1 has VLAN 10",
+     "SW1 has VLAN 20",
+     "Fa0/1 is in VLAN 10",
+     "Fa0/2 is in VLAN 10",
+     "Fa0/3 is in VLAN 20",
+     "Fa0/4 is in VLAN 20",
+     "PC1 reaches PC2",
+     "PC3 reaches PC4",
+     "PC1 cannot reach PC3 (other VLAN)"
+    ]
+   }
+  },
+  "solution": "Каждому отделу свой VLAN, порты в режиме access.",
+  "script": {
+   "SW1": "enable\nconfigure terminal\nvlan 10\nname SALES\nvlan 20\nname HR\nexit\ninterface range fa0/1 - 2\nswitchport mode access\nswitchport access vlan 10\nexit\ninterface range fa0/3 - 4\nswitchport mode access\nswitchport access vlan 20\nend"
+  }
+ }
+}

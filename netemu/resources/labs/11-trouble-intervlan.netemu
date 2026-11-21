@@ -1,0 +1,323 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "d9abaca00d45",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 80,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/0.10": {
+      "admin_up": true,
+      "ip": "192.168.10.1/24",
+      "description": "",
+      "parent": "GigabitEthernet0/0",
+      "vlan": 10,
+      "native": false,
+      "arp_broadcast": true
+     },
+     "GigabitEthernet0/0.20": {
+      "admin_up": true,
+      "ip": "192.168.20.1/24",
+      "description": "",
+      "parent": "GigabitEthernet0/0",
+      "vlan": 21,
+      "native": false,
+      "arp_broadcast": true
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "69dd3def1ae5",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 240,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "access",
+      "pvid": 10,
+      "access_vlan": 10,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "access",
+      "pvid": 20,
+      "access_vlan": 20,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "mode": "trunk",
+      "pvid": 1,
+      "access_vlan": 1,
+      "native_vlan": 1,
+      "tagged": null
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "vlans": {
+     "1": "default",
+     "10": "VLAN0010",
+     "20": "VLAN0020"
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "1e2ba915293e",
+   "model": "pc",
+   "name": "PC1",
+   "x": 250,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.10.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.10.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "5886726168c6",
+   "model": "pc",
+   "name": "PC2",
+   "x": 550,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.20.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.20.254",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "d9abaca00d45",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "69dd3def1ae5",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "1e2ba915293e",
+    "FastEthernet0"
+   ],
+   "b": [
+    "69dd3def1ae5",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "5886726168c6",
+    "FastEthernet0"
+   ],
+   "b": [
+    "69dd3def1ae5",
+    "FastEthernet0/2"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Поиск неисправностей: VLAN",
+  "text": "Сеть с маршрутизацией между VLAN раньше работала, но после «небольших правок» PC1 больше не видит PC2.\n\nВ сети **две** неисправности. Найдите их с помощью `show`-команд, `ipconfig` и `ping`, затем исправьте.\n\nПодсказки: сравните VLAN на коммутаторе и на подынтерфейсах; проверьте настройки ПК.",
+  "checks": [
+   "ping PC2 192.168.20.1 | PC2 видит свой шлюз",
+   "ping PC1 192.168.20.10 | PC1 видит PC2"
+  ],
+  "kind": "troubleshoot",
+  "translations": {
+   "en": {
+    "title": "Troubleshooting: VLAN",
+    "text": "This inter-VLAN network used to work, but after \"a few small changes\" PC1 cannot reach PC2.\n\nThere are **two** faults. Find them with `show` commands, `ipconfig` and `ping`, then fix them.\n\nHints: compare the VLANs on the switch with the subinterfaces; check the PC settings.",
+    "checks": [
+     "PC2 reaches its gateway",
+     "PC1 reaches PC2"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\ninterface gi0/0.20\nencapsulation dot1Q 20\nend",
+   "PC2": "@ip 192.168.20.10/24 gw 192.168.20.1"
+  },
+  "faults": [
+   "R1: подынтерфейс Gi0/0.20 настроен на VLAN 21 вместо 20",
+   "PC2: неверный шлюз 192.168.20.254 (нужен 192.168.20.1)"
+  ]
+ }
+}

@@ -1,0 +1,337 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "0fcfd9f586ef",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "192.168.2.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "fe81b1e561a9",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 200,
+   "y": 300,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "cb47ebc49760",
+   "model": "server",
+   "name": "Server",
+   "x": 650,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "Server",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.2.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.2.1",
+    "dns": null,
+    "services": {
+     "dhcp": {
+      "enabled": false,
+      "pools": [],
+      "excluded": [],
+      "interfaces": null
+     },
+     "dns": {
+      "enabled": false,
+      "records": {}
+     },
+     "http": {
+      "enabled": true,
+      "pages": {}
+     },
+     "syslog": {
+      "enabled": true
+     },
+     "ntp": {
+      "enabled": true
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "d2df64cc987f",
+   "model": "pc",
+   "name": "PC1",
+   "x": 100,
+   "y": 450,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "1de8bf85a813",
+   "model": "pc",
+   "name": "PC2",
+   "x": 300,
+   "y": 450,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.20/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "0fcfd9f586ef",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "fe81b1e561a9",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "d2df64cc987f",
+    "FastEthernet0"
+   ],
+   "b": [
+    "fe81b1e561a9",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "1de8bf85a813",
+    "FastEthernet0"
+   ],
+   "b": [
+    "fe81b1e561a9",
+    "FastEthernet0/2"
+   ]
+  },
+  {
+   "a": [
+    "cb47ebc49760",
+    "FastEthernet0"
+   ],
+   "b": [
+    "0fcfd9f586ef",
+    "GigabitEthernet0/1"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Списки доступа (ACL)",
+  "text": "Сервер бухгалтерии (192.168.2.10) должен быть доступен только с PC2.\n\n1. Создайте на **R1** список доступа, который запрещает PC1 (192.168.1.10) обращаться к серверу и разрешает остальное.\n2. Примените его на подходящем интерфейсе и в нужном направлении.\n3. Проверьте: PC2 видит сервер, PC1 нет, а шлюз 192.168.1.1 по-прежнему доступен с PC1.",
+  "checks": [
+   "noping PC1 192.168.2.10 | PC1 не видит сервер",
+   "ping PC2 192.168.2.10 | PC2 видит сервер",
+   "ping PC1 192.168.1.1 | PC1 видит шлюз"
+  ],
+  "translations": {
+   "en": {
+    "title": "Access lists (ACL)",
+    "text": "The accounting server (192.168.2.10) must be reachable from PC2 only.\n\n1. On **R1** create an access list that denies PC1 (192.168.1.10) access to the server and permits everything else.\n2. Apply it on the right interface in the right direction.\n3. Check: PC2 reaches the server, PC1 does not, and PC1 still reaches its gateway 192.168.1.1.",
+    "checks": [
+     "PC1 cannot reach the server",
+     "PC2 reaches the server",
+     "PC1 reaches the gateway"
+    ]
+   }
+  },
+  "solution": "Расширенный ACL ставят ближе к источнику.",
+  "script": {
+   "R1": "enable\nconfigure terminal\nip access-list extended BLOCK-PC1\ndeny ip host 192.168.1.10 host 192.168.2.10\npermit ip any any\nexit\ninterface gi0/0\nip access-group BLOCK-PC1 in\nend"
+  }
+ }
+}

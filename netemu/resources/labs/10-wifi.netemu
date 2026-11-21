@@ -1,0 +1,180 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "8720810a1c1b",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 80,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.50.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "dhcp_server": {
+     "enabled": true,
+     "pools": [
+      {
+       "name": "WIFI",
+       "network": "192.168.50.0/24",
+       "gateway": "192.168.50.1",
+       "dns": null,
+       "domain": "",
+       "start": null,
+       "end": null,
+       "lease": 86400,
+       "tftp": null
+      }
+     ],
+     "excluded": [],
+     "interfaces": null
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "fddf79710ace",
+   "model": "access-point",
+   "name": "AP1",
+   "x": 400,
+   "y": 230,
+   "powered": true,
+   "config": {
+    "hostname": "AP1",
+    "interfaces": {
+     "Ethernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "stp": {
+     "enabled": false,
+     "mode": "rstp",
+     "priority": 32768,
+     "costs": {},
+     "edge": []
+    },
+    "wifi": {
+     "ssid": "NetEmu",
+     "security": "wpa2",
+     "key": "netemu123",
+     "channel": 6,
+     "range": 250.0
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "cfec47375420",
+   "model": "laptop",
+   "name": "Laptop1",
+   "x": 300,
+   "y": 360,
+   "powered": true,
+   "config": {
+    "hostname": "Laptop1",
+    "interfaces": {
+     "Wireless0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "wifi": {
+     "ssid": null,
+     "key": null
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "24e610e1d1a1",
+   "model": "laptop",
+   "name": "Laptop2",
+   "x": 500,
+   "y": 360,
+   "powered": true,
+   "config": {
+    "hostname": "Laptop2",
+    "interfaces": {
+     "Wireless0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "wifi": {
+     "ssid": null,
+     "key": null
+    }
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "8720810a1c1b",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "fddf79710ace",
+    "Ethernet0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Беспроводная сеть",
+  "text": "Точка доступа AP1 подключена к R1, на R1 уже работает DHCP для сети 192.168.50.0/24.\n\n1. Настройте на **AP1** сеть `OFFICE` с WPA2 и ключом `Office2026` (окно устройства → «Настройка»).\n2. Подключите ноутбуки к сети OFFICE (Desktop → Wi-Fi или `netsh wlan connect`) и включите DHCP.\n3. Проверьте доступ ноутбуков к шлюзу 192.168.50.1.",
+  "checks": [
+   "wifi Laptop1 OFFICE | Laptop1 подключён к OFFICE",
+   "wifi Laptop2 OFFICE | Laptop2 подключён к OFFICE",
+   "dhcp Laptop1 | Laptop1 получил адрес",
+   "ping Laptop2 192.168.50.1 | Laptop2 видит шлюз"
+  ],
+  "translations": {
+   "en": {
+    "title": "Wireless network",
+    "text": "Access point AP1 is connected to R1, which already runs DHCP for 192.168.50.0/24.\n\n1. On **AP1** set up the network `OFFICE` with WPA2 and the key `Office2026` (device window → Config).\n2. Connect the laptops to OFFICE (Wi-Fi settings or `netsh wlan connect`) and enable DHCP.\n3. Check that the laptops reach the gateway 192.168.50.1.",
+    "checks": [
+     "Laptop1 joined OFFICE",
+     "Laptop2 joined OFFICE",
+     "Laptop1 got an address",
+     "Laptop2 reaches the gateway"
+    ]
+   }
+  },
+  "script": {
+   "AP1": "@ssid OFFICE key Office2026",
+   "Laptop1": "@wifi OFFICE Office2026\n@dhcp",
+   "Laptop2": "@wifi OFFICE Office2026\n@dhcp"
+  }
+ }
+}

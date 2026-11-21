@@ -1,0 +1,910 @@
+{
+  "format": "netemu",
+  "version": 1,
+  "devices": [
+    {
+      "id": "68d3c2ae6020",
+      "model": "cisco-2911",
+      "name": "R1",
+      "x": 0,
+      "y": -180,
+      "powered": true,
+      "config": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0.10": {
+            "admin_up": true,
+            "ip": "192.168.10.1/24",
+            "description": "USERS",
+            "parent": "GigabitEthernet0/0",
+            "vlan": 10,
+            "native": false,
+            "arp_broadcast": true
+          },
+          "GigabitEthernet0/0.20": {
+            "admin_up": true,
+            "ip": "192.168.20.1/24",
+            "description": "SERVERS",
+            "parent": "GigabitEthernet0/0",
+            "vlan": 20,
+            "native": false,
+            "arp_broadcast": true
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      },
+      "startup": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0.10": {
+            "admin_up": true,
+            "ip": "192.168.10.1/24",
+            "description": "USERS",
+            "parent": "GigabitEthernet0/0",
+            "vlan": 10,
+            "native": false,
+            "arp_broadcast": true
+          },
+          "GigabitEthernet0/0.20": {
+            "admin_up": true,
+            "ip": "192.168.20.1/24",
+            "description": "SERVERS",
+            "parent": "GigabitEthernet0/0",
+            "vlan": 20,
+            "native": false,
+            "arp_broadcast": true
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": false,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": []
+      }
+    },
+    {
+      "id": "d7175fbdfe0a",
+      "model": "cisco-2960",
+      "name": "SW1",
+      "x": -200,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "SW1",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 10,
+            "access_vlan": 10,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 20,
+            "access_vlan": 20,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          }
+        },
+        "vlans": {
+          "1": "default",
+          "10": "USERS",
+          "20": "SERVERS"
+        }
+      },
+      "startup": {
+        "hostname": "SW1",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 10,
+            "access_vlan": 10,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 20,
+            "access_vlan": 20,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          }
+        },
+        "vlans": {
+          "1": "default",
+          "10": "USERS",
+          "20": "SERVERS"
+        }
+      }
+    },
+    {
+      "id": "0f745bc960f2",
+      "model": "cisco-2960",
+      "name": "SW2",
+      "x": 200,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "SW2",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 10,
+            "access_vlan": 10,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 20,
+            "access_vlan": 20,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          }
+        },
+        "vlans": {
+          "1": "default",
+          "10": "USERS",
+          "20": "SERVERS"
+        }
+      },
+      "startup": {
+        "hostname": "SW2",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 10,
+            "access_vlan": 10,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "access",
+            "pvid": 20,
+            "access_vlan": 20,
+            "native_vlan": 1,
+            "tagged": null
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": "",
+            "mode": "trunk",
+            "pvid": 1,
+            "access_vlan": 1,
+            "native_vlan": 1,
+            "tagged": [
+              10,
+              20
+            ]
+          }
+        },
+        "vlans": {
+          "1": "default",
+          "10": "USERS",
+          "20": "SERVERS"
+        }
+      }
+    },
+    {
+      "id": "7071834907df",
+      "model": "pc",
+      "name": "PC0",
+      "x": -320,
+      "y": 170,
+      "powered": true,
+      "config": {
+        "hostname": "PC0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.11/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "6a9d844b99eb",
+      "model": "pc",
+      "name": "PC1",
+      "x": -110,
+      "y": 170,
+      "powered": true,
+      "config": {
+        "hostname": "PC1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.20.11/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.20.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "44ffbb0fe65d",
+      "model": "pc",
+      "name": "PC2",
+      "x": 110,
+      "y": 170,
+      "powered": true,
+      "config": {
+        "hostname": "PC2",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.12/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "bb235c6197d8",
+      "model": "pc",
+      "name": "PC3",
+      "x": 320,
+      "y": 170,
+      "powered": true,
+      "config": {
+        "hostname": "PC3",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.20.12/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.20.1",
+        "dns": null
+      },
+      "startup": null
+    }
+  ],
+  "links": [
+    {
+      "a": [
+        "68d3c2ae6020",
+        "GigabitEthernet0/0"
+      ],
+      "b": [
+        "d7175fbdfe0a",
+        "GigabitEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "d7175fbdfe0a",
+        "GigabitEthernet0/2"
+      ],
+      "b": [
+        "0f745bc960f2",
+        "GigabitEthernet0/2"
+      ]
+    },
+    {
+      "a": [
+        "7071834907df",
+        "FastEthernet0"
+      ],
+      "b": [
+        "d7175fbdfe0a",
+        "FastEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "6a9d844b99eb",
+        "FastEthernet0"
+      ],
+      "b": [
+        "d7175fbdfe0a",
+        "FastEthernet0/2"
+      ]
+    },
+    {
+      "a": [
+        "44ffbb0fe65d",
+        "FastEthernet0"
+      ],
+      "b": [
+        "0f745bc960f2",
+        "FastEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "bb235c6197d8",
+        "FastEthernet0"
+      ],
+      "b": [
+        "0f745bc960f2",
+        "FastEthernet0/2"
+      ]
+    }
+  ]
+}

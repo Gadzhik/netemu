@@ -1,0 +1,283 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "7ea9c28ac5ce",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 80,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "effc243ebebb",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 230,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "667592beb40f",
+   "model": "pc",
+   "name": "PC1",
+   "x": 250,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "ee45b4ad8e33",
+   "model": "pc",
+   "name": "PC2",
+   "x": 550,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "7ea9c28ac5ce",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "effc243ebebb",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "667592beb40f",
+    "FastEthernet0"
+   ],
+   "b": [
+    "effc243ebebb",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "ee45b4ad8e33",
+    "FastEthernet0"
+   ],
+   "b": [
+    "effc243ebebb",
+    "FastEthernet0/2"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "DHCP-сервер на маршрутизаторе",
+  "text": "Компьютеры должны получать адреса автоматически.\n\n1. На **R1** исключите из раздачи адреса 192.168.1.1–192.168.1.10.\n2. Создайте пул `LAN`: сеть 192.168.1.0/24, шлюз 192.168.1.1, DNS 8.8.8.8.\n3. На PC1 и PC2 включите DHCP (вкладка «Настройка» или `ipconfig /renew`).",
+  "checks": [
+   "dhcp PC1 | PC1 получил адрес по DHCP",
+   "dhcp PC2 | PC2 получил адрес по DHCP",
+   "ping PC1 192.168.1.1 | PC1 видит шлюз"
+  ],
+  "translations": {
+   "en": {
+    "title": "DHCP server on a router",
+    "text": "The computers must get their addresses automatically.\n\n1. On **R1** exclude 192.168.1.1–192.168.1.10 from the pool.\n2. Create pool `LAN`: network 192.168.1.0/24, gateway 192.168.1.1, DNS 8.8.8.8.\n3. Turn on DHCP on PC1 and PC2 (Config tab or `ipconfig /renew`).",
+    "checks": [
+     "PC1 got an address by DHCP",
+     "PC2 got an address by DHCP",
+     "PC1 reaches the gateway"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\nip dhcp excluded-address 192.168.1.1 192.168.1.10\nip dhcp pool LAN\nnetwork 192.168.1.0 255.255.255.0\ndefault-router 192.168.1.1\ndns-server 8.8.8.8\nend",
+   "PC1": "@dhcp",
+   "PC2": "@dhcp"
+  }
+ }
+}

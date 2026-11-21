@@ -1,0 +1,289 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "f35e4c0f9ec3",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 80,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "e36706567b09",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 400,
+   "y": 240,
+   "powered": true,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "c6be1f684f79",
+   "model": "pc",
+   "name": "PC1",
+   "x": 250,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.10.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.10.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "46353c81c67e",
+   "model": "pc",
+   "name": "PC2",
+   "x": 550,
+   "y": 400,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.20.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.20.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "f35e4c0f9ec3",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "e36706567b09",
+    "FastEthernet0/24"
+   ]
+  },
+  {
+   "a": [
+    "c6be1f684f79",
+    "FastEthernet0"
+   ],
+   "b": [
+    "e36706567b09",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "46353c81c67e",
+    "FastEthernet0"
+   ],
+   "b": [
+    "e36706567b09",
+    "FastEthernet0/2"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Маршрутизация между VLAN",
+  "text": "PC1 работает во VLAN 10 (192.168.10.0/24), PC2 во VLAN 20 (192.168.20.0/24). Настройте маршрутизацию между VLAN по схеме «маршрутизатор на палочке» (router-on-a-stick).\n\n1. На **SW1** создайте VLAN 10 и 20, переведите Fa0/1 во VLAN 10, Fa0/2 во VLAN 20, а Fa0/24 сделайте транком.\n2. На **R1** включите Gi0/0 и создайте подынтерфейсы Gi0/0.10 и Gi0/0.20 с инкапсуляцией dot1Q и адресами .1 в каждой сети.\n3. Проверьте ping с PC1 на PC2.",
+  "checks": [
+   "vlan SW1 10 | На SW1 есть VLAN 10",
+   "vlan SW1 20 | На SW1 есть VLAN 20",
+   "ip R1 192.168.10.1 | Шлюз VLAN 10 на R1",
+   "ip R1 192.168.20.1 | Шлюз VLAN 20 на R1",
+   "ping PC1 192.168.10.1 | PC1 видит свой шлюз",
+   "ping PC1 192.168.20.10 | PC1 видит PC2 через R1"
+  ],
+  "translations": {
+   "en": {
+    "title": "Inter-VLAN routing",
+    "text": "PC1 is in VLAN 10 (192.168.10.0/24), PC2 in VLAN 20 (192.168.20.0/24). Route between the VLANs with a router-on-a-stick.\n\n1. On **SW1** create VLANs 10 and 20, put Fa0/1 in VLAN 10 and Fa0/2 in VLAN 20, and make Fa0/24 a trunk.\n2. On **R1** enable Gi0/0 and create subinterfaces Gi0/0.10 and Gi0/0.20 with dot1Q encapsulation and the .1 address in each network.\n3. Ping PC2 from PC1.",
+    "checks": [
+     "SW1 has VLAN 10",
+     "SW1 has VLAN 20",
+     "VLAN 10 gateway on R1",
+     "VLAN 20 gateway on R1",
+     "PC1 reaches its gateway",
+     "PC1 reaches PC2 through R1"
+    ]
+   }
+  },
+  "solution": "Транк до маршрутизатора и подынтерфейсы dot1Q.",
+  "script": {
+   "SW1": "enable\nconfigure terminal\nvlan 10\nvlan 20\nexit\ninterface fa0/1\nswitchport mode access\nswitchport access vlan 10\ninterface fa0/2\nswitchport mode access\nswitchport access vlan 20\ninterface fa0/24\nswitchport mode trunk\nend",
+   "R1": "enable\nconfigure terminal\ninterface gi0/0\nno shutdown\ninterface gi0/0.10\nencapsulation dot1Q 10\nip address 192.168.10.1 255.255.255.0\ninterface gi0/0.20\nencapsulation dot1Q 20\nip address 192.168.20.1 255.255.255.0\nend"
+  }
+ }
+}

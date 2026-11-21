@@ -1,0 +1,133 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "285882a7175e",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "113b7fe3d077",
+   "model": "pc",
+   "name": "PC1",
+   "x": 200,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:1::10/64"
+      ],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "gateway6": "2001:db8:1::1"
+   },
+   "startup": null
+  },
+  {
+   "id": "ba9a968e7414",
+   "model": "pc",
+   "name": "PC2",
+   "x": 600,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": null,
+      "description": "",
+      "ipv6": [
+       "2001:db8:2::10/64"
+      ],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": null,
+    "dns": null,
+    "gateway6": "2001:db8:2::1"
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "113b7fe3d077",
+    "FastEthernet0"
+   ],
+   "b": [
+    "285882a7175e",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "ba9a968e7414",
+    "FastEthernet0"
+   ],
+   "b": [
+    "285882a7175e",
+    "GigabitEthernet0/1"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "IPv6: адресация и маршрутизация",
+  "text": "Компьютерам уже назначены IPv6-адреса: PC1 2001:db8:1::10/64, PC2 2001:db8:2::10/64.\n\n1. Включите на **R1** маршрутизацию IPv6 (`ipv6 unicast-routing`).\n2. Назначьте Gi0/0 адрес 2001:db8:1::1/64, Gi0/1 адрес 2001:db8:2::1/64 и включите интерфейсы.\n3. Проверьте `ping 2001:db8:2::10` и `tracert -6` с PC1.",
+  "checks": [
+   "ip R1 2001:db8:1::1 | Адрес Gi0/0",
+   "ip R1 2001:db8:2::1 | Адрес Gi0/1",
+   "ping PC1 2001:db8:2::10 | PC1 видит PC2 по IPv6"
+  ],
+  "translations": {
+   "en": {
+    "title": "IPv6: addressing and routing",
+    "text": "The computers already have IPv6 addresses: PC1 2001:db8:1::10/64, PC2 2001:db8:2::10/64.\n\n1. Enable IPv6 routing on **R1** (`ipv6 unicast-routing`).\n2. Give Gi0/0 the address 2001:db8:1::1/64 and Gi0/1 2001:db8:2::1/64, and enable the interfaces.\n3. Check `ping 2001:db8:2::10` and `tracert -6` from PC1.",
+    "checks": [
+     "Gi0/0 address",
+     "Gi0/1 address",
+     "PC1 reaches PC2 over IPv6"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\nipv6 unicast-routing\ninterface gi0/0\nipv6 address 2001:db8:1::1/64\nno shutdown\ninterface gi0/1\nipv6 address 2001:db8:2::1/64\nno shutdown\nend"
+  }
+ }
+}

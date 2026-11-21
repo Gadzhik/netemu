@@ -1,0 +1,187 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "860f9947d217",
+   "model": "internet",
+   "name": "Internet",
+   "x": 650,
+   "y": 120,
+   "powered": true,
+   "config": {
+    "hostname": "Internet",
+    "interfaces": {
+     "ISP0": {
+      "admin_up": true,
+      "ip": "203.0.113.1/30",
+      "description": ""
+     },
+     "ISP1": {
+      "admin_up": true,
+      "ip": "203.0.113.5/30",
+      "description": ""
+     },
+     "ISP2": {
+      "admin_up": true,
+      "ip": "203.0.113.9/30",
+      "description": ""
+     },
+     "ISP3": {
+      "admin_up": true,
+      "ip": "203.0.113.13/30",
+      "description": ""
+     },
+     "ISP4": {
+      "admin_up": true,
+      "ip": "203.0.113.17/30",
+      "description": ""
+     },
+     "ISP5": {
+      "admin_up": true,
+      "ip": "203.0.113.21/30",
+      "description": ""
+     },
+     "ISP6": {
+      "admin_up": true,
+      "ip": "203.0.113.25/30",
+      "description": ""
+     },
+     "ISP7": {
+      "admin_up": true,
+      "ip": "203.0.113.29/30",
+      "description": ""
+     },
+     "dns.google": {
+      "admin_up": true,
+      "ip": "8.8.8.8/32",
+      "description": "",
+      "loopback": true,
+      "short": "dns.google"
+     },
+     "one.one.one.one": {
+      "admin_up": true,
+      "ip": "1.1.1.1/32",
+      "description": "",
+      "loopback": true,
+      "short": "one.one.one.one"
+     },
+     "www.example.com": {
+      "admin_up": true,
+      "ip": "93.184.216.34/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.example.com"
+     },
+     "www.netemu.lab": {
+      "admin_up": true,
+      "ip": "198.51.100.80/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.netemu.lab"
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "13c42a608d6f",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 400,
+   "y": 120,
+   "powered": true,
+   "config": {
+    "hostname": "Router",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "fa5a066d2a7c",
+   "model": "pc",
+   "name": "PC1",
+   "x": 150,
+   "y": 120,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "13c42a608d6f",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "860f9947d217",
+    "ISP0"
+   ]
+  },
+  {
+   "a": [
+    "fa5a066d2a7c",
+    "FastEthernet0"
+   ],
+   "b": [
+    "13c42a608d6f",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "NAT/PAT и выход в интернет",
+  "text": "Провайдер выделил офису адрес 203.0.113.2/30, шлюз провайдера 203.0.113.1. Нужно выпустить сеть 192.168.1.0/24 в интернет.\n\n1. Настройте на **R1** интерфейс Gi0/1 (адрес провайдера) и маршрут по умолчанию.\n2. Настройте PAT (NAT overload): Gi0/0 inside, Gi0/1 outside, список доступа для 192.168.1.0/24.\n3. Проверьте `ping 8.8.8.8` с PC1 и `show ip nat translations` на R1.",
+  "checks": [
+   "ping R1 8.8.8.8 | R1 выходит в интернет",
+   "ping PC1 8.8.8.8 | PC1 выходит в интернет",
+   "nat R1 | На R1 есть трансляции NAT"
+  ],
+  "translations": {
+   "en": {
+    "title": "NAT/PAT and Internet access",
+    "text": "The ISP gave the office 203.0.113.2/30 with the ISP gateway at 203.0.113.1. Let 192.168.1.0/24 out to the Internet.\n\n1. Configure Gi0/1 on **R1** with the ISP address and add a default route.\n2. Configure PAT (NAT overload): Gi0/0 inside, Gi0/1 outside, an access list for 192.168.1.0/24.\n3. Check `ping 8.8.8.8` from PC1 and `show ip nat translations` on R1.",
+    "checks": [
+     "R1 reaches the Internet",
+     "PC1 reaches the Internet",
+     "R1 has NAT translations"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\ninterface gi0/1\nip address 203.0.113.2 255.255.255.252\nno shutdown\nip nat outside\ninterface gi0/0\nip nat inside\nexit\nip route 0.0.0.0 0.0.0.0 203.0.113.1\naccess-list 1 permit 192.168.1.0 0.0.0.255\nip nat inside source list 1 interface gi0/1 overload\nend"
+  }
+ }
+}

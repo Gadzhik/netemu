@@ -1,0 +1,771 @@
+{
+  "format": "netemu",
+  "version": 1,
+  "devices": [
+    {
+      "id": "d11a65c4fdf6",
+      "model": "cisco-2911",
+      "name": "R1",
+      "x": 0,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "10.0.1.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.12.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": "10.13.0.1/30",
+            "description": ""
+          },
+          "Loopback0": {
+            "admin_up": true,
+            "ip": "1.1.1.1/32",
+            "description": "",
+            "loopback": true,
+            "short": "Lo0"
+          }
+        },
+        "static_routes": [],
+        "ospf": {
+          "process_id": 1,
+          "router_id": null,
+          "networks": [
+            {
+              "prefix": "10.0.1.0/30",
+              "area": "0.0.0.0"
+            },
+            {
+              "prefix": "1.1.1.1/32",
+              "area": "0.0.0.0"
+            }
+          ],
+          "interfaces": {},
+          "passive": [],
+          "passive_default": false,
+          "non_passive": [],
+          "costs": {},
+          "hello": {},
+          "dead": {},
+          "priority": {},
+          "default_originate": null,
+          "redistribute": [],
+          "reference_bandwidth": 100,
+          "enabled": true,
+          "export": [],
+          "templates": [],
+          "mt_instance": "default-v2",
+          "mt_areas": {}
+        },
+        "bgp": {
+          "asn": 65001,
+          "router_id": "1.1.1.1",
+          "neighbors": {
+            "10.12.0.2": {
+              "remote_as": 65002
+            },
+            "10.13.0.2": {
+              "remote_as": 65003
+            },
+            "6.6.6.6": {
+              "remote_as": 65001,
+              "update_source": "Loopback0",
+              "next_hop_self": true
+            }
+          },
+          "networks": [],
+          "redistribute": [],
+          "enabled": true
+        }
+      },
+      "startup": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "10.0.1.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.12.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": "10.13.0.1/30",
+            "description": ""
+          },
+          "Loopback0": {
+            "admin_up": true,
+            "ip": "1.1.1.1/32",
+            "description": "",
+            "loopback": true,
+            "short": "Lo0"
+          }
+        },
+        "static_routes": [],
+        "ospf": {
+          "process_id": 1,
+          "router_id": null,
+          "networks": [
+            {
+              "prefix": "10.0.1.0/30",
+              "area": "0.0.0.0"
+            },
+            {
+              "prefix": "1.1.1.1/32",
+              "area": "0.0.0.0"
+            }
+          ],
+          "interfaces": {},
+          "passive": [],
+          "passive_default": false,
+          "non_passive": [],
+          "costs": {},
+          "hello": {},
+          "dead": {},
+          "priority": {},
+          "default_originate": null,
+          "redistribute": [],
+          "reference_bandwidth": 100,
+          "enabled": true,
+          "export": [],
+          "templates": [],
+          "mt_instance": "default-v2",
+          "mt_areas": {}
+        },
+        "bgp": {
+          "asn": 65001,
+          "router_id": "1.1.1.1",
+          "neighbors": {
+            "10.12.0.2": {
+              "remote_as": 65002
+            },
+            "10.13.0.2": {
+              "remote_as": 65003
+            },
+            "6.6.6.6": {
+              "remote_as": 65001,
+              "update_source": "Loopback0",
+              "next_hop_self": true
+            }
+          },
+          "networks": [],
+          "redistribute": [],
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "7f7a668327ff",
+      "model": "juniper-srx300",
+      "name": "SRX1",
+      "x": -260,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "SRX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.1.2/30",
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": "192.168.1.1/24",
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "lo0": {
+            "admin_up": true,
+            "ip": "6.6.6.6/32",
+            "description": "",
+            "loopback": true,
+            "short": "lo0"
+          }
+        },
+        "static_routes": [],
+        "ospf": {
+          "process_id": 1,
+          "router_id": null,
+          "networks": [],
+          "interfaces": {
+            "ge-0/0/0": {
+              "area": "0.0.0.0"
+            },
+            "lo0": {
+              "area": "0.0.0.0",
+              "passive": true
+            }
+          },
+          "passive": [],
+          "passive_default": false,
+          "non_passive": [],
+          "costs": {},
+          "hello": {},
+          "dead": {},
+          "priority": {},
+          "default_originate": null,
+          "redistribute": [],
+          "reference_bandwidth": 100,
+          "enabled": true,
+          "export": [],
+          "templates": [],
+          "mt_instance": "default-v2",
+          "mt_areas": {}
+        },
+        "bgp": {
+          "asn": 65001,
+          "router_id": null,
+          "neighbors": {
+            "1.1.1.1": {
+              "remote_as": 65001,
+              "update_source": "lo0",
+              "group": "IBGP"
+            }
+          },
+          "networks": [
+            "192.168.1.0/24"
+          ],
+          "redistribute": [],
+          "enabled": true
+        },
+        "router_id": "6.6.6.6",
+        "policies": {
+          "LAN": {
+            "protocols": [
+              "direct"
+            ],
+            "accept": true,
+            "route_filters": [
+              [
+                "192.168.1.0/24",
+                "exact"
+              ]
+            ]
+          }
+        },
+        "extra": {
+          "asn": 65001,
+          "bgp": {
+            "IBGP": {
+              "neighbors": {
+                "1.1.1.1": {}
+              },
+              "export": [
+                "LAN"
+              ],
+              "type": "internal",
+              "local_address": "6.6.6.6"
+            }
+          }
+        }
+      },
+      "startup": {
+        "hostname": "SRX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.1.2/30",
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": "192.168.1.1/24",
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "lo0": {
+            "admin_up": true,
+            "ip": "6.6.6.6/32",
+            "description": "",
+            "loopback": true,
+            "short": "lo0"
+          }
+        },
+        "static_routes": [],
+        "ospf": {
+          "process_id": 1,
+          "router_id": null,
+          "networks": [],
+          "interfaces": {
+            "ge-0/0/0": {
+              "area": "0.0.0.0"
+            },
+            "lo0": {
+              "area": "0.0.0.0",
+              "passive": true
+            }
+          },
+          "passive": [],
+          "passive_default": false,
+          "non_passive": [],
+          "costs": {},
+          "hello": {},
+          "dead": {},
+          "priority": {},
+          "default_originate": null,
+          "redistribute": [],
+          "reference_bandwidth": 100,
+          "enabled": true,
+          "export": [],
+          "templates": [],
+          "mt_instance": "default-v2",
+          "mt_areas": {}
+        },
+        "bgp": {
+          "asn": 65001,
+          "router_id": null,
+          "neighbors": {
+            "1.1.1.1": {
+              "remote_as": 65001,
+              "update_source": "lo0",
+              "group": "IBGP"
+            }
+          },
+          "networks": [
+            "192.168.1.0/24"
+          ],
+          "redistribute": [],
+          "enabled": true
+        },
+        "router_id": "6.6.6.6",
+        "policies": {
+          "LAN": {
+            "protocols": [
+              "direct"
+            ],
+            "accept": true,
+            "route_filters": [
+              [
+                "192.168.1.0/24",
+                "exact"
+              ]
+            ]
+          }
+        },
+        "extra": {
+          "asn": 65001,
+          "bgp": {
+            "IBGP": {
+              "neighbors": {
+                "1.1.1.1": {}
+              },
+              "export": [
+                "LAN"
+              ],
+              "type": "internal",
+              "local_address": "6.6.6.6"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "e31d5ce21a93",
+      "model": "huawei-ar2220",
+      "name": "AR1",
+      "x": 240,
+      "y": -140,
+      "powered": true,
+      "config": {
+        "hostname": "AR1",
+        "interfaces": {
+          "GigabitEthernet0/0/0": {
+            "admin_up": true,
+            "ip": "10.12.0.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/1": {
+            "admin_up": true,
+            "ip": "10.23.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/2": {
+            "admin_up": true,
+            "ip": "192.168.2.1/24",
+            "description": ""
+          }
+        },
+        "static_routes": [],
+        "bgp": {
+          "asn": 65002,
+          "router_id": "2.2.2.2",
+          "neighbors": {
+            "10.12.0.1": {
+              "remote_as": 65001
+            },
+            "10.23.0.2": {
+              "remote_as": 65003
+            }
+          },
+          "networks": [
+            "192.168.2.0/24"
+          ],
+          "redistribute": [],
+          "enabled": true
+        }
+      },
+      "startup": {
+        "hostname": "AR1",
+        "interfaces": {
+          "GigabitEthernet0/0/0": {
+            "admin_up": true,
+            "ip": "10.12.0.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/1": {
+            "admin_up": true,
+            "ip": "10.23.0.1/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/2": {
+            "admin_up": true,
+            "ip": "192.168.2.1/24",
+            "description": ""
+          }
+        },
+        "static_routes": [],
+        "bgp": {
+          "asn": 65002,
+          "router_id": "2.2.2.2",
+          "neighbors": {
+            "10.12.0.1": {
+              "remote_as": 65001
+            },
+            "10.23.0.2": {
+              "remote_as": 65003
+            }
+          },
+          "networks": [
+            "192.168.2.0/24"
+          ],
+          "redistribute": [],
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "36e9e1c94fc1",
+      "model": "mikrotik-rb4011",
+      "name": "MT1",
+      "x": 240,
+      "y": 140,
+      "powered": true,
+      "config": {
+        "hostname": "MT1",
+        "interfaces": {
+          "ether1": {
+            "admin_up": true,
+            "ip": "10.13.0.2/30",
+            "description": ""
+          },
+          "ether2": {
+            "admin_up": true,
+            "ip": "10.23.0.2/30",
+            "description": ""
+          },
+          "ether3": {
+            "admin_up": true,
+            "ip": "192.168.3.1/24",
+            "description": ""
+          },
+          "ether4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": [],
+        "bgp": {
+          "asn": 65003,
+          "router_id": "3.3.3.3",
+          "neighbors": {
+            "10.13.0.1": {
+              "remote_as": 65001,
+              "mt_name": "to-r1"
+            },
+            "10.23.0.1": {
+              "remote_as": 65002,
+              "mt_name": "to-ar1"
+            }
+          },
+          "networks": [
+            "192.168.3.0/24"
+          ],
+          "redistribute": [],
+          "enabled": true
+        },
+        "extra": {
+          "mt_addrlist": [
+            {
+              "list": "bgp-networks",
+              "address": "192.168.3.0/24"
+            }
+          ],
+          "mt_bgp": [
+            {
+              "name": "to-r1",
+              "remote.address": "10.13.0.1",
+              "remote.as": "65001",
+              "as": "65003",
+              "local.role": "ebgp",
+              "router-id": "3.3.3.3",
+              "output.network": "bgp-networks"
+            },
+            {
+              "name": "to-ar1",
+              "remote.address": "10.23.0.1",
+              "remote.as": "65002",
+              "as": "65003",
+              "local.role": "ebgp",
+              "router-id": "3.3.3.3",
+              "output.network": "bgp-networks"
+            }
+          ]
+        }
+      },
+      "startup": null
+    },
+    {
+      "id": "bc6af4687785",
+      "model": "pc",
+      "name": "PC0",
+      "x": -460,
+      "y": 0,
+      "powered": true,
+      "config": {
+        "hostname": "PC0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.1.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.1.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "0bf510923926",
+      "model": "pc",
+      "name": "PC1",
+      "x": 460,
+      "y": -140,
+      "powered": true,
+      "config": {
+        "hostname": "PC1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.2.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.2.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "778d01e6436d",
+      "model": "pc",
+      "name": "PC2",
+      "x": 460,
+      "y": 140,
+      "powered": true,
+      "config": {
+        "hostname": "PC2",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.3.10/24",
+            "description": "",
+            "ipv6": [],
+            "ipv6_enabled": true
+          }
+        },
+        "gateway": "192.168.3.1",
+        "dns": null
+      },
+      "startup": null
+    }
+  ],
+  "links": [
+    {
+      "a": [
+        "7f7a668327ff",
+        "ge-0/0/0"
+      ],
+      "b": [
+        "d11a65c4fdf6",
+        "GigabitEthernet0/0"
+      ]
+    },
+    {
+      "a": [
+        "d11a65c4fdf6",
+        "GigabitEthernet0/1"
+      ],
+      "b": [
+        "e31d5ce21a93",
+        "GigabitEthernet0/0/0"
+      ]
+    },
+    {
+      "a": [
+        "d11a65c4fdf6",
+        "GigabitEthernet0/2"
+      ],
+      "b": [
+        "36e9e1c94fc1",
+        "ether1"
+      ]
+    },
+    {
+      "a": [
+        "e31d5ce21a93",
+        "GigabitEthernet0/0/1"
+      ],
+      "b": [
+        "36e9e1c94fc1",
+        "ether2"
+      ]
+    },
+    {
+      "a": [
+        "bc6af4687785",
+        "FastEthernet0"
+      ],
+      "b": [
+        "7f7a668327ff",
+        "ge-0/0/1"
+      ]
+    },
+    {
+      "a": [
+        "0bf510923926",
+        "FastEthernet0"
+      ],
+      "b": [
+        "e31d5ce21a93",
+        "GigabitEthernet0/0/2"
+      ]
+    },
+    {
+      "a": [
+        "778d01e6436d",
+        "FastEthernet0"
+      ],
+      "b": [
+        "36e9e1c94fc1",
+        "ether3"
+      ]
+    }
+  ]
+}

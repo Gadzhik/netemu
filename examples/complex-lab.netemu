@@ -1,0 +1,1968 @@
+{
+  "format": "netemu",
+  "version": 1,
+  "devices": [
+    {
+      "id": "d9c4ee19e8d6",
+      "model": "cisco-2911",
+      "name": "R1",
+      "x": -350,
+      "y": -150,
+      "powered": true,
+      "config": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.10.1/24",
+            "description": "LAN10"
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.12.1/30",
+            "description": "to-MT1"
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": "10.0.13.1/30",
+            "description": "to-SRX1"
+          }
+        },
+        "static_routes": [
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 10
+          }
+        ]
+      },
+      "startup": {
+        "hostname": "R1",
+        "interfaces": {
+          "GigabitEthernet0/0": {
+            "admin_up": true,
+            "ip": "192.168.10.1/24",
+            "description": "LAN10"
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": "10.0.12.1/30",
+            "description": "to-MT1"
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": "10.0.13.1/30",
+            "description": "to-SRX1"
+          }
+        },
+        "static_routes": [
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.12.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.13.2",
+            "interface": null,
+            "distance": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "9aa98940d4b7",
+      "model": "mikrotik-rb4011",
+      "name": "MT1",
+      "x": 350,
+      "y": -150,
+      "powered": true,
+      "config": {
+        "hostname": "MT1",
+        "interfaces": {
+          "ether1": {
+            "admin_up": true,
+            "ip": "10.0.12.2/30",
+            "description": ""
+          },
+          "ether2": {
+            "admin_up": true,
+            "ip": "10.0.23.1/30",
+            "description": ""
+          },
+          "ether3": {
+            "admin_up": true,
+            "ip": "192.168.20.1/24",
+            "description": ""
+          },
+          "ether4": {
+            "admin_up": true,
+            "ip": "10.0.24.1/30",
+            "description": ""
+          },
+          "ether5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": [
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.12.1",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.23.2",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.23.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.30.0/24",
+            "next_hop": "10.0.12.1",
+            "interface": null,
+            "distance": 10
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.24.2",
+            "interface": null,
+            "distance": 1
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.23.2",
+            "interface": null,
+            "distance": 10
+          }
+        ]
+      },
+      "startup": null
+    },
+    {
+      "id": "ec05bb1138fd",
+      "model": "juniper-srx300",
+      "name": "SRX1",
+      "x": 0,
+      "y": 60,
+      "powered": true,
+      "config": {
+        "hostname": "SRX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.13.2/30",
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": "10.0.23.2/30",
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": "10.0.34.1/30",
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": "192.168.30.1/24",
+            "description": "LAN30"
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": [
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.13.1",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 20
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.13.1",
+            "interface": null,
+            "distance": 20
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.34.2",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 20
+          }
+        ]
+      },
+      "startup": {
+        "hostname": "SRX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.13.2/30",
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": "10.0.23.2/30",
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": "10.0.34.1/30",
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": "192.168.30.1/24",
+            "description": "LAN30"
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        },
+        "static_routes": [
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.13.1",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.10.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 20
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.20.0/24",
+            "next_hop": "10.0.13.1",
+            "interface": null,
+            "distance": 20
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.34.2",
+            "interface": null,
+            "distance": 5
+          },
+          {
+            "network": "192.168.40.0/24",
+            "next_hop": "10.0.23.1",
+            "interface": null,
+            "distance": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "3c72020b6057",
+      "model": "huawei-ar2220",
+      "name": "AR1",
+      "x": 350,
+      "y": 260,
+      "powered": true,
+      "config": {
+        "hostname": "AR1",
+        "interfaces": {
+          "GigabitEthernet0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.24.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/1": {
+            "admin_up": true,
+            "ip": "10.0.34.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/2": {
+            "admin_up": true,
+            "ip": "192.168.40.1/24",
+            "description": ""
+          }
+        },
+        "static_routes": [
+          {
+            "network": "0.0.0.0/0",
+            "next_hop": "10.0.24.1",
+            "interface": null,
+            "distance": 60
+          },
+          {
+            "network": "0.0.0.0/0",
+            "next_hop": "10.0.34.1",
+            "interface": null,
+            "distance": 100
+          }
+        ]
+      },
+      "startup": {
+        "hostname": "AR1",
+        "interfaces": {
+          "GigabitEthernet0/0/0": {
+            "admin_up": true,
+            "ip": "10.0.24.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/1": {
+            "admin_up": true,
+            "ip": "10.0.34.2/30",
+            "description": ""
+          },
+          "GigabitEthernet0/0/2": {
+            "admin_up": true,
+            "ip": "192.168.40.1/24",
+            "description": ""
+          }
+        },
+        "static_routes": [
+          {
+            "network": "0.0.0.0/0",
+            "next_hop": "10.0.24.1",
+            "interface": null,
+            "distance": 60
+          },
+          {
+            "network": "0.0.0.0/0",
+            "next_hop": "10.0.34.1",
+            "interface": null,
+            "distance": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": "19b2dbba1a0c",
+      "model": "cisco-2960",
+      "name": "SW1",
+      "x": -620,
+      "y": -150,
+      "powered": true,
+      "config": {
+        "hostname": "SW1",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": {
+        "hostname": "SW1",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "0700405aa489",
+      "model": "cisco-2960",
+      "name": "SW1b",
+      "x": -620,
+      "y": 60,
+      "powered": true,
+      "config": {
+        "hostname": "SW1b",
+        "interfaces": {
+          "FastEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "FastEthernet0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": null
+    },
+    {
+      "id": "e0f9d4cf0cdc",
+      "model": "hub",
+      "name": "Hub0",
+      "x": -860,
+      "y": -20,
+      "powered": true,
+      "config": {
+        "hostname": "Hub",
+        "interfaces": {
+          "Port0": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "Port7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": null
+    },
+    {
+      "id": "69dd36661d7c",
+      "model": "mikrotik-crs326",
+      "name": "CRS1",
+      "x": 620,
+      "y": -150,
+      "powered": true,
+      "config": {
+        "hostname": "CRS1",
+        "interfaces": {
+          "ether1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ether24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": null
+    },
+    {
+      "id": "c45690cf1b75",
+      "model": "juniper-ex2300",
+      "name": "EX1",
+      "x": 0,
+      "y": 300,
+      "powered": true,
+      "config": {
+        "hostname": "EX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": {
+        "hostname": "EX1",
+        "interfaces": {
+          "ge-0/0/0": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "ge-0/0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "8d01b1811569",
+      "model": "huawei-s5720",
+      "name": "LSW1",
+      "x": 620,
+      "y": 260,
+      "powered": true,
+      "config": {
+        "hostname": "LSW1",
+        "interfaces": {
+          "GigabitEthernet0/0/1": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/2": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/3": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/4": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/5": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/6": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/7": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/8": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/9": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/10": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/11": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/12": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/13": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/14": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/15": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/16": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/17": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/18": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/19": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/20": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/21": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/22": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/23": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          },
+          "GigabitEthernet0/0/24": {
+            "admin_up": true,
+            "ip": null,
+            "description": ""
+          }
+        }
+      },
+      "startup": null
+    },
+    {
+      "id": "ee67ef02c0fc",
+      "model": "pc",
+      "name": "PC0",
+      "x": -860,
+      "y": -280,
+      "powered": true,
+      "config": {
+        "hostname": "PC0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.11/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "037e4635c812",
+      "model": "pc",
+      "name": "PC1",
+      "x": -860,
+      "y": -160,
+      "powered": true,
+      "config": {
+        "hostname": "PC1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.12/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "b6d24f15c048",
+      "model": "pc",
+      "name": "PC2",
+      "x": -1080,
+      "y": -80,
+      "powered": true,
+      "config": {
+        "hostname": "PC2",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.21/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "698f237349de",
+      "model": "pc",
+      "name": "PC3",
+      "x": -1080,
+      "y": 40,
+      "powered": true,
+      "config": {
+        "hostname": "PC3",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.22/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "9bedd3bbf32f",
+      "model": "pc",
+      "name": "PC4",
+      "x": -860,
+      "y": 160,
+      "powered": true,
+      "config": {
+        "hostname": "PC4",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.31/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "c303d3728d08",
+      "model": "pc",
+      "name": "PC5",
+      "x": -620,
+      "y": 250,
+      "powered": true,
+      "config": {
+        "hostname": "PC5",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.10.32/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.10.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "798d9158bf9a",
+      "model": "pc",
+      "name": "PC6",
+      "x": 860,
+      "y": -260,
+      "powered": true,
+      "config": {
+        "hostname": "PC6",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.20.11/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.20.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "b47c2627818a",
+      "model": "pc",
+      "name": "PC7",
+      "x": 860,
+      "y": -100,
+      "powered": true,
+      "config": {
+        "hostname": "PC7",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.20.12/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.20.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "edd9bcf3a186",
+      "model": "pc",
+      "name": "PC8",
+      "x": 200,
+      "y": 430,
+      "powered": true,
+      "config": {
+        "hostname": "PC8",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.30.11/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.30.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "eebffc9d5d91",
+      "model": "pc",
+      "name": "PC9",
+      "x": 860,
+      "y": 200,
+      "powered": true,
+      "config": {
+        "hostname": "PC9",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.40.11/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.40.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "203efe7b880a",
+      "model": "server",
+      "name": "Server0",
+      "x": -200,
+      "y": 430,
+      "powered": true,
+      "config": {
+        "hostname": "Server0",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.30.100/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.30.1",
+        "dns": null
+      },
+      "startup": null
+    },
+    {
+      "id": "a3f406d70629",
+      "model": "server",
+      "name": "Server1",
+      "x": 860,
+      "y": 340,
+      "powered": true,
+      "config": {
+        "hostname": "Server1",
+        "interfaces": {
+          "FastEthernet0": {
+            "admin_up": true,
+            "ip": "192.168.40.100/24",
+            "description": ""
+          }
+        },
+        "gateway": "192.168.40.1",
+        "dns": null
+      },
+      "startup": null
+    }
+  ],
+  "links": [
+    {
+      "a": [
+        "d9c4ee19e8d6",
+        "GigabitEthernet0/0"
+      ],
+      "b": [
+        "19b2dbba1a0c",
+        "GigabitEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "d9c4ee19e8d6",
+        "GigabitEthernet0/2"
+      ],
+      "b": [
+        "ec05bb1138fd",
+        "ge-0/0/0"
+      ]
+    },
+    {
+      "a": [
+        "9aa98940d4b7",
+        "ether2"
+      ],
+      "b": [
+        "ec05bb1138fd",
+        "ge-0/0/1"
+      ]
+    },
+    {
+      "a": [
+        "9aa98940d4b7",
+        "ether3"
+      ],
+      "b": [
+        "69dd36661d7c",
+        "ether1"
+      ]
+    },
+    {
+      "a": [
+        "9aa98940d4b7",
+        "ether4"
+      ],
+      "b": [
+        "3c72020b6057",
+        "GigabitEthernet0/0/0"
+      ]
+    },
+    {
+      "a": [
+        "ec05bb1138fd",
+        "ge-0/0/2"
+      ],
+      "b": [
+        "3c72020b6057",
+        "GigabitEthernet0/0/1"
+      ]
+    },
+    {
+      "a": [
+        "ec05bb1138fd",
+        "ge-0/0/3"
+      ],
+      "b": [
+        "c45690cf1b75",
+        "ge-0/0/0"
+      ]
+    },
+    {
+      "a": [
+        "3c72020b6057",
+        "GigabitEthernet0/0/2"
+      ],
+      "b": [
+        "8d01b1811569",
+        "GigabitEthernet0/0/1"
+      ]
+    },
+    {
+      "a": [
+        "19b2dbba1a0c",
+        "FastEthernet0/1"
+      ],
+      "b": [
+        "ee67ef02c0fc",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "19b2dbba1a0c",
+        "FastEthernet0/2"
+      ],
+      "b": [
+        "037e4635c812",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "19b2dbba1a0c",
+        "FastEthernet0/3"
+      ],
+      "b": [
+        "e0f9d4cf0cdc",
+        "Port0"
+      ]
+    },
+    {
+      "a": [
+        "e0f9d4cf0cdc",
+        "Port1"
+      ],
+      "b": [
+        "b6d24f15c048",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "e0f9d4cf0cdc",
+        "Port2"
+      ],
+      "b": [
+        "698f237349de",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "19b2dbba1a0c",
+        "GigabitEthernet0/2"
+      ],
+      "b": [
+        "0700405aa489",
+        "GigabitEthernet0/1"
+      ]
+    },
+    {
+      "a": [
+        "0700405aa489",
+        "FastEthernet0/1"
+      ],
+      "b": [
+        "9bedd3bbf32f",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "0700405aa489",
+        "FastEthernet0/2"
+      ],
+      "b": [
+        "c303d3728d08",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "69dd36661d7c",
+        "ether2"
+      ],
+      "b": [
+        "798d9158bf9a",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "69dd36661d7c",
+        "ether3"
+      ],
+      "b": [
+        "b47c2627818a",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "c45690cf1b75",
+        "ge-0/0/1"
+      ],
+      "b": [
+        "203efe7b880a",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "c45690cf1b75",
+        "ge-0/0/2"
+      ],
+      "b": [
+        "edd9bcf3a186",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "8d01b1811569",
+        "GigabitEthernet0/0/2"
+      ],
+      "b": [
+        "eebffc9d5d91",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "8d01b1811569",
+        "GigabitEthernet0/0/3"
+      ],
+      "b": [
+        "a3f406d70629",
+        "FastEthernet0"
+      ]
+    },
+    {
+      "a": [
+        "d9c4ee19e8d6",
+        "GigabitEthernet0/1"
+      ],
+      "b": [
+        "9aa98940d4b7",
+        "ether1"
+      ]
+    }
+  ]
+}

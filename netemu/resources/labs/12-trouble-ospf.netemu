@@ -1,0 +1,303 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "a3e9b57e5bf1",
+   "model": "cisco-2911",
+   "name": "R1",
+   "x": 150,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R1",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.12.1/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "ospf": {
+     "process_id": 1,
+     "router_id": null,
+     "networks": [
+      {
+       "prefix": "192.168.0.0/16",
+       "area": "0.0.0.0"
+      },
+      {
+       "prefix": "10.0.0.0/8",
+       "area": "0.0.0.0"
+      }
+     ],
+     "interfaces": {},
+     "passive": [],
+     "passive_default": false,
+     "non_passive": [],
+     "costs": {},
+     "hello": {},
+     "dead": {},
+     "priority": {},
+     "default_originate": null,
+     "redistribute": [],
+     "reference_bandwidth": 100,
+     "enabled": true,
+     "export": [],
+     "templates": [],
+     "mt_instance": "default-v2",
+     "mt_areas": {}
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "391409c69388",
+   "model": "cisco-2911",
+   "name": "R2",
+   "x": 400,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R2",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.12.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": "10.0.23.1/30",
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "ospf": {
+     "process_id": 1,
+     "router_id": null,
+     "networks": [
+      {
+       "prefix": "192.168.0.0/16",
+       "area": "0.0.0.0"
+      },
+      {
+       "prefix": "10.0.0.0/8",
+       "area": "0.0.0.0"
+      }
+     ],
+     "interfaces": {},
+     "passive": [],
+     "passive_default": false,
+     "non_passive": [],
+     "costs": {},
+     "hello": {},
+     "dead": {},
+     "priority": {},
+     "default_originate": null,
+     "redistribute": [],
+     "reference_bandwidth": 100,
+     "enabled": true,
+     "export": [],
+     "templates": [],
+     "mt_instance": "default-v2",
+     "mt_areas": {}
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "18e7a6b43228",
+   "model": "cisco-2911",
+   "name": "R3",
+   "x": 650,
+   "y": 150,
+   "powered": true,
+   "config": {
+    "hostname": "R3",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.3.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "10.0.23.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "ospf": {
+     "process_id": 1,
+     "router_id": null,
+     "networks": [
+      {
+       "prefix": "192.168.0.0/16",
+       "area": "0.0.0.0"
+      },
+      {
+       "prefix": "10.0.0.0/8",
+       "area": "0.0.0.0"
+      }
+     ],
+     "interfaces": {},
+     "passive": [],
+     "passive_default": false,
+     "non_passive": [],
+     "costs": {},
+     "hello": {},
+     "dead": {},
+     "priority": {},
+     "default_originate": null,
+     "redistribute": [],
+     "reference_bandwidth": 100,
+     "enabled": true,
+     "export": [],
+     "templates": [],
+     "mt_instance": "default-v2",
+     "mt_areas": {}
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "f63cbad10bde",
+   "model": "pc",
+   "name": "PC1",
+   "x": 150,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "cae97c60870b",
+   "model": "pc",
+   "name": "PC3",
+   "x": 650,
+   "y": 350,
+   "powered": true,
+   "config": {
+    "hostname": "PC3",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.3.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.3.1",
+    "dns": null
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "a3e9b57e5bf1",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "391409c69388",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "391409c69388",
+    "GigabitEthernet0/2"
+   ],
+   "b": [
+    "18e7a6b43228",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "f63cbad10bde",
+    "FastEthernet0"
+   ],
+   "b": [
+    "a3e9b57e5bf1",
+    "GigabitEthernet0/0"
+   ]
+  },
+  {
+   "a": [
+    "cae97c60870b",
+    "FastEthernet0"
+   ],
+   "b": [
+    "18e7a6b43228",
+    "GigabitEthernet0/0"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Поиск неисправностей: OSPF",
+  "text": "OSPF-сеть из трёх маршрутизаторов работала, но теперь PC1 не может достучаться ни до чего, а R3 потерял соседа.\n\nВ сети **две** неисправности. Используйте `show ip interface brief`, `show ip ospf neighbor`, `show ip protocols`.",
+  "checks": [
+   "ospf R2 2 | У R2 снова два соседа",
+   "ping PC1 192.168.1.1 | PC1 видит свой шлюз",
+   "ping PC1 192.168.3.10 | PC1 видит PC3"
+  ],
+  "kind": "troubleshoot",
+  "translations": {
+   "en": {
+    "title": "Troubleshooting: OSPF",
+    "text": "This three-router OSPF network used to work, but now PC1 reaches nothing and R3 has lost its neighbour.\n\nThere are **two** faults. Use `show ip interface brief`, `show ip ospf neighbor` and `show ip protocols`.",
+    "checks": [
+     "R2 has two neighbours again",
+     "PC1 reaches its gateway",
+     "PC1 reaches PC3"
+    ]
+   }
+  },
+  "script": {
+   "R1": "enable\nconfigure terminal\ninterface gi0/0\nno shutdown\nend",
+   "R3": "enable\nconfigure terminal\nrouter ospf 1\nno network 10.0.0.0 0.255.255.255 area 1\nnetwork 10.0.0.0 0.255.255.255 area 0\nend"
+  },
+  "faults": [
+   "R1: интерфейс Gi0/0 (LAN PC1) выключен командой shutdown",
+   "R3: транзитная сеть 10.0.23.0/30 объявлена в зоне 1 вместо зоны 0, соседство с R2 не поднимается"
+  ]
+ }
+}

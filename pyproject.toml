@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netemu"
+version = "0.3.0"
+description = "Educational network simulator (Packet Tracer-like) with multi-vendor CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["PySide6>=6.6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-qt>=4.4", "pyinstaller>=6"]
+
+[project.gui-scripts]
+netemu = "netemu.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["netemu*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+netemu = ["resources/*.png", "resources/*.ico", "resources/labs/*.netemu"]
