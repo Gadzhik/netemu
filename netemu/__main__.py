@@ -24,9 +24,8 @@ def main(argv: list[str] | None = None) -> int:
         i = argv.index("--lang")
         lang = argv[i + 1] if i + 1 < len(argv) else None
         del argv[i:i + 2]
-    system = QLocale.system().language()
-    lang = lang or QSettings().value("language") or {QLocale.Russian: "ru", QLocale.Belarusian: "ru",
-                                                      QLocale.Ukrainian: "uk", QLocale.Kazakh: "kk"}.get(system, "en")
+    lang = lang or QSettings().value("language") or \
+        ("ru" if QLocale.system().language() in (QLocale.Russian, QLocale.Ukrainian, QLocale.Belarusian) else "en")
     set_language(str(lang))
     from .gui import theme
     if "--self-test" in argv:                     # packaged-build check (CI): English UI, light theme

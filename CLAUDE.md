@@ -50,21 +50,18 @@ python -m venv .venv
 ## Everyday commands (all must stay green before finishing a task)
 ```bash
 .venv/Scripts/python -m pyflakes netemu tools         # lint, must print nothing
-.venv/Scripts/python -m pytest -q tests                # 384 tests, ~10 s, GUI tests off screen
+.venv/Scripts/python -m pytest -q tests                # ~396 tests, ~10-20 s, GUI tests off screen
 .venv/Scripts/python tools/gen_docs.py                 # regenerate CLI command tables in docs/*/*.md
 .venv/Scripts/python tools/make_labs.py                # rebuild + verify the 19 ready-made labs (labs 13-19: tools/labs_more.py)
 .venv/Scripts/python tools/screenshots.py              # re-render docs/images/*.png (English UI, off screen)
 .venv/Scripts/python tools/build.py                    # PyInstaller build -> release/ (zip; setup.exe via Inno Setup)
-.venv/Scripts/python tools/i18n_status.py             # coverage of the uk/kk translations
 ```
 - `tests/test_docs.py` fails when:
   - the generated command tables are stale (run `gen_docs.py`);
   - a fenced example in the vendor docs produces a CLI error (every code block in the
     hand-written part of `docs/*/<vendor>.md` is executed);
   - a GUI string has no English translation in `netemu/i18n.py` (the `EN` dict, keyed by the Russian text).
-    Ukrainian/Kazakh live in `netemu/i18n_uk.py` / `i18n_kk.py` (`TRANSLATION`, same keys); missing strings fall
-    back to English, so new strings only *need* EN, but add uk/kk when you can (`tests/test_i18n.py` checks
-    placeholders and stale keys, and requires >= 90 % coverage).
+    The UI languages are Russian and English only (the owner does not want others).
 - `tests/test_gui.py::test_english_interface_has_no_russian_text` scans the menus in English mode.
 
 ## Architecture
@@ -177,14 +174,16 @@ python -m venv .venv
      (`Device.location`, `Link.media`/`length_m`, copper > 100 m keeps the link down), terminal highlighting,
      next-keyword hint and Ctrl+F command search (`gui/terminal_tools.py`; the terminal tab is now a page
      widget, use `dlg.terminal.parentWidget()` with `tabs.setCurrentWidget`);
-   - Ukrainian and Kazakh UI; update checker (`gui/updater.py`); packaged self-test `--self-test <dir>` run by
-     CI on all three OSes (screenshots uploaded as artifacts).
+   - update checker (`gui/updater.py`); packaged self-test `--self-test <dir>` run by CI on all three OSes
+     (screenshots uploaded as artifacts); CI tests Python 3.11-3.15;
+   - EIGRP for IPv6 (`v6igp.Eigrp6`) and IS-IS for IPv6 (TLV 236 in `isis.py`), MPLS L3VPN (VPNv4 in
+     `bgp.py`, VPN labels / `_send_vpn` in `router.py`), RSVP-TE (`routing/te.py`, `TunnelPort.tmode == "te"`;
+     note `Port.mode` is the switchport mode, do not reuse it), secondary IPv4 addresses (`Port.ip2`).
 
 ## Known gaps / ideas for next time (also listed in README "Limitations")
-- CME only on Cisco; HSRP only on Cisco (VRRP everywhere).
-- MPLS is LDP only (no RSVP-TE, no MP-BGP L3VPN); IS-IS and EIGRP are IPv4 only.
-- Docs and lab texts exist only in ru/en; uk/kk users see English there (`content_language()`).
-- One IPv4 address per interface; STP is computed centrally (no max-age timers).
+- CME and HSRP only on Cisco (Cisco technologies; VRRP everywhere) - by design.
+- L3VPN and RSVP-TE only in the Cisco CLI; RSVP signalling is computed, not sent as packets.
+- STP is computed centrally (no max-age timers).
 - Collaboration shares the project, not the running simulation (each peer simulates locally; last writer
   wins on concurrent edits of one device).
 - Linux/macOS have never been run by hand; CI covers them (tests + packaged self-test with screenshots).

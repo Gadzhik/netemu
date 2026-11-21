@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QDockWidget, QFileDialog, QInputDialog, QLabel, Q
                                QToolBar)
 
 from .. import __version__
-from ..i18n import language, LANGUAGES, tr, tr_in
+from ..i18n import language, LANGUAGES, tr
 from ..core import persistence
 from ..core.addresses import IPv4Address
 from ..core.samples import build_demo
@@ -914,7 +914,9 @@ class MainWindow(QMainWindow):
             return
         QSettings().setValue("language", code)
         self.language_pending = code
-        QMessageBox.information(self, "NetEmu", tr_in(code, "Язык интерфейса изменится после перезапуска NetEmu."))
+        QMessageBox.information(self, "NetEmu", tr("Язык интерфейса изменится после перезапуска NetEmu.")
+                                if code == "ru" else
+                                "The interface language will change after NetEmu is restarted.")
 
     def shutdown(self) -> None:
         """Release simulation and scene resources (safe to call twice)."""

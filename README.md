@@ -22,7 +22,10 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
 ## Features
 
 - **New in 0.4**:
-  - routing and MPLS: EIGRP (DUAL, feasible successors), IS-IS (L1/L2), MPLS with LDP, VRF-lite;
+  - routing and MPLS: EIGRP (DUAL, feasible successors) and IS-IS, both also for IPv6; MPLS with LDP;
+    MPLS L3VPN (VRFs with RD/route targets, MP-BGP VPNv4, two-label forwarding); MPLS traffic engineering
+    with RSVP-TE (explicit and dynamic paths, bandwidth reservation, failover, autoroute); VRF-lite;
+    secondary IPv4 addresses on router interfaces;
   - security: stateful firewall (Cisco zone-based firewall, Junos SRX security zones), 802.1X with
     RADIUS, AAA with TACACS+/RADIUS for logins;
   - services: TFTP and FTP servers (`copy running-config tftp:`), e-mail (SMTP/POP3 with a mail client on PCs),
@@ -35,7 +38,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
   - tools: packet analyzer with display filters and `.pcap` export for Wireshark; physical view
     (building / floor / rack, cable type and length, copper limited to 100 m); terminal syntax highlighting,
     a live hint of the next keywords and command search (`Ctrl+F`);
-  - interface: Ukrainian and Kazakh; update check against GitHub releases; the vendor gaps of 0.3 are closed
+  - interface: update check against GitHub releases; tested on Python 3.11–3.15; the vendor gaps of 0.3 are closed
     (QoS and voice VLAN on every vendor, IPsec on every router, NAT64 for TCP/UDP).
 - **New in 0.3**:
   - teaching:
@@ -116,7 +119,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
   - devices, cables, configurations, notes and the lab are shared;
   - each participant simulates locally.
 - **Interface**:
-  - Russian, English, Ukrainian or Kazakh (**View → Language**);
+  - Russian or English (**View → Language**);
   - light/dark theme;
   - scale 100–200 % for projectors;
   - built-in help (`F1`).
@@ -216,10 +219,8 @@ of the License, or (at your option) any later version. It is distributed WITHOUT
 
 ## Limitations
 
-- HSRP is Cisco only; VRRP is available everywhere. CME (IP telephony call control) is Cisco only.
-- One IPv4 address per interface.
-- MPLS is LDP only (no RSVP-TE, no L3VPN with MP-BGP); IS-IS and EIGRP are IPv4 only.
-- Ukrainian and Kazakh cover the interface; the documentation and the lab texts fall back to English.
+- HSRP and CME are Cisco technologies and exist on Cisco only, as on real equipment; VRRP is available everywhere.
+- MPLS L3VPN and RSVP-TE are configured on Cisco; RSVP signalling is computed hop by hop, not sent as packets.
 - The packet analyzer serializes the simulated headers; payloads of application protocols are synthetic.
 - STP is computed per switch domain without max-age timers.
 - In a collaboration session every participant runs their own simulation.

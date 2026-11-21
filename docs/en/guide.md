@@ -249,7 +249,7 @@ When a lab check fails, the lab panel explains the probable cause: an interface 
 
 ## Language
 
-**View → Language / Язык**: Russian, English, Ukrainian or Kazakh (Ukrainian and Kazakh cover the interface; help and labs are shown in English). The interface language changes after a restart. CLI output is always English, as on real hardware.
+**View → Language / Язык**: Russian or English. The interface language changes after a restart. CLI output is always English, as on real hardware.
 
 ## Keyboard shortcuts
 
@@ -275,4 +275,6 @@ When a lab check fails, the lab panel explains the probable cause: an interface 
 
 Ethernet, MAC-learning switching, 802.1Q VLANs (access, trunk, native VLAN, inter-VLAN routing on subinterfaces), ARP (cache, proxy ARP on routers), IPv4, connected and static routing (longest prefix match, recursive next hop, administrative distance, floating backup routes), OSPFv2 (adjacencies and DR/BDR, multiple areas, ABRs, `O IA`, `O E2`, default route, redistribution, ECMP), BGP-4 (eBGP and iBGP, loopback peering, multihop, next-hop-self, route reflection, best-path selection, AS_PATH loop prevention), IPv6 (addresses, link-local, NDP, ping, static routes, RA and SLAAC, OSPFv3 with LSAs and areas, RIPng, DHCPv6, NAT64), GRE and IPsec tunnels, QoS (classes, DSCP, policing), Syslog, SNMP v2c, NTP, IP telephony (voice VLAN, CME, RTP), routing on switches (SVI, Vlanif, irb, RouterOS VLAN interfaces, EXOS VLAN IP addresses), EtherChannel/LACP, HSRP/VRRP, RIPv2, STP (PVST, RSTP, MSTP: root election, loop blocking, edge ports), loopback interfaces, ACLs (standard and extended, Junos filters, RouterOS firewall), NAT (static, dynamic pools, PAT, port forwarding; ping and traceroute through NAT), TTL, ICMP echo, destination unreachable, time exceeded, ping and traceroute, DHCP (server, relay, APIPA), DNS, HTTP (web server and browser), Telnet and SSH logins between devices, TCP and UDP.
 
-NAT64 translates ICMP echo only. QoS is configured on Cisco and Huawei; CME exists on Cisco only. One IPv4 address per interface.
+Also: EIGRP and IS-IS for IPv4 and IPv6, MPLS with LDP, MPLS L3VPN (VRFs with route distinguishers and route targets, MP-BGP VPNv4), MPLS traffic engineering with RSVP-TE (explicit and dynamic paths, bandwidth reservation, autoroute), VRF-lite, stateful firewalls (zone-based firewall, SRX zones, Cisco ASA, FortiGate), 802.1X with RADIUS, AAA with TACACS+, TFTP/FTP, e-mail (SMTP/POP3), DHCP option 82, wireless controllers, IoT, secondary IPv4 addresses.
+
+HSRP and CME are Cisco technologies and exist on Cisco only, as on real equipment; VRRP is available on every vendor.

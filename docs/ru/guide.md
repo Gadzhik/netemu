@@ -249,7 +249,7 @@ wifi Laptop1 OFFICE | ноутбук подключён к OFFICE
 
 ## Язык
 
-**Вид → Язык / Language**: русский, английский, украинский или казахский (на украинском и казахском переведён интерфейс; справка и задания показываются на английском). Язык интерфейса меняется после перезапуска. Вывод CLI всегда на английском, как на настоящем оборудовании.
+**Вид → Язык / Language**: русский или английский. Язык интерфейса меняется после перезапуска. Вывод CLI всегда на английском, как на настоящем оборудовании.
 
 ## Горячие клавиши
 
@@ -275,4 +275,6 @@ wifi Laptop1 OFFICE | ноутбук подключён к OFFICE
 
 Ethernet, коммутация с изучением MAC-адресов, VLAN 802.1Q (access, trunk, native VLAN, маршрутизация между VLAN на подынтерфейсах), ARP (кэш, proxy ARP на маршрутизаторах), IPv4, connected- и статическая маршрутизация (longest prefix match, рекурсивный next hop, административная дистанция, плавающие резервные маршруты), OSPFv2 (соседство и DR/BDR, несколько зон, ABR, `O IA`, `O E2`, маршрут по умолчанию, перераспределение, ECMP), BGP-4 (eBGP и iBGP, пиринг через loopback, multihop, next-hop-self, отражение маршрутов, выбор лучшего пути, защита от петель по AS_PATH), IPv6 (адреса, link-local, NDP, ping, статика, RA и SLAAC, OSPFv3 с LSA и зонами, RIPng, DHCPv6, NAT64), туннели GRE и IPsec, QoS (классы, DSCP, полисинг), Syslog, SNMP v2c, NTP, IP-телефония (voice VLAN, CME, RTP), маршрутизация на коммутаторах (SVI, Vlanif, irb, VLAN-интерфейсы RouterOS, IP на VLAN в EXOS), EtherChannel/LACP, HSRP/VRRP, RIPv2, STP (PVST, RSTP, MSTP: выбор корня, блокировка петель, edge-порты), loopback-интерфейсы, ACL (стандартные и расширенные, фильтры Junos, firewall RouterOS), NAT (статический, динамический из пула, PAT, проброс портов; ping и traceroute через NAT), TTL, ICMP echo, destination unreachable, time exceeded, ping и traceroute, DHCP (сервер, relay, APIPA), DNS, HTTP (веб-сервер и браузер), удалённый вход по Telnet и SSH между устройствами, TCP и UDP.
 
-NAT64 транслирует только ICMP echo. QoS настраивается у Cisco и Huawei, CME есть только у Cisco. На каждом интерфейсе один IPv4-адрес.
+Также: EIGRP и IS-IS для IPv4 и IPv6, MPLS с LDP, MPLS L3VPN (VRF с RD и route target, MP-BGP VPNv4), MPLS Traffic Engineering с RSVP-TE (явные и динамические пути, резервирование полосы, autoroute), VRF-lite, межсетевые экраны с отслеживанием состояния (zone-based firewall, зоны SRX, Cisco ASA, FortiGate), 802.1X с RADIUS, AAA с TACACS+, TFTP/FTP, почта (SMTP/POP3), DHCP option 82, контроллеры беспроводной сети, IoT, вторичные IPv4-адреса.
+
+HSRP и CME — технологии Cisco и есть только у Cisco, как на настоящем оборудовании; VRRP доступен у всех производителей.

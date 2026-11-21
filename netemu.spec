@@ -13,7 +13,7 @@ a = Analysis(
         "netemu.core.cli.cisco", "netemu.core.cli.huawei", "netemu.core.cli.juniper",
         "netemu.core.cli.mikrotik", "netemu.core.cli.host", "netemu.core.cli.linux",
         "netemu.core.cli.windows", "netemu.core.cli.extreme", "netemu.core.cli.asa", "netemu.core.cli.fortigate",
-        "netemu.core.services.remote", "netemu.i18n_uk", "netemu.i18n_kk", "PySide6.QtSvg",
+        "netemu.core.services.remote", "PySide6.QtSvg",
     ],
     excludes=["tkinter", "PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets",
               "PySide6.QtQml", "PySide6.QtQuick", "PySide6.Qt3DCore", "PySide6.QtPdf",

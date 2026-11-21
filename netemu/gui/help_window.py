@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QListWidget, QListWidgetItem, QSplitter, QTextBrowser
 
-from ..i18n import content_language, tr
+from ..i18n import language, tr
 
 TOPICS = ("guide", "cisco", "mikrotik", "juniper", "huawei", "extreme", "pc")
 
@@ -33,13 +33,13 @@ def topic_for_device(dev) -> str:
 class HelpWindow(QDialog):
     def __init__(self, parent=None, lang: str | None = None):
         super().__init__(parent)
-        self.lang = lang or content_language()
+        self.lang = lang or language()
         self.setWindowTitle(tr("Справка NetEmu"))
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.resize(1100, 760)
         self.folder = docs_dir() / self.lang
         if not self.folder.is_dir():
-            self.folder = docs_dir() / "en"
+            self.folder = docs_dir() / "ru"
         self.topics = QListWidget()
         self.topics.setMaximumWidth(220)
         self.view = QTextBrowser()

@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFileDialog
                                QWidget)
 
 from ..core.lab import Lab, evaluate, parse_checks, record_attempt, report_html, script_to_text, text_to_script
-from ..i18n import content_language, tr
+from ..i18n import language, tr
 
 PASS, FAIL, TODO = "✔", "✘", "•"
 LABS_DIR = Path(__file__).resolve().parents[1] / "resources" / "labs"
@@ -26,7 +26,7 @@ def builtin_labs() -> list[tuple[str, Path, str]]:
             lab = json.loads(p.read_text(encoding="utf-8")).get("lab") or {}
         except (OSError, ValueError):
             continue
-        title = ((lab.get("translations") or {}).get(content_language()) or {}).get("title") or lab.get("title") or p.stem
+        title = ((lab.get("translations") or {}).get(language()) or {}).get("title") or lab.get("title") or p.stem
         out.append((title, p, lab.get("kind", "lab")))
     return out
 
@@ -87,7 +87,7 @@ class LabPanel(QWidget):
             self.check_btn.setEnabled(False)
             self.report_btn.setEnabled(False)
             return
-        title, text, check_texts = lab.localized(content_language())
+        title, text, check_texts = lab.localized(language())
         prefix = tr("Поиск неисправностей: ") if lab.kind == "troubleshoot" and not title.startswith(
             tr("Поиск неисправностей")) else ""
         self.title.setText(prefix + (title or tr("Задание")))
@@ -108,7 +108,7 @@ class LabPanel(QWidget):
         results = evaluate(self.window.topology, lab)
         self.checks.clear()
         passed = 0
-        texts = lab.localized(content_language())[2]
+        texts = lab.localized(language())[2]
         from ..core.diagnose import hints_for
         for (c, ok, detail), text in zip(results, texts):
             hint = "" if ok else " ".join(hints_for(self.window.topology, c)[:2])
@@ -135,14 +135,14 @@ class LabPanel(QWidget):
             if not ok or not student.strip():
                 return None
         results = self.run_checks()
-        attempt = record_attempt(lab, student.strip(), results, content_language())
+        attempt = record_attempt(lab, student.strip(), results, language())
         if path is None:
             path, _ = QFileDialog.getSaveFileName(self, tr("Сохранить отчёт"),
-                                                  f"{lab.localized(content_language())[0]} - {student.strip()}.html",
+                                                  f"{lab.localized(language())[0]} - {student.strip()}.html",
                                                   "HTML (*.html)")
             if not path:
                 return None
-        Path(path).write_text(report_html(lab, attempt, content_language()), encoding="utf-8")
+        Path(path).write_text(report_html(lab, attempt, language()), encoding="utf-8")
         self.window.statusBar().showMessage(tr("Отчёт сохранён: {p}", p=path), 8000)
         return path
 
