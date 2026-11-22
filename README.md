@@ -29,7 +29,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
 
 ## Features
 
-- **New in 0.5** (security training):
+- **New in 0.6** (security training):
   - DDoS attacks of any power from a Botnet device: UDP/ICMP/SYN/HTTP floods, Slowloris, DNS/NTP
     amplification; a load monitor and red overloaded cables show where the network breaks;
   - DDoS defences on every level: ACLs, policing, uRPF (BCP 38) and null routes on every vendor, Cisco TCP
