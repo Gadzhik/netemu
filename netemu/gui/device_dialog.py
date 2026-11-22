@@ -641,9 +641,16 @@ class DeviceDialog(QDialog):
         elif cat == "attack":
             self.config = HostConfig(self)
             self.tabs.addTab(scrolled(self.config), tr("Настройка"))
-            from .ddos_panel import AttackPanel
-            self.attacks = AttackPanel(self)
-            self.tabs.addTab(self.attacks, tr("Атаки"))
+            self.terminal = TerminalWidget(device.create_cli())
+            self.tabs.addTab(terminal_page(self.terminal), tr("Командная строка"))
+            if device.model_key == "lan-attacker":
+                from .l2attack_panel import L2AttackPanel
+                self.attacks = L2AttackPanel(self)
+                self.tabs.addTab(self.attacks, tr("Атаки L2"))
+            else:
+                from .ddos_panel import AttackPanel
+                self.attacks = AttackPanel(self)
+                self.tabs.addTab(self.attacks, tr("Атаки"))
         elif cat == "iot":
             self.config = HostConfig(self)
             self.tabs.addTab(scrolled(self.config), tr("Настройка"))

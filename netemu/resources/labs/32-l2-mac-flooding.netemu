@@ -1,0 +1,351 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "ff160bbad0ab",
+   "model": "cisco-2911",
+   "name": "GW",
+   "x": 420,
+   "y": 80,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "GW",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "dhcp_server": {
+     "enabled": true,
+     "pools": [
+      {
+       "name": "LAN",
+       "network": "192.168.1.0/24",
+       "gateway": "192.168.1.1",
+       "dns": null,
+       "domain": "",
+       "start": null,
+       "end": null,
+       "lease": 86400,
+       "tftp": null
+      }
+     ],
+     "excluded": [
+      [
+       "192.168.1.1",
+       "192.168.1.10"
+      ]
+     ],
+     "interfaces": null
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "5c6e7f860731",
+   "model": "cisco-2960",
+   "name": "SW",
+   "x": 420,
+   "y": 240,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "mac_limit": 300
+   },
+   "startup": null
+  },
+  {
+   "id": "da61bce1104e",
+   "model": "pc",
+   "name": "PC1",
+   "x": 240,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.11/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null,
+    "dhcp": true
+   },
+   "startup": null
+  },
+  {
+   "id": "f04895b02523",
+   "model": "pc",
+   "name": "PC2",
+   "x": 390,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.12/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null,
+    "dhcp": true
+   },
+   "startup": null
+  },
+  {
+   "id": "d7643eb80f03",
+   "model": "lan-attacker",
+   "name": "ATK",
+   "x": 620,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "ATK",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.13/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null,
+    "dhcp": true,
+    "l2attacks": [
+     {
+      "kind": "mac-flood",
+      "target": "",
+      "gateway": "",
+      "running": true
+     }
+    ]
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "ff160bbad0ab",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "5c6e7f860731",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "da61bce1104e",
+    "FastEthernet0"
+   ],
+   "b": [
+    "5c6e7f860731",
+    "FastEthernet0/2"
+   ]
+  },
+  {
+   "a": [
+    "f04895b02523",
+    "FastEthernet0"
+   ],
+   "b": [
+    "5c6e7f860731",
+    "FastEthernet0/3"
+   ]
+  },
+  {
+   "a": [
+    "d7643eb80f03",
+    "FastEthernet0"
+   ],
+   "b": [
+    "5c6e7f860731",
+    "FastEthernet0/10"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "L2: переполнение MAC-таблицы и port security",
+  "text": "**Переполнение MAC-таблицы (MAC flooding).** Атакующий заваливает коммутатор кадрами с тысячами случайных MAC-адресов. Таблица коммутации переполняется, и коммутатор начинает работать «на отказ» — рассылает все кадры во все порты (как концентратор). Атакующий видит трафик, предназначенный другим.\n\n1. В «Инструменты → Атаки в сети (L2)» видно переполнение таблицы и перехваченные кадры. На коммутаторе `show mac address-table count` показывает, что таблица забита.\n2. Включите **port security** на порту атакующего (fa0/10): ограничьте число MAC-адресов и задайте действие при нарушении — отключить порт. Тогда лавина MAC-адресов отключит порт нарушителя, а таблица не переполнится.\n3. Убедитесь, что перехват прекратился.\n\nПочему port security ставят на порты к пользователям, а не на магистральные порты между коммутаторами?",
+  "checks": [
+   "mitm ATK 0 | Атакующий больше не видит чужой трафик"
+  ],
+  "translations": {
+   "en": {
+    "title": "L2: MAC flooding and port security",
+    "text": "**MAC flooding (CAM overflow).** The attacker floods the switch with frames from thousands of random MAC addresses. The switching table overflows and the switch fails open, flooding every frame out of all ports (like a hub). The attacker sees traffic meant for others.\n\n1. Tools → LAN attacks shows the table overflow and the intercepted frames. On the switch `show mac address-table count` shows the table is full.\n2. Turn on **port security** on the attacker's port (fa0/10): limit the number of MAC addresses and set the violation action to shut the port. The flood of MACs then disables the offender's port and the table does not overflow.\n3. Check that interception stopped.\n\nWhy is port security put on user access ports rather than on the trunk ports between switches?",
+    "checks": [
+     "The attacker no longer sees others' traffic"
+    ]
+   }
+  },
+  "solution": "Переполнение MAC-таблицы (CAM overflow) останавливает port security: лимит адресов на порт и отключение порта при нарушении. Ставится на порты доступа к пользователям.",
+  "script": {
+   "SW": "enable\nconfigure terminal\ninterface fa0/10\nswitchport mode access\nswitchport port-security\nswitchport port-security maximum 3\nswitchport port-security violation shutdown\nend"
+  }
+ }
+}

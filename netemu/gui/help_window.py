@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QDialog, QHBoxLayout, QListWidget, QListWidgetItem
 
 from ..i18n import language, tr
 
-TOPICS = ("guide", "cisco", "mikrotik", "juniper", "huawei", "extreme", "pc", "ddos", "malware")
+TOPICS = ("guide", "cisco", "mikrotik", "juniper", "huawei", "extreme", "pc", "ddos", "malware", "l2")
 
 
 def docs_dir() -> Path:

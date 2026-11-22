@@ -20,8 +20,11 @@
   настоящими пакетами через маршрутизацию, ACL, NAT и IPS; защита на узлах (обновления, антивирус, службы,
   межсетевой экран хоста, резервные копии: вкладка «Безопасность», `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`,
   `wbadmin`, `ufw`, ClamAV) и в сети (сегментация, IPS Cisco IOS, фильтрация исходящего трафика, DNS sinkhole),
-  монитор заражения ([руководство](docs/ru/malware.md)); 11 новых лабораторных (20–30): шесть по DDoS и пять по
-  вредоносам; новые проверки `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`.
+  монитор заражения ([руководство](docs/ru/malware.md)); атаки канального уровня (L2) с устройства «Атакующий (LAN)»
+  настоящими кадрами — подмена ARP (MITM), переполнение MAC-таблицы, захват корня STP; защита коммутатора — Dynamic ARP
+  Inspection (`ip arp inspection`, `ip source binding`), port security, DHCP snooping, BPDU Guard и Root Guard, монитор
+  атак ([руководство](docs/ru/l2.md)); 14 новых лабораторных (20–33): шесть по DDoS, пять по вредоносам и три по
+  атакам L2; новые проверки `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **Новое в 0.4**: EIGRP и IS-IS (в том числе для IPv6), MPLS/LDP, MPLS L3VPN (MP-BGP VPNv4), MPLS TE с RSVP-TE,
   VRF, вторичные IPv4-адреса на интерфейсах; межсетевой экран с отслеживанием состояния (Cisco ZBF,
   зоны Junos SRX), 802.1X с RADIUS, AAA/TACACS+; серверы TFTP и FTP, почта SMTP/POP3 с почтовым клиентом,

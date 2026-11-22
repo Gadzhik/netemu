@@ -12,7 +12,7 @@ from .icons import device_icon, device_pixmap
 
 CATEGORIES = [("router", "Маршрутизаторы"), ("switch", "Коммутаторы"), ("hub", "Концентраторы"),
               ("security", "Безопасность"), ("end", "Конечные устройства"), ("wireless", "Беспроводные"),
-              ("iot", "Интернет вещей"), ("cloud", "Интернет"), ("attack", "Атаки (DDoS)")]
+              ("iot", "Интернет вещей"), ("cloud", "Интернет"), ("attack", "Атаки")]
 
 
 class ModelList(QListWidget):

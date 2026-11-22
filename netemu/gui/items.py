@@ -21,6 +21,8 @@ def device_kind(device) -> str | None:
         return "wlc"
     if getattr(device, "category", "") == "iot":
         return "iot"
+    if key == "lan-attacker":
+        return "attacker"
     return None
 
 

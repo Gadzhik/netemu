@@ -145,6 +145,10 @@ def hints_for(topology, check) -> list[str]:
         return [tr("Порты должны быть в одном channel-group с совместимыми режимами (active/passive) с обеих сторон.")]
     if k in ("clean", "immune", "outbreak", "c2blocked"):
         return malware_hints(topology, k, a)
+    if k == "mitm":
+        return [tr("{atk} всё ещё перехватывает трафик. На коммутаторе включите Dynamic ARP Inspection (против "
+                   "подмены ARP), port security (против переполнения MAC-таблицы) или BPDU Guard (против захвата "
+                   "корня STP) на порту атакующего.", atk=a[0])]
     if k in ("available", "ddos"):
         return ddos_hints(topology, a[0] if k == "ddos" else None)
     if k == "phone":

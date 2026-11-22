@@ -1016,6 +1016,38 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `[no] zone-member security WORD` | Zone name |
 <!-- END GENERATED COMMANDS -->
 
+## Switch defences against L2 attacks
+
+Layer-2 attacks and defences are explained in [L2 attacks and switch defences](l2.md). The Cisco commands:
+
+```
+enable
+configure terminal
+ip dhcp snooping
+ip dhcp snooping vlan 1
+no ip dhcp snooping information option
+interface gi0/1
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+ip arp inspection vlan 1
+ip source binding 0001.1111.1111 vlan 1 192.168.1.11 interface fa0/2
+interface fa0/10
+switchport mode access
+switchport port-security
+switchport port-security maximum 3
+switchport port-security violation shutdown
+spanning-tree bpduguard enable
+spanning-tree guard root
+end
+show ip arp inspection
+```
+
+- `ip dhcp snooping` / `ip dhcp snooping trust`: DHCP snooping, DHCP replies only from trusted ports (against rogue DHCP).
+- `ip arp inspection vlan` / `trust` / `ip source binding`: Dynamic ARP Inspection against ARP spoofing.
+- `switchport port-security`: against MAC flooding.
+- `spanning-tree bpduguard enable` / `guard root`: against STP root takeover.
+
 ## All commands: Cisco 2960 switch
 
 <!-- BEGIN GENERATED COMMANDS switch -->
@@ -1143,6 +1175,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `show ip access-lists <1-2699>/WORD` | Access list number or name |
 | `show ip arp` | IP ARP table |
 | `show ip ssh` | Information on SSH |
+| `show ip arp inspection` | Dynamic ARP Inspection |
 | `show ipv6 interface brief` | Brief summary of IPv6 status and configuration |
 | `show ipv6 route` | Show IPv6 route table entries |
 | `show ipv6 route eigrp` | EIGRP routes |
@@ -1248,6 +1281,8 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `ip classless` | Follow classless routing forwarding rules |
 | `ip domain-name WORD` | Default domain name |
 | `ip ssh version <1-2>` | Protocol version |
+| `ip arp inspection vlan WORD` | vlan range |
+| `ip source binding H.H.H vlan <1-4094> A.B.C.D interface IFACE` | Interface |
 | `[no] ipv6 unicast-routing` | Enable unicast routing |
 | `[no] ipv6 route X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 route X:X:X:X::X/<0-128> X:X:X:X::X` | IPv6 address of next-hop |
@@ -1294,6 +1329,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `[no] spanning-tree vlan WORD priority <0-61440>` | bridge priority in increments of 4096 |
 | `[no] spanning-tree vlan WORD root primary` | Configure this switch as primary root for this spanning tree |
 | `[no] spanning-tree vlan WORD root secondary` | Configure switch as secondary root |
+| `[no] spanning-tree portfast bpduguard default` | Enable bpdu guard by default |
 | `[no] username WORD` | User name |
 | `[no] username WORD privilege <0-15> secret LINE` | The UNENCRYPTED (cleartext) user secret |
 | `[no] username WORD privilege <0-15> password LINE` | The UNENCRYPTED (cleartext) user password |
@@ -1352,6 +1388,7 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `ip address A.B.C.D A.B.C.D` | IP subnet mask |
 | `ip address A.B.C.D A.B.C.D secondary` | Make this IP address a secondary address |
 | `ip dhcp snooping trust` | DHCP Snooping trust config |
+| `ip arp inspection trust` | Configure the interface as trusted |
 | `[no] ipv6 address X:X:X:X::X/<0-128>` | IPv6 prefix |
 | `[no] ipv6 enable` | Enable IPv6 on interface |
 | `[no] ipv6 nd ra suppress` | Suppress IPv6 Router Advertisements |
@@ -1365,6 +1402,10 @@ Descriptions come from the CLI's own help (`?`). `A.B.C.D` is an IP address or m
 | `[no] shutdown` | Shutdown the selected interface |
 | `[no] spanning-tree portfast` | Portfast mode |
 | `[no] spanning-tree cost <1-200000000>` | port path cost |
+| `[no] spanning-tree bpduguard enable` | Enable BPDU guard on this interface |
+| `[no] spanning-tree bpduguard disable` | Disable BPDU guard on this interface |
+| `[no] spanning-tree guard root` | Set guard mode to root guard on interface |
+| `[no] spanning-tree guard none` | Set guard mode to none |
 | `speed 10/100/1000/auto` | Configure speed operation. |
 | `[no] standby <0-255>` | group number |
 | `[no] standby <0-255> ip A.B.C.D` | Virtual IP address |

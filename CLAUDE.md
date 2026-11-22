@@ -52,7 +52,7 @@ python -m venv .venv
 .venv/Scripts/python -m pyflakes netemu tools         # lint, must print nothing
 .venv/Scripts/python -m pytest -q tests                # ~396 tests, ~10-20 s, GUI tests off screen
 .venv/Scripts/python tools/gen_docs.py                 # regenerate CLI command tables in docs/*/*.md
-.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 30 ready-made labs (13-19: labs_more.py, 20-25: labs_ddos.py, 26-30: labs_malware.py)
+.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 33 ready-made labs (…: labs_more/ddos/malware.py, 31-33: labs_l2.py)
 .venv/Scripts/python tools/screenshots.py              # re-render docs/images/*.png (English UI, off screen)
 .venv/Scripts/python tools/build.py                    # PyInstaller build -> release/ (zip; setup.exe via Inno Setup)
 ```

@@ -760,6 +760,7 @@ class CiscoSession(TreeSession):
                 ipshow.children.append(P.kw("dhcp", "Show items in the DHCP database", snoop))
             else:
                 dhs.children.append(snoop)
+            self._add_l2sec_trees(t)
             modes = [P.kw(m, h, handler=lambda s, a, n, m=m: s.channel_group(a[0], m, False))
                      for m, h in (("active", "Enable LACP unconditionally"), ("passive", "Enable LACP only if a LACP device is detected"),
                                   ("on", "Enable Etherchannel only"), ("desirable", "Enable PAgP unconditionally"),
@@ -4734,6 +4735,129 @@ class CiscoSession(TreeSession):
             self.device.stp.states.clear()
         return self._stp_changed()
 
+    def _add_l2sec_trees(self, t):
+        # global: ip arp inspection vlan <list>
+        ipg = next(x for x in t["config"] if x.word == "ip")
+        dai_vlan = P.kw("vlan", "Enable/Disable ARP Inspection on vlans",
+                        P.arg(P.VlanListArg(), "vlan range",
+                              handler=lambda s, a, n: s.arp_inspect_vlan(a[0], n), negatable=True),
+                        negatable=True)
+        ipg.children.append(P.kw("arp", "ARP configuration",
+                                 P.kw("inspection", "Dynamic ARP Inspection", dai_vlan, negatable=True),
+                                 negatable=True))
+        # ip source binding H.H.H vlan N A.B.C.D interface IF  (static DHCP-snooping binding for DAI)
+        ipg.children.append(P.kw("source", "Source binding",
+            P.kw("binding", "Static IP source binding",
+                 P.arg(P.WordArg("H.H.H"), "MAC address",
+                       P.kw("vlan", "VLAN",
+                            P.arg(P.NumArg(1, 4094, "<1-4094>"), "VLAN id",
+                                  P.arg(P.IpArg(), "IP address",
+                                        P.kw("interface", "Interface",
+                                             P.arg(P.IfaceArg(), "Interface",
+                                                   handler=lambda s, a, n: s.ip_source_binding(a, n),
+                                                   negatable=True))))))), negatable=True))
+        # interface: ip arp inspection trust
+        ipif = next(x for x in t["config-if"] if x.word == "ip")
+        arp = next((x for x in ipif.children if x.word == "arp"), None)
+        node = P.kw("inspection", "Dynamic ARP Inspection",
+                    P.kw("trust", "Configure the interface as trusted",
+                         handler=lambda s, a, n: s.arp_inspect_trust(n), negatable=True), negatable=True)
+        if arp is None:
+            ipif.children.append(P.kw("arp", "Configure ARP features", node, negatable=True))
+        else:
+            arp.children.append(node)
+        # interface: spanning-tree bpduguard enable | guard root
+        stp = next((x for x in t["config-if"] if x.word == "spanning-tree"), None)
+        if stp is not None:
+            stp.children.append(P.kw("bpduguard", "Don't accept BPDUs on this port",
+                P.kw("enable", "Enable BPDU guard on this interface",
+                     handler=lambda s, a, n: s.if_bpduguard(True, n), negatable=True),
+                P.kw("disable", "Disable BPDU guard on this interface",
+                     handler=lambda s, a, n: s.if_bpduguard(False, n), negatable=True), negatable=True))
+            stp.children.append(P.kw("guard", "Change an interface's spanning tree guard mode",
+                P.kw("root", "Set guard mode to root guard on interface",
+                     handler=lambda s, a, n: s.if_rootguard(n), negatable=True),
+                P.kw("none", "Set guard mode to none", handler=lambda s, a, n: s.if_rootguard(True), negatable=True),
+                negatable=True))
+        # global default: spanning-tree portfast bpduguard default
+        cstp = next((x for x in t["config"] if x.word == "spanning-tree"), None)
+        if cstp is not None:
+            pf = next((x for x in cstp.children if x.word == "portfast"), None)
+            bg = P.kw("bpduguard", "Enable bpdu guard by default on all portfast ports",
+                      P.kw("default", "Enable bpdu guard by default", handler=lambda s, a, n: s.bpduguard_default(n),
+                           negatable=True), negatable=True)
+            if pf is None:
+                cstp.children.append(P.kw("portfast", "Spanning tree portfast options", bg, negatable=True))
+            else:
+                pf.children.append(bg)
+        show = next((x for x in t["priv"] if x.word == "show"), None)
+        if show is not None:
+            ipsh = next((x for x in show.children if x.word == "ip"), None)
+            if ipsh is not None:
+                ipsh.children.append(P.kw("arp", "ARP table",
+                    P.kw("inspection", "Dynamic ARP Inspection", handler=lambda s, a, n: s.show_arp_inspection()),
+                    handler=lambda s, a, n: s.show_arp_table()))
+
+    def ip_source_binding(self, args, negate):
+        from ..security.l2attack import l2sec
+        mac, vlan, ip, iface = args[0], int(args[1]), str(args[2]), args[3]
+        from ..addresses import MacAddress
+        try:
+            mac = MacAddress(mac).cisco()
+        except Exception:
+            return "% Invalid MAC address"
+        s = l2sec(self.device)
+        binds = s.setdefault("static_bindings", [])
+        entry = {"mac": mac, "vlan": vlan, "ip": ip, "port": getattr(iface, "name", str(iface))}
+        binds[:] = [b for b in binds if not (b["mac"] == mac and b["ip"] == ip)]
+        if not negate:
+            binds.append(entry)
+        return None
+
+    def arp_inspect_vlan(self, vlans, negate):
+        from ..security.l2attack import l2sec
+        s = l2sec(self.device)
+        cur = set(s["dai_vlans"])
+        ids = vlans if isinstance(vlans, (list, tuple, set)) else [vlans]
+        for v in ids:
+            cur.discard(int(v)) if negate else cur.add(int(v))
+        s["dai_vlans"] = sorted(cur)
+        return None
+
+    def arp_inspect_trust(self, negate):
+        self.iface.arp_trust = not negate
+        return None
+
+    def if_bpduguard(self, enable, negate):
+        self.iface.bpduguard = enable and not negate
+        return None
+
+    def if_rootguard(self, negate):
+        self.iface.rootguard = not negate
+        return None
+
+    def bpduguard_default(self, negate):
+        from ..security.l2attack import l2sec
+        l2sec(self.device)["bpduguard"] = not negate
+        return None
+
+    def show_arp_inspection(self):
+        from ..security.l2attack import l2sec
+        s = l2sec(self.device)
+        vlans = ", ".join(str(v) for v in s["dai_vlans"]) or "none"
+        lines = ["Source Mac Validation      : Disabled", "Destination Mac Validation : Disabled",
+                 "IP Address Validation      : Enabled" if s["dai_vlans"] else "IP Address Validation      : Disabled",
+                 "", " Vlan     Configuration    Operation    ACL Match          Static ACL",
+                 " ----     -------------    ---------   ---------          ----------"]
+        for v in s["dai_vlans"]:
+            lines.append(f" {v:<8} Enabled          Active")
+        lines.append(f"\nARP inspection VLANs: {vlans}")
+        lines.append(f"Dropped by DAI: {getattr(self.device, 'dai_drops', 0)}")
+        return "\n".join(lines)
+
+    def show_arp_table(self):
+        return self.show_arp() if hasattr(self, "show_arp") else "ARP table"
+
     def stp_portfast(self, negate):
         e = self.device.stp.edge
         (e.discard if negate else e.add)(self.iface.name)
@@ -5207,6 +5331,12 @@ def render_running(device, cfg: dict) -> str:
                       for m in ps.get("macs", [])]
         if ic.get("dhcp_trust"):
             lines.append(" ip dhcp snooping trust")
+        if ic.get("arp_trust"):
+            lines.append(" ip arp inspection trust")
+        if ic.get("bpduguard"):
+            lines.append(" spanning-tree bpduguard enable")
+        if ic.get("rootguard"):
+            lines.append(" spanning-tree guard root")
         if not router and not svi:
             stp_c = cfg.get("stp") or {}
             if name in stp_c.get("edge", []):
@@ -5274,6 +5404,13 @@ def render_running(device, cfg: dict) -> str:
             lines.append(f"ip dhcp snooping vlan {vlan_ranges(ds['vlans'])}")
         if ds.get("enabled"):
             lines.append("ip dhcp snooping")
+        l2s = cfg.get("l2security") or {}
+        if l2s.get("dai_vlans"):
+            lines.append(f"ip arp inspection vlan {vlan_ranges(l2s['dai_vlans'])}")
+        for b in (l2s.get("static_bindings") or []):
+            lines.append(f"ip source binding {b['mac']} vlan {b['vlan']} {b['ip']} interface {b['port']}")
+        if l2s.get("bpduguard"):
+            lines.append("spanning-tree portfast bpduguard default")
         if cfg.get("default_gateway"):
             lines.append(f"ip default-gateway {cfg['default_gateway']}")
         if cfg.get("ip_routing") or cfg.get("default_gateway"):

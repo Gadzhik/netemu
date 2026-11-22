@@ -176,6 +176,9 @@ class MainWindow(QMainWindow):
         self.act_malware = self._act("Заражение сети", self.show_malware, "Ctrl+Shift+V")
         m.addAction(self.act_malware)
         self.malware_dock = None
+        self.act_l2 = self._act("Атаки в сети (L2)", self.show_l2attacks, "Ctrl+Shift+L")
+        m.addAction(self.act_l2)
+        self.l2_dock = None
 
         m = mb.addMenu(tr("&Вид"))
         self.act_labels = self._act("Подписи портов", self._toggle_labels, checkable=True)
@@ -717,6 +720,19 @@ class MainWindow(QMainWindow):
         self.load_dock.raise_()
         return self.load_panel
 
+    def show_l2attacks(self):
+        from .l2attack_panel import L2Monitor
+        if self.l2_dock is None:
+            self.l2_panel = L2Monitor(self)
+            self.l2_dock = QDockWidget(tr("Атаки в сети (L2)"), self)
+            self.l2_dock.setObjectName("l2attacks")
+            self.l2_dock.setWidget(self.l2_panel)
+            self.addDockWidget(Qt.BottomDockWidgetArea, self.l2_dock)
+        self.l2_panel.refresh()
+        self.l2_dock.show()
+        self.l2_dock.raise_()
+        return self.l2_panel
+
     def show_malware(self):
         from .malware_panel import InfectionMonitor
         if self.malware_dock is None:
@@ -974,6 +990,8 @@ class MainWindow(QMainWindow):
             self.load_panel.shutdown()
         if getattr(self, "malware_dock", None) is not None:
             self.malware_panel.shutdown()
+        if getattr(self, "l2_dock", None) is not None:
+            self.l2_panel.shutdown()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()

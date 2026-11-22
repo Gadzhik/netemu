@@ -155,8 +155,13 @@ class Switch(Router):
     # -- forwarding ------------------------------------------------------------
     def receive(self, frame: EthernetFrame, port: Port) -> None:
         from .stp import BPDU_MAC
-        if frame.dst == BPDU_MAC and self.stp.enabled:
-            return                                     # BPDUs are consumed by the STP process
+        if frame.dst == BPDU_MAC:
+            from ..security.l2attack import bpdu_guard_trips, on_bpdu
+            if bpdu_guard_trips(self, port):
+                return                                 # BPDU Guard / Root Guard
+            on_bpdu(self, frame, port)                 # a superior BPDU from an end port: STP root takeover
+            if self.stp.enabled:
+                return                                 # BPDUs are consumed by the STP process
         if frame.ethertype == "LACP":
             return                                     # LACP/PAgP negotiation frames stop here
         if port.dot1x and not port.dot1x_ok:              # 802.1X: only EAPOL until authorized
@@ -182,6 +187,11 @@ class Switch(Router):
         if vlan is None or vlan not in self.vlans:
             port.drops += 1
             return
+        from ..packets import ETH_ARP
+        if frame.ethertype == ETH_ARP:
+            from ..security.l2attack import dai_blocks
+            if dai_blocks(self, frame.payload, port, vlan):
+                return
         if port.psec is not None and not self._port_security(frame, port):
             return
         if self.dhcp_snooping["enabled"] and not self._dhcp_snoop(frame, port, vlan):
@@ -293,6 +303,8 @@ class Switch(Router):
                 p.send(frame)
 
     def lookup(self, mac: MacAddress, vlan: int = 1) -> MacEntry | None:
+        if getattr(self, "cam_overflow", False):
+            return None                                # table full: fail-open, flood everywhere
         e = self.mac_table.get((vlan, mac))
         if e and self.engine.now - e.learned_at > self.aging:
             del self.mac_table[(vlan, mac)]
@@ -330,6 +342,8 @@ class Switch(Router):
             cfg["vlan_filtering"] = self.vlan_filtering
             if self.bridge_vlans:
                 cfg["bridge_vlans"] = [dict(e) for e in self.bridge_vlans]
+        from ..security import l2attack
+        l2attack.to_config(self, cfg)
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -345,6 +359,8 @@ class Switch(Router):
                               "option82": ds.get("option82", True)}
         from ..addresses import IPv4Address
         self.default_gateway = IPv4Address(cfg["default_gateway"]) if cfg.get("default_gateway") else None
+        from ..security import l2attack
+        l2attack.apply_config(self, cfg)
         super().apply_config(cfg)
 
     def clear_mac_table(self) -> None:

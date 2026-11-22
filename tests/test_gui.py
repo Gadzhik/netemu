@@ -443,7 +443,7 @@ def test_help_window_shows_guide_and_vendor_pages(qtbot, win, monkeypatch):
     win.act_help.trigger()
     h = win._help
     assert h.isVisible() and "NetEmu" in h.text()
-    assert h.topics.count() == 9
+    assert h.topics.count() == 10
     h.show_topic("mikrotik")
     assert "/ip route add" in h.text() and "/interface disable" in h.text()
     from PySide6.QtCore import QUrl

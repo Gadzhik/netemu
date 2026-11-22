@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "d95e7020f374",
+   "id": "05f82cc39568",
    "model": "cisco-2911",
    "name": "ISP-R",
    "x": 400,
@@ -34,7 +34,7 @@
    "startup": null
   },
   {
-   "id": "7654117f74e2",
+   "id": "c50b17597a68",
    "model": "cisco-2960",
    "name": "CUST-SW",
    "x": 160,
@@ -179,7 +179,7 @@
    "startup": null
   },
   {
-   "id": "80096c0cd701",
+   "id": "d693ad6058f7",
    "model": "botnet",
    "name": "INFECTED",
    "x": 80,
@@ -216,7 +216,7 @@
    "startup": null
   },
   {
-   "id": "324b639e5e11",
+   "id": "27467c54ad89",
    "model": "pc",
    "name": "CUST-PC",
    "x": 260,
@@ -240,7 +240,7 @@
    "startup": null
   },
   {
-   "id": "5613a9742551",
+   "id": "7376ba495453",
    "model": "server",
    "name": "VICTIM",
    "x": 660,
@@ -311,41 +311,41 @@
  "links": [
   {
    "a": [
-    "d95e7020f374",
+    "05f82cc39568",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "7654117f74e2",
+    "c50b17597a68",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "80096c0cd701",
+    "d693ad6058f7",
     "FastEthernet0"
    ],
    "b": [
-    "7654117f74e2",
+    "c50b17597a68",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "324b639e5e11",
+    "27467c54ad89",
     "FastEthernet0"
    ],
    "b": [
-    "7654117f74e2",
+    "c50b17597a68",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "5613a9742551",
+    "7376ba495453",
     "FastEthernet0"
    ],
    "b": [
-    "d95e7020f374",
+    "05f82cc39568",
     "GigabitEthernet0/1"
    ]
   }

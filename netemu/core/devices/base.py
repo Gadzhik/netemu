@@ -228,6 +228,9 @@ class Device:
             d["port_security"] = ps
         if p.dhcp_trust:
             d["dhcp_trust"] = True
+        for flag in ("arp_trust", "bpduguard", "rootguard"):
+            if getattr(p, flag, False):
+                d[flag] = True
         if p.voice_vlan is not None:
             d["voice_vlan"] = p.voice_vlan
         if p.vrf:
@@ -328,6 +331,9 @@ class Device:
                 p.channel_mode = icfg.get("channel_mode")
             p.psec = dict(icfg["port_security"]) if icfg.get("port_security") is not None else None
             p.dhcp_trust = bool(icfg.get("dhcp_trust"))
+            p.arp_trust = bool(icfg.get("arp_trust"))
+            p.bpduguard = bool(icfg.get("bpduguard"))
+            p.rootguard = bool(icfg.get("rootguard"))
             p.qos_in, p.qos_out = icfg.get("qos_in"), icfg.get("qos_out")
             p.voice_vlan = icfg.get("voice_vlan")
             p.eigrp_bw, p.eigrp_delay = icfg.get("bandwidth"), icfg.get("delay")

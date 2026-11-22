@@ -181,7 +181,8 @@ class LabEditor(QDialog):
                          "channel <коммутатор> <Po> [портов], psec <коммутатор> <порт>, phone <телефон>, "
                          "ospf6 <устройство> <соседей>, http <устройство> <URL>, available <устройство> <URL> "
                          "[процент], ddos <устройство> <Мбит/с>, clean <устройство>, immune <устройство> <семейство>, "
-                         "outbreak <нулевой пациент> <семейство> <устройства через запятую>, c2blocked <устройство>."))
+                         "outbreak <нулевой пациент> <семейство> <устройства через запятую>, c2blocked <устройство>, "
+                         "mitm <атакующий> [макс]."))
         hint.setWordWrap(True)
         v.addWidget(hint)
         self.checks = QPlainTextEdit("\n".join(c.line() for c in lab.checks))

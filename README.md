@@ -42,8 +42,12 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     tab, `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`, `wbadmin`, `ufw`, ClamAV) and in the network
     (segmentation, Cisco IOS IPS, egress filtering, DNS sinkhole); an infection monitor
     ([guide](docs/en/malware.md));
-  - 11 new labs (20–30): six on DDoS and five on malware; new lab checks `available`, `ddos`, `clean`,
-    `immune`, `outbreak`, `c2blocked`.
+  - LAN (layer-2) attacks from a LAN attacker device, with real frames: ARP spoofing (MITM), MAC flooding
+    and STP root takeover; switch defences — Dynamic ARP Inspection (`ip arp inspection`, `ip source
+    binding`), port security, DHCP snooping, BPDU Guard and Root Guard; a LAN-attack monitor
+    ([guide](docs/en/l2.md));
+  - 14 new labs (20–33): six on DDoS, five on malware and three on L2 attacks; new lab checks `available`,
+    `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **New in 0.4**:
   - routing and MPLS: EIGRP (DUAL, feasible successors) and IS-IS, both also for IPv6; MPLS with LDP;
     MPLS L3VPN (VRFs with RD/route targets, MP-BGP VPNv4, two-label forwarding); MPLS traffic engineering

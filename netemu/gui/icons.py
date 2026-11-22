@@ -104,6 +104,13 @@ def classic_svg(kind: str, color: str) -> str:
         body = (f'{nodes}{bots}<circle cx="32" cy="32" r="11" fill="{color}"/>'
                 f'<path d="M27 29h3M34 29h3M27 36q5 3 10 0" stroke="{W}" stroke-width="2.2" fill="none" '
                 f'stroke-linecap="round"/>')
+    elif kind == "attacker":                      # a hooded intruder over a laptop
+        body = (f'<rect x="16" y="44" width="32" height="12" rx="2" fill="{dark}"/>'
+                f'<rect x="19" y="47" width="26" height="6" rx="1" fill="{lite}"/>'
+                f'<path d="M22 40c0-10 6-18 10-18s10 8 10 18z" fill="{color}"/>'
+                f'<path d="M22 40c0-10 6-18 10-18s10 8 10 18z" fill="none" stroke="{dark}" stroke-width="1.6"/>'
+                f'<ellipse cx="32" cy="33" rx="7" ry="5" fill="{dark}"/>'
+                f'<circle cx="29" cy="33" r="1.6" fill="#ff5252"/><circle cx="35" cy="33" r="1.6" fill="#ff5252"/>')
     elif kind == "iot":
         body = (f'<circle cx="32" cy="34" r="14" fill="{color}"/><circle cx="32" cy="34" r="5" fill="{W}"/>'
                 f'<path d="M20 16a17 17 0 0 1 24 0M24 21a11 11 0 0 1 16 0" fill="none" stroke="{dark}" '

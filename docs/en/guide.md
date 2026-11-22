@@ -13,6 +13,7 @@ Help topics:
 - [PC and server](pc.md)
 - [DDoS attacks and defence](ddos.md)
 - [Malware: infection and defence](malware.md)
+- [L2 attacks and switch defences](l2.md)
 
 ## Quick start
 
@@ -158,6 +159,9 @@ A project file can contain a lab: a task and its checks. When such a file is ope
 | Malware: an IoT botnet and factory passwords | Telnet, passwords, memory-resident malware |
 | Malware: ransomware and backups | cleaning, closing the hole, restoring |
 | Malware: the command-and-control server and the kill switch | blocking the C2, the kill switch |
+| L2: ARP spoofing and DAI | intercepting traffic through ARP, Dynamic ARP Inspection |
+| L2: MAC flooding and port security | CAM overflow, eavesdropping |
+| L2: STP root takeover and BPDU Guard | hijacking the tree root |
 
 Every lab is verified when it is built: before the solution the checks fail, after it they all pass.
 
@@ -243,6 +247,10 @@ The **Botnet** device (palette group Attacks (DDoS)) launches attacks of differe
 ## Malware
 
 Any PC, server or IoT device can be infected with training malware (Security tab): an SMB worm, a ransomware worm, an IoT botnet or a trojan. A worm sends exploit packets across the network, and ACLs, VLANs, NAT, firewalls and IPS act on them. Host defences: updates, an antivirus with current signatures, turning services off, the host firewall, backups. Tools → Network infection (`Ctrl+Shift+V`) shows who is infected and by whom. Theory, commands and labs: [Malware](malware.md).
+
+## L2 attacks and switch defences
+
+The "LAN attacker" device (palette group Attacks) runs data-link attacks with real frames: ARP spoofing (MITM), MAC flooding and STP root takeover. The defences are configured on the switch: Dynamic ARP Inspection, port security, DHCP snooping, BPDU Guard and Root Guard. Tools → LAN attacks (`Ctrl+Shift+L`) shows the interception and the defences that fired. Theory, commands and labs: [L2 attacks and switch defences](l2.md).
 
 ## Packet analyzer
 

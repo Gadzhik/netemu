@@ -34,10 +34,11 @@ from ipaddress import ip_address, ip_network
 
 CHECK_TYPES = ("ping", "noping", "route", "ospf", "hostname", "vlan", "ip", "dhcp", "nat", "ssh", "stproot", "fhrp",
                "wifi", "access", "bgp", "channel", "psec", "phone", "ospf6", "http", "available", "ddos",
-               "clean", "immune", "outbreak", "c2blocked")
+               "clean", "immune", "outbreak", "c2blocked", "mitm", "stproot")
 NEED = {"ping": 2, "noping": 2, "route": 2, "ospf": 2, "hostname": 2, "vlan": 2, "ip": 2, "dhcp": 1, "nat": 1,
         "ssh": 1, "stproot": 1, "fhrp": 2, "wifi": 1, "access": 3, "bgp": 2, "channel": 2, "psec": 2, "phone": 1,
-        "ospf6": 2, "http": 2, "available": 2, "ddos": 2, "clean": 1, "immune": 2, "outbreak": 3, "c2blocked": 1}
+        "ospf6": 2, "http": 2, "available": 2, "ddos": 2, "clean": 1, "immune": 2, "outbreak": 3, "c2blocked": 1,
+        "mitm": 1}
 
 
 # ------------------------------------------------------------------------------------ crypto
@@ -351,6 +352,11 @@ def run_check(topology, c: Check) -> tuple[bool, str]:
             return ok, f"attack traffic at {dev.name}: {human_bps(got)}" + ("" if ok else f" (> {a[1]} Mbit/s)")
         if k in ("clean", "immune", "outbreak", "c2blocked"):
             return _malware_check(topology, k, dev, a)
+        if k == "mitm":                                  # mitm <attacker> [max]: at most N frames intercepted
+            from .security import l2attack as _l2
+            got = _l2.intercepted_by(topology, dev.name)
+            cap = int(a[1]) if len(a) > 1 else 0
+            return got <= cap, f"{dev.name} intercepted {got} frame(s)"
         if k == "access":
             p = dev.get_port(a[1])
             if p is None:
@@ -516,6 +522,8 @@ def _host_settings(dev, text: str) -> str:
                 prot.setdefault("flowspec", []).append(" ".join(w[3:]))
         elif w[0] == "sec":                                 # malware training: @sec patch MS17-010 | avupdate ...
             _sec_directive(dev, w[1:])
+        elif w[0] == "l2":                                  # LAN attacker: @l2 start | stop
+            (dev.start if (len(w) < 2 or w[1] == "start") else dev.stop)()
         elif w[0] == "attack":                              # botnet: @attack start | stop
             (dev.start if w[1] == "start" else dev.stop)()
     return ""

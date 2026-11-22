@@ -67,6 +67,9 @@ class Port:
     psec: dict | None = None               # port security: {max, violation, sticky, macs, violations}
     err_disabled: bool = False             # shut down by a port-security violation
     dhcp_trust: bool = False               # DHCP snooping trusted port
+    arp_trust: bool = False                # Dynamic ARP Inspection trusted port
+    bpduguard: bool = False                # STP BPDU Guard on this interface
+    rootguard: bool = False                # STP Root Guard on this interface
     is_wireless: bool = False              # radio port / Wi-Fi NIC: never cabled by hand
     dot1x: bool = False                    # authentication port-control auto (802.1X authenticator)
     dot1x_ok: bool = False                 # runtime: supplicant authorized
