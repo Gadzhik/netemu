@@ -138,7 +138,14 @@ class AsaSession(TreeSession):
         pmap_c = [end, P.kw("exit", "Exit", handler=lambda s, a, n: s.set_mode("config-pmap")),
                   P.kw("inspect", "Protocol inspection", P.arg(P.WordArg("icmp|dns|ftp|http|..."), "Protocol",
                        handler=lambda s, a, n: s.flag("inspect_icmp", not n) if a[0].lower() == "icmp" else None,
-                       negatable=True), negatable=True)]
+                       negatable=True), negatable=True),
+                  P.kw("set", "Set connection values", P.kw("connection", "Configure connection values",
+                       P.kw("embryonic-conn-max", "Maximum number of embryonic connections",
+                            P.arg(P.NumArg(0, 2000000, "<0-2000000>"), "Max embryonic connections",
+                                  handler=lambda s, a, n: s.flag("syn_protect", not n), negatable=True)),
+                       P.kw("conn-max", "Maximum number of connections",
+                            P.arg(P.NumArg(0, 2000000, "<0-2000000>"), "Max connections",
+                                  handler=lambda s, a, n: None)), negatable=True), negatable=True)]
         srt = lambda lst: sorted(lst, key=lambda x: x.word or "")
         self._trees = {"user": srt(user), "priv": srt(priv), "config": srt(config), "config-if": srt(cif),
                        "config-network-object": srt(obj), "config-pmap": srt(pmap), "config-pmap-c": srt(pmap_c)}
@@ -440,7 +447,11 @@ class AsaSession(TreeSession):
             port = d.route_lookup(s.next_hop)
             ifn = names.get(port[0].name) if port else "?"
             lines.append(f"route {ifn} {s.network.network_address} {s.network.netmask} {s.next_hop} {s.distance}")
-        if a.get("inspect_icmp"):
-            lines += ["policy-map global_policy", " class inspection_default", "  inspect icmp"]
+        if a.get("inspect_icmp") or a.get("syn_protect"):
+            lines += ["policy-map global_policy", " class inspection_default"]
+            if a.get("inspect_icmp"):
+                lines.append("  inspect icmp")
+            if a.get("syn_protect"):
+                lines.append("  set connection embryonic-conn-max 1000")
         lines += ["service-policy global_policy global", ": end"]
         return "\n".join(lines)

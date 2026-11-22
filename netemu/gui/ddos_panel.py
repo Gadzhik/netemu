@@ -438,14 +438,19 @@ class LoadMonitor(QWidget):
             if parts:
                 lines.append(f"{d.name}: " + ", ".join(parts))
         if m is not None:
+            from ..core.security.ddos import firewall_syn_protected
             for d in topo.devices.values():
-                if d.category not in ("router", "switch") or not getattr(d, "pps_limit", None):
-                    continue
-                pps = m.device_pps(d)
-                if pps:
+                if getattr(d, "pps_limit", None) and m.device_pps(d):
+                    pps = m.device_pps(d)
                     over = pps > d.pps_limit
                     lines.append(tr("{dev}: пересылка {pps} из {cap}", dev=d.name, pps=human_pps(pps),
                                     cap=human_pps(d.pps_limit)) + (" ⚠" if over else ""))
+                cap = getattr(d, "conn_max", None)
+                syn = m.received(d).get("syn", (0, 0, 0, 0))[1] if cap else 0
+                if cap and syn:
+                    over = syn > cap and not firewall_syn_protected(d)
+                    lines.append(tr("{dev}: полуоткрытых соединений {syn} из {cap}", dev=d.name,
+                                    syn=human_pps(syn).replace("pps", "").strip(), cap=cap) + (" ⚠" if over else ""))
         self.servers.setPlainText("\n".join(lines) or tr("Серверы работают в штатном режиме."))
         running = sum(1 for d in topo.devices.values() for a in getattr(d, "attacks", []) if a.running)
         drops = m.drops if m is not None else 0

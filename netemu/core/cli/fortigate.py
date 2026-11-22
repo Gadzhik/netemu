@@ -15,7 +15,7 @@ from ..addresses import make_interface, mask_to_prefix
 from .base import CliSession, make_ping
 
 TABLES = ("system global", "system interface", "router static", "firewall address", "firewall policy",
-          "ips sensor")
+          "ips sensor", "firewall DoS-policy")
 SERVICES = {"ALL": "any", "HTTP": "http", "HTTPS": "https", "SSH": "ssh", "DNS": "dns", "PING": "icmp",
             "ALL_ICMP": "icmp", "TELNET": "telnet"}
 
@@ -29,7 +29,7 @@ class FortiSession(CliSession):
 
     @property
     def fo(self) -> dict:
-        return self.device.extra.setdefault("forti", {"interface": {}, "static": {}, "address": {}, "policy": {}, "ips": {}})
+        return self.device.extra.setdefault("forti", {"interface": {}, "static": {}, "address": {}, "policy": {}, "ips": {}, "dos": {}})
 
     @property
     def prompt(self) -> str:
@@ -129,7 +129,7 @@ class FortiSession(CliSession):
 
     def _in_table(self, cmd, args):
         tkey = {"system interface": "interface", "router static": "static", "firewall address": "address",
-                "firewall policy": "policy", "ips sensor": "ips"}[self.table]
+                "firewall policy": "policy", "ips sensor": "ips", "firewall DoS-policy": "dos"}[self.table]
         t = self.fo[tkey]
         if cmd == "edit" and args:
             name = args[0]
@@ -212,7 +212,7 @@ class FortiSession(CliSession):
             self.work = None
             return
         key = {"system interface": "interface", "router static": "static", "firewall address": "address",
-               "firewall policy": "policy", "ips sensor": "ips"}[self.table]
+               "firewall policy": "policy", "ips sensor": "ips", "firewall DoS-policy": "dos"}[self.table]
         self.fo[key][self.entry] = self.work
         self.entry, self.work = None, None
         self._apply()
@@ -284,6 +284,7 @@ class FortiSession(CliSession):
                               "drops": (d.extra.get("ips") or {}).get("drops", 0)}
         else:
             d.extra.pop("ips", None)
+        fo["syn_protect"] = any(e.get("status", "enable") != "disable" for e in fo.get("dos", {}).values())
         if nat_rules:
             d.nat_engine().cfg = NatConfig(sorted(inside), sorted(outside), nat_rules, {})
         elif d.nat is not None:
@@ -299,7 +300,7 @@ class FortiSession(CliSession):
         if path == "system global":
             return f'config system global\n    set hostname "{self.device.hostname}"\nend'
         key = {"system interface": "interface", "router static": "static", "firewall address": "address",
-               "firewall policy": "policy", "ips sensor": "ips"}[path]
+               "firewall policy": "policy", "ips sensor": "ips", "firewall DoS-policy": "dos"}[path]
         out = [f"config {path}"]
         for name, e in self.fo[key].items():
             out.append(f'    edit "{name}"' if not name.isdigit() else f"    edit {name}")

@@ -184,6 +184,7 @@ class Device:
     # -- configuration -----------------------------------------------------
     location: str = ""                       # "Building / Floor / Rack" (physical view)
     pps_limit = None                         # forwarding capacity (packets/s) for DDoS; None = unlimited
+    conn_max = None                          # stateful firewall connection/session table size (SYN flood)
 
     def to_config(self) -> dict[str, Any]:
         """Vendor-neutral configuration state (used for save/load)."""

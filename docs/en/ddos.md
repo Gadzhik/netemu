@@ -179,7 +179,8 @@ In NetEmu the Internet cloud hosts customers' domains: Provider protection tab â
 ### 8. SYN flood defences
 
 - **SYN cookies.** The server keeps no half-open connection: it encodes the connection's parameters in the initial sequence number of the SYN-ACK and creates state only when the client returns the ACK. Linux: `sysctl -w net.ipv4.tcp_syncookies=1` (the same on a Linux server in NetEmu); the "SYN cookies" box on a server's Services tab. MikroTik: `/ip settings set tcp-syncookies=yes`.
-- **TCP intercept / SYN proxy.** A router or firewall in front of the server answers the SYNs itself and lets through only connections whose client sent the ACK. Cisco: `access-list 120 permit tcp any host 203.0.113.2 eq 80` and `ip tcp intercept list 120`; on an ASA, `set connection embryonic-conn-max`.
+- **TCP intercept / SYN proxy.** A router or firewall in front of the server answers the SYNs itself and lets through only connections whose client sent the ACK. Cisco: `access-list 120 permit tcp any host 203.0.113.2 eq 80` and `ip tcp intercept list 120`.
+- **The firewall's connection table.** A stateful firewall (Cisco ASA, FortiGate) has a finite connection table. A SYN flood fills it with half-open sessions and the firewall stops passing new connections: all traffic through it suffers. Defence: limit the half-open connections and turn on SYN cookies/proxy. ASA: in `policy-map global_policy` / `class inspection_default`, `set connection embryonic-conn-max 1000`. FortiGate: an anomaly-protection policy, `config firewall DoS-policy` with `tcp_syn_flood`. In NetEmu the ASA and FortiGate have a table size (`conn_max`) and their overload is shown in Load and DDoS.
 - A bigger backlog and shorter timeouts help only against weak attacks.
 
 ### 9. Application-layer defences
@@ -248,5 +249,5 @@ Solution scripts have directives for servers, the cloud and botnets:
 
 - An attack is an aggregated flow in one-second steps. Its individual packets are not simulated; only the probes are visible.
 - A router or switch can be given a forwarding capacity in packets/s (`pps_limit`). A small-packet flood (SYN, 64-byte UDP) produces many packets at a low volume and overwhelms the device by packets/s even when the link is not full, and then legitimate traffic is lost too. No limit is set by default. The device's load is shown in Load and DDoS.
-- ASA and FortiGate filter the flow by their rules, but their connection tables do not overflow.
+- ASA and FortiGate filter the flow by their rules; under a SYN flood above the connection-table size (`conn_max`) the firewall is overwhelmed until the defence is configured (ASA `set connection embryonic-conn-max`, a FortiGate DoS policy).
 - L7 protection is simplified: the JS challenge filters out every bot, and limits apply to the rate of one bot.

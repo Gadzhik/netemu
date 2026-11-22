@@ -1,7 +1,7 @@
 """DDoS training: flows, saturation, server resources, reflection and every mitigation."""
 from ipaddress import IPv4Address
 
-from cli_helpers import run_all
+from cli_helpers import run, run_all
 from netemu.core.persistence import topology_from_dict, topology_to_dict
 from netemu.core.security.ddos import Attack, guard, monitor
 from netemu.core.topology import Topology
@@ -345,3 +345,44 @@ def test_router_packets_per_second_capacity():
     edge.pps_limit = None
     t.engine.run(max_time=2000)
     assert availability(t, client, "http://203.0.113.130") >= 0.8
+
+
+def test_firewall_connection_table_syn_flood():
+    """A SYN flood overflows a stateful firewall's connection table (ASA/FortiGate) until SYN-flood
+    protection is configured."""
+    from netemu.core.security.ddos import firewall_syn_protected
+    t = Topology()
+    inet = t.add_device("internet", "ISP")
+    fw = t.add_device("cisco-asa5506", "FW")
+    sw = t.add_device("cisco-2960", "SW")
+    bot = t.add_device("botnet", "B")
+    t.connect(fw.get_port("Gi1/1"), inet.get_port("ISP0"))
+    t.connect(fw.get_port("Gi1/2"), sw.get_port("Gi0/1"))
+    t.connect(bot.nic, inet.get_port("ISP3"))
+    assert fw.conn_max == 15000
+    run_all(fw.create_cli(), "enable\nconfigure terminal\ninterface Gi1/1\nnameif outside\nsecurity-level 0\n"
+                             "ip address 203.0.113.2 255.255.255.252\nno shutdown\nend")
+    bot.set_ip("203.0.113.14", "255.255.255.252")
+    bot.set_gateway("203.0.113.13")
+    bot.attacks = [Attack("syn", "203.0.113.2", 80, bots=400, rate=100, spoof=True, running=True)]  # 40 kpps
+    bot.start()
+    t.engine.run(max_time=3000)
+    m = monitor(t)
+    assert m.received(fw).get("syn", (0, 0, 0, 0))[1] > 15000       # SYN pps over the table size
+    assert not firewall_syn_protected(fw) and m.device_overloaded(fw)
+    run_all(fw.create_cli(), "enable\nconfigure terminal\npolicy-map global_policy\nclass inspection_default\n"
+                             "set connection embryonic-conn-max 1000\nend")
+    assert firewall_syn_protected(fw)
+    t.engine.run(max_time=2000)
+    assert not m.device_overloaded(fw)                             # protected: the table no longer overflows
+    cfg = run(fw.create_cli(), "show running-config")
+    assert "set connection embryonic-conn-max" in cfg
+    t2 = topology_from_dict(topology_to_dict(t), Topology())
+    assert firewall_syn_protected(t2.devices[fw.id]) and t2.devices[fw.id].conn_max == 15000
+
+    # FortiGate: the same vulnerability, defended by a DoS policy
+    fgt = Topology().add_device("fortigate-60f", "FGT")
+    assert fgt.conn_max == 30000 and not firewall_syn_protected(fgt)
+    run_all(fgt.create_cli(), "config firewall DoS-policy\nedit 1\nset srcintf port1\nset status enable\n"
+                              "set comment tcp_syn_flood\nnext\nend")
+    assert firewall_syn_protected(fgt)

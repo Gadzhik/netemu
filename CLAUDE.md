@@ -222,7 +222,9 @@ python -m venv .venv
    `gui/l2attack_panel.py`; check `mitm`, directive `@l2`; labs 31-33; docs `docs/*/l2.md` (topic "l2").
 9. **0.5.0, SIEM** (item 4): `core/siem.py` aggregates the DDoS/malware/L2 monitors + device syslog buffers
    into `alerts()`/`events()`; `gui/siem_panel.py` (Tools → Monitoring, Ctrl+Shift+M); lab 35; docs
-   `docs/*/siem.md` (help topic "siem"). Also: router/switch `pps_limit` (DDoS by packets/s).
+   `docs/*/siem.md` (help topic "siem"). Also: router/switch `pps_limit` (DDoS by packets/s); ASA/FortiGate
+    `conn_max` connection table overflows under a SYN flood (`ddos.firewall_syn_protected`): ASA
+    `set connection embryonic-conn-max`, FortiGate `config firewall DoS-policy`.
 10. **0.5.0, attack-and-defend class** (item 5): `TeacherClass.set_attacks()` broadcasts start/stop to every
     student; the student applies it with `siem.set_all_attacks()` and reports its SIEM alert count back;
     `Roster.alerts()`/`Student.status`, RosterPanel status column + attack buttons.

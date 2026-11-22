@@ -260,6 +260,7 @@ EN: dict[str, str] = {
     "Браузер": "Web Browser",
     "Службы": "Services",
     "Служба включена": "Service on",
+    "{dev}: полуоткрытых соединений {syn} из {cap}": "{dev}: half-open connections {syn} of {cap}",
     "Запустить атаки": "Start attacks",
     "Остановить атаки": "Stop attacks",
     "Преподаватель запустил атаки ({n}). Защитите сеть!": "The teacher started the attacks ({n}). Defend the network!",

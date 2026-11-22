@@ -171,6 +171,10 @@ def create_device(engine, model_key: str, name: str, device_id: str | None = Non
     dev.vendor = m.vendor
     dev.model = m.title
     dev.dialect = m.dialect
+    if m.dialect == "asa":
+        dev.conn_max = 15000             # ASA 5506-X connection table (embryonic), for SYN-flood training
+    elif m.dialect == "fortios":
+        dev.conn_max = 30000             # FortiGate 60F session table
     if m.category in ("router", "switch"):
         dev.hostname = m.hostname
         dev.default_hostname = m.hostname

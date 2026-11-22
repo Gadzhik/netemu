@@ -222,11 +222,16 @@ class DdosMonitor:
         return sum(v[1] for v in self.received(dev).values())
 
     def device_overloaded(self, dev) -> bool:
-        """A router/switch whose forwarding capacity (packets/s) the attack exceeds drops legitimate frames."""
+        """A device drops legitimate frames when an attack exceeds its capacity: a router/switch by
+        forwarding rate (packets/s), or a stateful firewall by its connection table (SYN flood)."""
+        ratio = 0.0
         limit = getattr(dev, "pps_limit", None)
-        if not limit:
-            return False
-        ratio = self.device_pps(dev) / float(limit)
+        if limit:
+            ratio = self.device_pps(dev) / float(limit)
+        conn_max = getattr(dev, "conn_max", None)
+        if conn_max and not firewall_syn_protected(dev):
+            syn_pps = self.received(dev).get("syn", (0, 0, 0, 0))[1]   # half-open sessions ≈ SYN packets/s
+            ratio = max(ratio, syn_pps / float(conn_max))
         if ratio <= 1.0:
             return False
         if self.rng.random() < min(0.97, 1.0 - 1.0 / ratio):
@@ -260,6 +265,13 @@ def capacity_bps(port) -> float:
             return BACKBONE_KBPS
         return port_bandwidth(p)
     return float(min(bw(port), bw(getattr(port, "peer", None)))) * 1000.0
+
+
+def firewall_syn_protected(dev) -> bool:
+    """A stateful firewall has SYN-flood protection configured (ASA embryonic-conn-max, FortiGate DoS policy)."""
+    ex = getattr(dev, "extra", {}) or {}
+    return bool((ex.get("asa") or {}).get("syn_protect") or (ex.get("forti") or {}).get("syn_protect")
+                or ex.get("syn_protect"))
 
 
 def monitor(topology) -> DdosMonitor:
