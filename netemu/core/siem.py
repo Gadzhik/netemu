@@ -109,19 +109,20 @@ def alerts(topology) -> list[Alert]:
             out.append(Alert("ids", 4, "network", tr("IPS отбросил вредоносные пакеты: {n}.", n=st["ips"]),
                              tr("IPS работает; проверьте, не осталось ли заражённых узлов.")))
 
-    # -- L2 -------------------------------------------------------------------------------------
+    # -- L2 (gated on currently running attacks so the alert clears when the attack stops) --------
     if l2 is not None:
         st = l2.stats
-        if st.get("poisoned", 0) > 0:
+        running = {a.kind for d in l2.attackers() for a in getattr(d, "l2attacks", []) if a.running}
+        if "arp-spoof" in running:
             sev = 2 if st.get("intercepted", 0) > 0 else 3
             out.append(Alert("arp-spoof", sev, "network",
-                             tr("Подмена ARP: отравлено {p}, перехвачено кадров {i}.", p=st["poisoned"],
+                             tr("Подмена ARP: отравлено {p}, перехвачено кадров {i}.", p=st.get("poisoned", 0),
                                 i=st.get("intercepted", 0)),
                              tr("Включите Dynamic ARP Inspection на коммутаторе.")))
-        if st.get("cam_flood", 0) > 0:
+        if "mac-flood" in running:
             out.append(Alert("mac-flood", 2, "network", tr("Переполнение MAC-таблицы коммутатора."),
                              tr("Включите port security на портах доступа.")))
-        if st.get("bpdu_blocked", 0) == 0 and _stp_hijacked(topology):
+        if ("stp-root" in running or st.get("bpdu_blocked", 0) == 0) and _stp_hijacked(topology):
             out.append(Alert("stp", 2, "network", tr("Захват корня STP чужим устройством."),
                              tr("Включите BPDU Guard / Root Guard на портах к устройствам.")))
         if st.get("dai_drops", 0) > 0:
@@ -148,3 +149,18 @@ def alert_counts(topology) -> dict:
     for al in alerts(topology):
         c[al.severity] = c.get(al.severity, 0) + 1
     return c
+
+
+# ---------------------------------------------------------------------------------- attack-and-defend control
+def set_all_attacks(topology, on: bool) -> int:
+    """Start or stop every live attack in the topology (botnets and LAN attackers).  Returns how many."""
+    n = 0
+    for d in topology.devices.values():
+        if d.category == "attack" and hasattr(d, "start"):
+            (d.start if on else d.stop)()
+            n += 1
+    return n
+
+
+def has_attackers(topology) -> bool:
+    return any(d.category == "attack" for d in topology.devices.values())

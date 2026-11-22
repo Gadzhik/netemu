@@ -1006,3 +1006,44 @@ def test_security_tab_and_infection_monitor(win):
     sec.reinstall()
     assert pcs[0].infection is None
     d.close()
+
+
+def test_classroom_roster_status_column():
+    """The attack-and-defend roster shows each student's live status (data-model only, no sockets)."""
+    from netemu.gui.classroom import RosterPanel, TeacherClass
+    teacher = TeacherClass({}, "Defend the LAN")
+    teacher.roster.join("Petrov")
+    teacher.roster.alerts("Petrov", 2, 1)              # under attack (a critical alert)
+    teacher.roster.join("Sidorov")
+    teacher.roster.alerts("Sidorov", 0, 0)             # defended
+    panel = RosterPanel(teacher)
+    panel.refresh()
+    rows = {panel.table.item(i, 0).text(): panel.table.item(i, 1).text() for i in range(panel.table.rowCount())}
+    assert rows["Petrov"] == "под атакой" and rows["Sidorov"] == "чисто"
+    teacher.stop()
+
+
+def test_classroom_attack_and_defend_wiring(monkeypatch):
+    """The teacher's start/stop-attacks command is broadcast to named students; core set_all_attacks
+    toggles the attack devices.  (No sockets/windows: those crash the suite on Windows+Qt.)"""
+    from netemu.gui import classroom
+    from netemu.gui.classroom import TeacherClass
+    from netemu.core.siem import set_all_attacks
+    from netemu.core.security.l2attack import L2Attack
+    from netemu.core.topology import Topology
+    sent = []
+    monkeypatch.setattr(classroom, "_send", lambda sock, obj: sent.append((sock, obj)))
+    teacher = TeacherClass({}, "Defend the LAN")
+    teacher.clients = {"s1": {"name": "Petrov", "buf": b""}, "s2": {"name": None, "buf": b""}}
+    teacher.set_attacks(True)
+    assert sent == [("s1", {"attacks": True})]         # only the joined student, not the unnamed socket
+    sent.clear()
+    teacher.set_attacks(False)
+    assert sent == [("s1", {"attacks": False})]
+    teacher.stop = lambda: None                        # no real server to stop
+    # core: starting/stopping attacks toggles every attack device
+    t = Topology()
+    atk = t.add_device("lan-attacker", "ATK")
+    atk.l2attacks = [L2Attack("arp-spoof", gateway="10.0.0.1")]
+    assert set_all_attacks(t, True) == 1 and atk.l2attacks[0].running
+    assert set_all_attacks(t, False) == 1 and not atk.l2attacks[0].running

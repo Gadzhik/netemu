@@ -49,6 +49,8 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     ([guide](docs/en/l2.md));
   - a SIEM (Tools → Monitoring): one pane of glass that correlates events from every device and the DDoS,
     malware and L2 monitors into ranked alerts with advice ([guide](docs/en/siem.md));
+  - attack-and-defend classroom mode: the teacher launches attack waves on every student's network at once
+    and the roster shows each student's live status (under attack / alert / clear) from their SIEM;
   - 16 new labs (20–35): six on DDoS, six on malware, three on L2 attacks and a SIEM find-the-attack lab;
     new lab checks `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **New in 0.4**:

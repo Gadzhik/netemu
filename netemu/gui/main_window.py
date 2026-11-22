@@ -274,6 +274,7 @@ class MainWindow(QMainWindow):
         for a in (self.act_class_join, self.act_class_leave):
             m.addAction(a)
         self.teacher_class = self.student_class = None
+        self._class_alert_timer = None
         self.roster_dock = None
 
         m = mb.addMenu(tr("&Совместная работа"))
@@ -865,8 +866,32 @@ class MainWindow(QMainWindow):
         s.status.connect(lambda st: self.statusBar().showMessage(
             {"joined": tr("Вы в классе: {name}", name=s.name), "lost": tr("Связь с классом потеряна"),
              "error": tr("Не удалось подключиться к классу")}.get(st, st), 8000))
+        s.attacksToggled.connect(self._class_attacks)
         s.join(address, port or CLASS_PORT, (pin or "").strip())
         self.student_class = s
+        if self._class_alert_timer is None:
+            from PySide6.QtCore import QTimer
+            self._class_alert_timer = QTimer(self)
+            self._class_alert_timer.timeout.connect(self._class_report_alerts)
+        self._class_alert_timer.start(2000)
+
+    def _class_attacks(self, on: bool) -> None:
+        from ..core.siem import set_all_attacks
+        n = set_all_attacks(self.topology, on)
+        self.statusBar().showMessage(
+            tr("Преподаватель запустил атаки ({n}). Защитите сеть!", n=n) if on
+            else tr("Преподаватель остановил атаки."), 8000)
+
+    def _class_report_alerts(self) -> None:
+        if self.student_class is None:
+            return
+        from ..core import siem
+        try:
+            counts = siem.alert_counts(self.topology)
+        except Exception:
+            return
+        actionable = counts.get(1, 0) + counts.get(2, 0) + counts.get(3, 0)   # ignore sev-4 "working" info
+        self.student_class.report_alerts(actionable, counts.get(1, 0) + counts.get(2, 0))
 
     def _class_assigned(self, data: dict) -> None:
         self._reset()
@@ -889,6 +914,8 @@ class MainWindow(QMainWindow):
             self.removeDockWidget(self.roster_dock)
             self.roster_dock.deleteLater()
             self.roster_dock = None
+        if self._class_alert_timer is not None:
+            self._class_alert_timer.stop()
         if self.student_class is not None:
             self.student_class.stop()
             self.student_class = None

@@ -18,10 +18,21 @@ class Student:
     total: int = 0
     results: list = field(default_factory=list)       # [[check text, ok, detail]]
     updated: str = ""
+    alerts: int = 0                                   # live SIEM alerts (attack-and-defend mode)
+    critical: int = 0
 
     @property
     def percent(self) -> int:
         return round(100 * self.passed / self.total) if self.total else 0
+
+    @property
+    def status(self) -> str:
+        """Attack-and-defend status: 'under attack' (critical/high alert) / 'alert' / 'defended'."""
+        if self.critical:
+            return "critical"
+        if self.alerts:
+            return "alert"
+        return "clear"
 
 
 @dataclass
@@ -49,6 +60,11 @@ class Roster:
         st.total = len(results)
         st.passed = sum(1 for r in results if r[1])
         st.updated = datetime.now().strftime("%H:%M:%S")
+
+    def alerts(self, name: str, total: int, critical: int) -> None:
+        st = self.students.setdefault(name, Student(name))
+        st.alerts = int(total)
+        st.critical = int(critical)
 
     def report_html(self) -> str:
         rows = []

@@ -268,6 +268,12 @@ The console colours prompts, addresses, up/down states, errors and ping results.
 
 **Class → Open a class and hand out the lab…** starts a class on the teacher's computer (address, port and PIN). Students choose **Class → Join a class…**, enter the address, the PIN and their name, and receive the lab. Every check a student runs (`F6`) is sent to the teacher, whose roster shows each student's progress; **Save class report…** writes an HTML summary.
 
+### Attack-and-defend mode
+
+A class can be run as a training battle. The teacher prepares a network with attacker devices (a botnet for DDoS, a LAN attacker for layer-2 attacks) and hands it out as the lab; any of the ready-made security labs (20–35) works too. The roster gains **Start attacks** and **Stop attacks** buttons that turn the attacks on and off on every student's network at once, so the teacher launches "waves" in real time.
+
+Each student defends their own network (ACLs, uRPF, DAI, port security, SYN cookies, scrubbing at the provider, cleaning malware, …). Every student's row shows a **status**: "under attack" (red), "alert" (orange) or "clear" (green), taken live from the student's SIEM. The checks column shows how many defensive checks are already passed. The teacher thus sees on one screen who has already repelled the attack and who is still under fire.
+
 ## Hints for failed checks
 
 When a lab check fails, the lab panel explains the probable cause: an interface in shutdown, a missing gateway or route, an ACL on the path, a VLAN that does not exist, and so on.

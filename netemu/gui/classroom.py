@@ -6,7 +6,9 @@ import random
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtNetwork import QHostAddress, QTcpServer, QTcpSocket
-from PySide6.QtWidgets import QHeaderView, QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (QHBoxLayout, QHeaderView, QLabel, QPushButton, QTableWidget, QTableWidgetItem,
+                               QVBoxLayout, QWidget)
 
 from ..core.classroom import Roster
 from ..i18n import tr
@@ -63,6 +65,12 @@ class TeacherClass(QObject):
             if info.get("name"):
                 _send(s, {"assign": assignment})
 
+    def set_attacks(self, on: bool) -> None:
+        """Attack-and-defend: start or stop the attacks on every student's running network."""
+        for s, info in self.clients.items():
+            if info.get("name"):
+                _send(s, {"attacks": bool(on)})
+
     def _accept(self) -> None:
         while self.server.hasPendingConnections():
             s = self.server.nextPendingConnection()
@@ -100,11 +108,15 @@ class TeacherClass(QObject):
             elif "progress" in msg:
                 self.roster.progress(info["name"], msg["progress"])
                 self.changed.emit()
+            elif "alerts" in msg:
+                self.roster.alerts(info["name"], msg.get("alerts", 0), msg.get("critical", 0))
+                self.changed.emit()
 
 
 class StudentClass(QObject):
     assigned = Signal(dict)
     status = Signal(str)
+    attacksToggled = Signal(bool)
 
     def __init__(self, name: str):
         super().__init__()
@@ -131,6 +143,11 @@ class StudentClass(QObject):
             return
         _send(self.sock, {"progress": [[c.text, bool(ok), d] for c, ok, d in results]})
 
+    def report_alerts(self, total: int, critical: int) -> None:
+        if self.sock is None:
+            return
+        _send(self.sock, {"alerts": int(total), "critical": int(critical)})
+
     def _read(self) -> None:
         self.buf += bytes(self.sock.readAll())
         while b"\n" in self.buf:
@@ -146,6 +163,8 @@ class StudentClass(QObject):
                 self.status.emit("joined")
             if msg.get("assign"):
                 self.assigned.emit(msg["assign"])
+            if "attacks" in msg:
+                self.attacksToggled.emit(bool(msg["attacks"]))
 
 
 class RosterPanel(QWidget):
@@ -158,11 +177,21 @@ class RosterPanel(QWidget):
         self.info = QLabel()
         self.info.setWordWrap(True)
         lay.addWidget(self.info)
-        self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels([tr("Ученик"), tr("Проверки"), "%", tr("Последняя проверка")])
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels([tr("Ученик"), tr("Статус"), tr("Проверки"), "%",
+                                              tr("Последняя проверка")])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         lay.addWidget(self.table, 1)
+        self.battle = QHBoxLayout()
+        self.battle_label = QLabel(tr("Режим «атака и защита»:"))
+        self.battle.addWidget(self.battle_label)
+        for text, on in ((tr("Запустить атаки"), True), (tr("Остановить атаки"), False)):
+            b = QPushButton(text)
+            b.clicked.connect(lambda _c=False, v=on: self.t.set_attacks(v))
+            self.battle.addWidget(b)
+        self.battle.addStretch(1)
+        lay.addLayout(self.battle)
         teacher.changed.connect(self.refresh)
         self.refresh()
 
@@ -172,7 +201,13 @@ class RosterPanel(QWidget):
                              n=sum(1 for s in r.students.values() if s.connected)))
         sts = sorted(r.students.values(), key=lambda s: s.name.lower())
         self.table.setRowCount(len(sts))
+        status_txt = {"critical": tr("под атакой"), "alert": tr("тревога"), "clear": tr("чисто")}
+        status_col = {"critical": "#c62828", "alert": "#ef6c00", "clear": "#2e7d32"}
         for i, st in enumerate(sts):
-            for c, text in enumerate((st.name + ("" if st.connected else " ✕"), f"{st.passed} / {st.total}",
-                                      f"{st.percent}%", st.updated or "—")):
-                self.table.setItem(i, c, QTableWidgetItem(text))
+            cells = (st.name + ("" if st.connected else " ✕"), status_txt[st.status], f"{st.passed} / {st.total}",
+                     f"{st.percent}%", st.updated or "—")
+            for c, text in enumerate(cells):
+                it = QTableWidgetItem(text)
+                if c == 1:
+                    it.setForeground(QColor(status_col[st.status]))
+                self.table.setItem(i, c, it)

@@ -223,6 +223,9 @@ python -m venv .venv
 9. **0.5.0, SIEM** (item 4): `core/siem.py` aggregates the DDoS/malware/L2 monitors + device syslog buffers
    into `alerts()`/`events()`; `gui/siem_panel.py` (Tools → Monitoring, Ctrl+Shift+M); lab 35; docs
    `docs/*/siem.md` (help topic "siem"). Also: router/switch `pps_limit` (DDoS by packets/s).
+10. **0.5.0, attack-and-defend class** (item 5): `TeacherClass.set_attacks()` broadcasts start/stop to every
+    student; the student applies it with `siem.set_all_attacks()` and reports its SIEM alert count back;
+    `Roster.alerts()`/`Student.status`, RosterPanel status column + attack buttons.
 
 ## Known gaps / ideas for next time (also listed in README "Limitations")
 - CME and HSRP only on Cisco (Cisco technologies; VRRP everywhere) - by design.
