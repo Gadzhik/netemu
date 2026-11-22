@@ -52,6 +52,24 @@ def _dark_palette() -> QPalette:
     return p
 
 
+def _light_palette() -> QPalette:
+    p = QPalette()
+    text = QColor("#1f2328")
+    for role, c in ((QPalette.Window, QColor("#efefef")), (QPalette.WindowText, text), (QPalette.Base, QColor("#ffffff")),
+                    (QPalette.AlternateBase, QColor("#f5f5f5")), (QPalette.ToolTipBase, QColor("#ffffdc")),
+                    (QPalette.ToolTipText, text), (QPalette.Text, text), (QPalette.Button, QColor("#efefef")),
+                    (QPalette.ButtonText, text), (QPalette.BrightText, QColor("#ffffff")),
+                    (QPalette.Highlight, QColor("#308cc6")), (QPalette.HighlightedText, QColor("#ffffff")),
+                    (QPalette.Link, QColor("#0b57d0")), (QPalette.PlaceholderText, QColor("#7a7f85")),
+                    (QPalette.Light, QColor("#ffffff")), (QPalette.Midlight, QColor("#e3e3e3")),
+                    (QPalette.Mid, QColor("#b8b8b8")), (QPalette.Dark, QColor("#9f9f9f")),
+                    (QPalette.Shadow, QColor("#767676"))):
+        p.setColor(role, c)
+    for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
+        p.setColor(QPalette.Disabled, role, QColor("#9a9a9a"))
+    return p
+
+
 def apply_theme(name: str) -> None:
     app = QApplication.instance()
     STATE["theme"] = name if name in THEMES else "light"
@@ -59,7 +77,8 @@ def apply_theme(name: str) -> None:
     COLORS.clear()
     COLORS.update(DARK if dark else LIGHT)
     if app is not None:
-        app.setPalette(_dark_palette() if dark else app.style().standardPalette())
+        # not style().standardPalette(): with Qt 6 it follows a dark Windows colour scheme
+        app.setPalette(_dark_palette() if dark else _light_palette())
         _refresh_views(app)
 
 
@@ -74,10 +93,14 @@ def apply_scale(factor: float) -> None:
     f = QFont(app.font())
     f.setPointSizeF(STATE["base_pt"] * factor)
     app.setFont(f)
+    from PySide6.QtCore import QSize
+    from .palette import ModelList
     from .terminal import TerminalWidget
     for w in app.allWidgets():
         if isinstance(w, TerminalWidget):          # the rest follows app.setFont() by itself
             w.apply_scale()
+        elif isinstance(w, ModelList):
+            w.setGridSize(QSize(int(118 * factor), int(92 * factor)))
     _refresh_views(app)
 
 

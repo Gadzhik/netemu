@@ -52,3 +52,17 @@ def test_wlc_persistence():
     assert [w["ssid"] for w in w2.wlans] == ["Corp", "Lab"]
     t2.engine.run(max_time=8000)
     assert t2.devices[ap1.id].wifi["ssid"] == "Corp"           # only enabled WLANs go to the APs
+
+
+def test_second_wlan_is_broadcast_too():
+    t, wlc, ap1, ap2, lt = build()
+    wlc.wlans.append({"ssid": "Guest", "security": "wpa2", "key": "guest12345", "enabled": True})
+    t.engine.run(max_time=8000)
+    from netemu.core.devices.wireless import ap_networks
+    assert [n[0] for n in ap_networks(ap1)] == ["Corp", "Guest"]
+    lt.wifi = {"ssid": "Guest", "key": "guest12345"}
+    t.rescan_wireless()
+    assert lt.nic.link is not None
+    lt.wifi = {"ssid": "Guest", "key": "wrong-key"}
+    t.rescan_wireless()
+    assert lt.nic.link is None

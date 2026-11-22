@@ -64,8 +64,17 @@ def visible_networks(client, devices) -> list[tuple]:
         if isinstance(ap, AccessPoint) and ap.powered and ap.wifi.get("ssid"):
             s = signal(ap, client)
             if s > 0:
-                out.append((ap.wifi["ssid"], ap.wifi["security"], ap.wifi["channel"], s, ap))
+                for ssid, sec, _key in ap_networks(ap):
+                    out.append((ssid, sec, ap.wifi["channel"], s, ap))
     return sorted(out, key=lambda x: -x[3])
+
+
+def ap_networks(ap) -> list[tuple]:
+    """[(ssid, security, key)] an access point broadcasts (several for a controller-managed AP)."""
+    w = ap.wifi
+    if not w.get("ssid"):
+        return []
+    return [(w["ssid"], w.get("security", "wpa2"), w.get("key"))] + [tuple(x) for x in w.get("extra", [])]
 
 
 def is_wireless_client(dev) -> bool:
@@ -79,7 +88,8 @@ def wanted_ap(client, devices):
     if not ssid:
         return None
     for name, sec, ch, s, ap in visible_networks(client, devices):
-        if name == ssid and (sec == "open" or want.get("key") == ap.wifi.get("key")):
+        key = next((k for n, _s, k in ap_networks(ap) if n == name), None)
+        if name == ssid and (sec == "open" or want.get("key") == key):
             return ap
     return None
 

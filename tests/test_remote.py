@@ -148,3 +148,34 @@ def test_linux_server_sshd_and_nested_hop():
     assert s.active().display_prompt() == "R2>"
     r(s, "exit")
     assert s.active() is s
+
+
+def test_console_enable_asks_for_the_secret_like_ios():
+    from cli_helpers import run
+    from netemu.core.topology import Topology
+    t = Topology()
+    r = t.add_device("cisco-2911")
+    s = r.create_cli()
+    run(s, "enable")
+    assert s.mode == "priv"                                   # no secret yet: straight in
+    for line in ("configure terminal", "enable secret Cisco123", "end", "disable"):
+        run(s, line)
+    run(s, "enable")
+    assert s.secret_input() and "Password:" in s.display_prompt() and s.mode == "user"
+    run(s, "wrong")
+    run(s, "wrong2")
+    assert "% Bad secrets" in run(s, "wrong3") and s.mode == "user"
+    run(s, "enable")
+    run(s, "Cisco123")
+    assert s.mode == "priv"
+
+
+def test_apply_script_answers_the_enable_secret_itself():
+    from netemu.core.lab import apply_script
+    from netemu.core.topology import Topology
+    t = Topology()
+    r = t.add_device("cisco-2911", "R1")
+    script = {"R1": "enable\nconfigure terminal\nenable secret Cisco123\nhostname CORE\nend"}
+    apply_script(t, script)
+    out = apply_script(t, {"CORE": "enable\nconfigure terminal\nhostname CORE2\nend"})   # now enable prompts
+    assert r.hostname == "CORE2", out

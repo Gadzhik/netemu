@@ -47,3 +47,15 @@ def test_lab_parsing_errors_and_persistence():
     t, r1, r2 = lab_topology()
     t2 = topology_from_dict(topology_to_dict(t), Topology())
     assert t2.lab.title == "OSPF lab" and len(t2.lab.checks) == 4
+
+
+def test_apply_script_settles_one_minute_not_twice_the_clock():
+    """engine.run(max_time) is relative: applying a solution must not double the virtual clock."""
+    from netemu.core.lab import apply_script
+    from netemu.core.topology import Topology
+    t = Topology()
+    t.add_device("pc", "PC0")
+    t.engine.run(max_time=500000)
+    t0 = t.engine.now
+    apply_script(t, {})
+    assert t.engine.now - t0 == 60000

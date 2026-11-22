@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "7918063900a0",
+   "id": "330169c2fc5b",
    "model": "internet",
    "name": "Internet",
    "x": 650,
    "y": 40,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Internet",
     "interfaces": {
@@ -86,12 +87,13 @@
    "startup": null
   },
   {
-   "id": "3d7489ab5907",
+   "id": "094bcaf0790b",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
    "y": 40,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Router",
     "interfaces": {
@@ -116,12 +118,13 @@
    "startup": null
   },
   {
-   "id": "e1ef994c21d3",
+   "id": "e9132f1c44ce",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
    "y": 200,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -260,12 +263,13 @@
    "startup": null
   },
   {
-   "id": "78412770df16",
+   "id": "f34216e26ae5",
    "model": "pc",
    "name": "PC-SALES",
    "x": 250,
    "y": 360,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC-SALES",
     "interfaces": {
@@ -284,12 +288,13 @@
    "startup": null
   },
   {
-   "id": "01792a89737f",
+   "id": "2f3dd8f1f118",
    "model": "pc",
    "name": "PC-HR",
    "x": 550,
    "y": 360,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC-HR",
     "interfaces": {
@@ -311,41 +316,41 @@
  "links": [
   {
    "a": [
-    "3d7489ab5907",
+    "094bcaf0790b",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "7918063900a0",
+    "330169c2fc5b",
     "ISP0"
    ]
   },
   {
    "a": [
-    "3d7489ab5907",
+    "094bcaf0790b",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "e1ef994c21d3",
+    "e9132f1c44ce",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "78412770df16",
+    "f34216e26ae5",
     "FastEthernet0"
    ],
    "b": [
-    "e1ef994c21d3",
+    "e9132f1c44ce",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "01792a89737f",
+    "2f3dd8f1f118",
     "FastEthernet0"
    ],
    "b": [
-    "e1ef994c21d3",
+    "e9132f1c44ce",
     "FastEthernet0/2"
    ]
   }

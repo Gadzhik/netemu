@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "0fcfd9f586ef",
+   "id": "79a0be5081a3",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Router",
     "interfaces": {
@@ -33,12 +34,13 @@
    "startup": null
   },
   {
-   "id": "fe81b1e561a9",
+   "id": "9b05d6b00bbe",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 200,
    "y": 300,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -177,12 +179,13 @@
    "startup": null
   },
   {
-   "id": "cb47ebc49760",
+   "id": "3f966d54e019",
    "model": "server",
    "name": "Server",
    "x": 650,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Server",
     "interfaces": {
@@ -216,18 +219,41 @@
      },
      "ntp": {
       "enabled": true
+     },
+     "aaa": {
+      "radius": false,
+      "tacacs": false,
+      "secret": "netemu",
+      "users": {}
+     },
+     "files": {
+      "tftp": true,
+      "ftp": true,
+      "mail": false,
+      "domain": "netemu.lab",
+      "files": {},
+      "ftp_users": {
+       "cisco": "cisco"
+      },
+      "mail_users": {},
+      "mailboxes": {}
+     },
+     "iot": {
+      "enabled": false,
+      "rules": []
      }
     }
    },
    "startup": null
   },
   {
-   "id": "d2df64cc987f",
+   "id": "53e5ce557c9e",
    "model": "pc",
    "name": "PC1",
    "x": 100,
    "y": 450,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -245,12 +271,13 @@
    "startup": null
   },
   {
-   "id": "1de8bf85a813",
+   "id": "9a65118abbe6",
    "model": "pc",
    "name": "PC2",
    "x": 300,
    "y": 450,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC2",
     "interfaces": {
@@ -271,41 +298,41 @@
  "links": [
   {
    "a": [
-    "0fcfd9f586ef",
+    "79a0be5081a3",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "fe81b1e561a9",
+    "9b05d6b00bbe",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "d2df64cc987f",
+    "53e5ce557c9e",
     "FastEthernet0"
    ],
    "b": [
-    "fe81b1e561a9",
+    "9b05d6b00bbe",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "1de8bf85a813",
+    "9a65118abbe6",
     "FastEthernet0"
    ],
    "b": [
-    "fe81b1e561a9",
+    "9b05d6b00bbe",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "cb47ebc49760",
+    "3f966d54e019",
     "FastEthernet0"
    ],
    "b": [
-    "0fcfd9f586ef",
+    "79a0be5081a3",
     "GigabitEthernet0/1"
    ]
   }

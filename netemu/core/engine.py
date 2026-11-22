@@ -135,7 +135,7 @@ class SimEngine:
         return count
 
     def run(self, max_time: float | None = None, max_events: int = 1_000_000) -> int:
-        """Run until the queue is empty (or *max_time* virtual ms elapse)."""
+        """Run until the queue is empty (or *max_time* more virtual ms elapse: relative, not absolute)."""
         limit = None if max_time is None else self.now + max_time
         count = 0
         while count < max_events:

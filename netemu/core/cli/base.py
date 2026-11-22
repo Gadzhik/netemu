@@ -388,12 +388,13 @@ def wifi_status(host):
 
 def wifi_connect(host, ssid, key):
     """Returns 'ok', 'absent' (SSID not heard) or 'auth' (wrong / missing key)."""
+    from ..devices.wireless import ap_networks
     host.wifi = {"ssid": ssid, "key": key}
     topo = getattr(host.engine, "topology", None)
     if topo is not None:
         topo.rescan_wireless()
     ap, _, nets = wifi_status(host)
-    if ap is not None and ap.wifi["ssid"] == ssid:
+    if ap is not None and any(n[0] == ssid for n in ap_networks(ap)):
         return "ok"
     return "auth" if any(n[0] == ssid for n in nets) else "absent"
 

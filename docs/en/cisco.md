@@ -290,7 +290,7 @@ transport input ssh telnet
 end
 ```
 
-Connect from another device with `ssh -l admin 10.0.0.2` or `telnet 10.0.0.2`. For a line password instead of users, use `password cisco` and `login` under `line vty 0 4`. Check: `show ip ssh`, `show users`.
+Connect from another device with `ssh -l admin 10.0.0.2` or `telnet 10.0.0.2`. For a line password instead of users, use `password cisco` and `login` under `line vty 0 4`. Check: `show ip ssh`, `show users`. Once `enable secret` is set, `enable` asks for it on the console too, as on real IOS (three wrong tries give `% Bad secrets`).
 
 ## EtherChannel (link aggregation)
 

@@ -32,3 +32,10 @@ def test_dark_theme_and_ui_scale(qtbot, qapp, monkeypatch):
     assert not theme.is_dark() and abs(qapp.font().pointSizeF() - base) < 0.01
     win._saved_snapshot = win._snapshot()
     win.shutdown()
+
+
+def test_light_theme_is_light_even_on_a_dark_system(qapp):
+    from netemu.gui import theme
+    theme.apply_theme("light")
+    assert qapp.palette().window().color().lightness() > 200
+    assert qapp.palette().windowText().color().lightness() < 80

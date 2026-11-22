@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "7ea9c28ac5ce",
+   "id": "9563c72d34b8",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
    "y": 80,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Router",
     "interfaces": {
@@ -33,12 +34,13 @@
    "startup": null
   },
   {
-   "id": "effc243ebebb",
+   "id": "7c3e3f70c712",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
    "y": 230,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -177,12 +179,13 @@
    "startup": null
   },
   {
-   "id": "667592beb40f",
+   "id": "dd06d6e384b7",
    "model": "pc",
    "name": "PC1",
    "x": 250,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -200,12 +203,13 @@
    "startup": null
   },
   {
-   "id": "ee45b4ad8e33",
+   "id": "426bf0ab116e",
    "model": "pc",
    "name": "PC2",
    "x": 550,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC2",
     "interfaces": {
@@ -226,31 +230,31 @@
  "links": [
   {
    "a": [
-    "7ea9c28ac5ce",
+    "9563c72d34b8",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "effc243ebebb",
+    "7c3e3f70c712",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "667592beb40f",
+    "dd06d6e384b7",
     "FastEthernet0"
    ],
    "b": [
-    "effc243ebebb",
+    "7c3e3f70c712",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "ee45b4ad8e33",
+    "426bf0ab116e",
     "FastEthernet0"
    ],
    "b": [
-    "effc243ebebb",
+    "7c3e3f70c712",
     "FastEthernet0/2"
    ]
   }

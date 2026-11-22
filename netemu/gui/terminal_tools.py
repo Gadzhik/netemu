@@ -57,7 +57,15 @@ def hint_for(session, line: str) -> str:
         text = session.help(line if line.endswith(" ") or not line else line + "?"[0:0])
     except Exception:                                      # a dialect without tree help
         return ""
-    items = [l.split()[0] for l in text.splitlines() if l.strip() and not l.lstrip().startswith(("%", "^"))]
+    items = []
+    for l in text.splitlines():
+        # "word  description" (shells: unindented lower-case command; '?' help: indented, 2+ spaces)
+        m = (re.match(r"^([a-z?/][\w./?-]*)(?:\s|$)", l)
+             or re.match(r"^ {1,4}(\S+)(?:\s{2,}\S|\s*$)", l))
+        if m is None or m.group(1).startswith(("%", "^")):
+            continue                                       # headings and wrapped continuation lines
+        if m.group(1) not in items:
+            items.append(m.group(1))
     if not items:
         return ""
     shown = ", ".join(items[:12])

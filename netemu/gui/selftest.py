@@ -38,7 +38,7 @@ def run(app, out_dir: str) -> int:
             w.load_demo()
             w.center_view()
             eng = w.topology.engine
-            eng.run(max_time=eng.now + 60000)                       # OSPF/STP converge (simulated minute)
+            eng.run(max_time=60000)                       # OSPF/STP converge (simulated minute)
             check("demo_loaded", len(w.topology.devices) >= 8, f"{len(w.topology.devices)} devices")
             pc0 = next(d for d in w.topology.devices.values() if d.name == "PC0")
             buf = []

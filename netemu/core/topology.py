@@ -24,8 +24,11 @@ class Topology:
         self._rescanning = False
 
     def _wifi_changed(self, dev) -> None:
-        if self._rescanning or dev.category not in ("wireless", "pc", "server"):
+        if self._rescanning:
             return
+        if dev.category not in ("wireless", "pc", "server") and \
+                not getattr(getattr(dev, "nic", None), "is_wireless", False):
+            return                                  # IoT sensors/actuators are Wi-Fi clients too
         self.rescan_wireless()
 
     def rescan_wireless(self) -> None:

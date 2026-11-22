@@ -435,11 +435,27 @@ class TopologyView(QGraphicsView):
         else:
             super().dropEvent(e)
 
+    def free_spot(self, center: QPointF, step: float = 110.0) -> QPointF:
+        """*center*, or the first point of a square spiral around it not taken by another device."""
+        taken = [(d.x, d.y) for d in self.tscene.topology.devices.values()]
+
+        def free(x, y):
+            return all(abs(x - tx) > step * 0.8 or abs(y - ty) > step * 0.8 for tx, ty in taken)
+        if free(center.x(), center.y()):
+            return center
+        for ring in range(1, 12):
+            for i in range(-ring, ring + 1):
+                for dx, dy in ((i, -ring), (ring, i), (-i, ring), (-ring, -i)):
+                    x, y = center.x() + dx * step, center.y() + dy * step
+                    if free(x, y):
+                        return QPointF(x, y)
+        return center
+
     def add_device(self, model_key: str, pos: QPointF | None = None):
         if model_key not in MODELS:
             return None
-        if pos is None:
-            pos = self.mapToScene(self.viewport().rect().center())
+        if pos is None:                            # palette double-click: the view centre, or the nearest free spot
+            pos = self.free_spot(self.mapToScene(self.viewport().rect().center()))
         dev = self.tscene.topology.add_device(model_key, x=pos.x(), y=pos.y())
         self.status.emit(tr("Добавлено: {name} ({model})", name=dev.name, model=dev.model))
         return dev

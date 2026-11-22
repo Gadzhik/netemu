@@ -427,7 +427,7 @@ def test_canvas_label_follows_hostname(qtbot, win):
     assert r.name == "CORE-R1" and item.device.name == "CORE-R1"
     assert "CORE-R1" in dlg.windowTitle()
     # config form: hostname alone renames the label, an explicit label wins
-    dlg.tabs.setCurrentWidget(dlg.config)
+    dlg.tabs.setCurrentIndex(0)
     dlg.config.hostname.setText("EDGE")
     dlg.config.apply()
     assert r.name == "EDGE"
@@ -826,3 +826,84 @@ def test_terminal_hint_highlight_and_search(win, qtbot):
     cs.insert(0)
     assert "ospf" in term.current_input()
     d.close()
+
+
+def test_demo_after_lab_clears_the_lab_panel(win):
+    from netemu.gui.lab_panel import builtin_labs
+    path = next(p for t, p, k in builtin_labs() if "01-vlan" in p.name)
+    win.open_builtin_lab(path)
+    assert win.topology.lab is not None and not win.lab_dock.isHidden()
+    win._saved_snapshot = win._snapshot()
+    win.load_demo()
+    assert win.topology.lab is None and win.lab_dock.isHidden()
+
+
+def test_shell_hint_has_commands_only():
+    from netemu.core.topology import Topology
+    from netemu.gui.terminal_tools import hint_for
+    t = Topology()
+    pc = hint_for(t.add_device("pc").create_cli(), "").split(", ")
+    assert "Available" not in pc and len(pc) == len(set(pc)) and "arp" in pc
+    assert "traceroute" in hint_for(t.add_device("pc-linux").create_cli(), "")
+
+
+def test_router_form_keeps_unsaved_interface_edits_when_a_route_is_added(win):
+    from netemu.gui.device_dialog import DeviceDialog
+    r = win.topology.add_device("cisco-2911")
+    d = DeviceDialog(r, win.topology)
+    c = d.config
+    row = next(i for i in range(c.ifaces.rowCount()) if c.ifaces.item(i, 0).text().endswith("0/0"))
+    c.ifaces.item(row, 2).setText("192.168.1.1")
+    c.ifaces.item(row, 3).setText("255.255.255.0")
+    c.r_net.setText("10.10.0.0")
+    c.r_mask.setText("255.255.0.0")
+    c.r_nh.setText("192.168.1.254")
+    c.add_route()
+    assert c.ifaces.item(row, 2).text() == "192.168.1.1"          # the typed address survived
+    assert c.apply()
+    assert str(r.get_port("gi0/0").ip) == "192.168.1.1/24" and len(r.static_routes) == 1
+    d.close()
+
+
+def test_iot_device_joins_wifi_from_its_form(win):
+    from netemu.gui.device_dialog import DeviceDialog
+    ap = win.topology.add_device("access-point", "AP", 0, 0)
+    temp = win.topology.add_device("iot-temperature", "T1", 100, 50)
+    d = DeviceDialog(temp, win.topology)
+    c = d.config
+    c.dhcp.setChecked(False)
+    c.wifi_ssid.setText(ap.wifi["ssid"])
+    c.wifi_key.setText(ap.wifi["key"])
+    c.ip.setText("192.168.1.21")
+    c.mask.setText("255.255.255.0")
+    assert c.apply()
+    assert temp.nic.link is not None and temp.nic.link.other(temp.nic).device is ap
+    d.close()
+
+
+def test_menu_actions_do_not_pass_checked_into_optional_parameters(win, monkeypatch):
+    """QAction.triggered(bool) once reached class_join(address=False) and class_open(port=False)."""
+    from PySide6.QtWidgets import QInputDialog
+    asked = []
+    monkeypatch.setattr(QInputDialog, "getText", lambda *a, **k: (asked.append(a[2]), ("", False))[1])
+    win.act_class_join.trigger()
+    win.act_collab_join.trigger()
+    assert len(asked) == 2                      # both asked the user for the address instead of crashing
+
+
+def test_palette_double_click_does_not_stack_devices(win):
+    lst = win.palette.lists["router"]
+    for _ in range(5):
+        lst.itemDoubleClicked.emit(lst.item(0))
+    spots = {(round(d.x), round(d.y)) for d in win.topology.devices.values()}
+    assert len(spots) == 5
+
+
+def test_realtime_clock_does_not_replay_a_long_stall(win):
+    """After the event loop stalls (sleep, modal dialog) one tick must not simulate the whole gap."""
+    from netemu.gui.controller import MAX_CATCHUP_MS
+    ctl = win.ctl
+    t0 = ctl.engine.now
+    ctl._last = ctl._clock.elapsed() - 3_600_000          # an hour without ticks
+    ctl._on_tick()
+    assert ctl.engine.now - t0 <= MAX_CATCHUP_MS

@@ -439,7 +439,7 @@ def build(fn):
     r = fn()
     t, fname, title, text, checks, script, notes = r[:7]
     faults = r[7] if len(r) > 7 else []
-    t.engine.run(max_time=t.engine.now + 60000)
+    t.engine.run(max_time=60000)
     lab_obj = Lab(title, text, parse_checks(checks)[0], notes, script, faults, "troubleshoot" if faults else "lab")
     from labs_en import EN
     from labs_more import EN as EN2
@@ -452,7 +452,7 @@ def build(fn):
     assert not all(before), f"{fname}: every check already passes before the solution"
     # verify the solution on a fresh copy
     t2 = persistence.topology_from_dict(data)
-    t2.engine.run(max_time=t2.engine.now + 5000)
+    t2.engine.run(max_time=5000)
     apply_script(t2, script)
     res = evaluate(t2, t2.lab)
     bad = [(c.text, d) for c, ok, d in res if not ok]

@@ -71,3 +71,31 @@ def test_fortigate_policy_nat_and_default_deny():
     f2 = t2.devices[fgt.id]
     run(f2.create_cli(), "show")                 # session over the restored device (rebuild from config)
     assert _ping(None, t2.devices[pc.id], "203.0.113.1").received == 4
+
+
+def test_settings_made_outside_fortios_survive_cli_changes():
+    """The Config form changes the device directly; a later CLI edit must not wipe that, and show prints it."""
+    from ipaddress import IPv4Address, IPv4Interface, IPv4Network
+    from netemu.core.topology import Topology
+    t = Topology()
+    f = t.add_device("fortigate-60f")
+    p = f.ports["port1"]
+    p.ip = IPv4Interface("10.9.8.1/24")
+    p.description = "uplink"
+    f.add_static_route(IPv4Network("0.0.0.0/0"), IPv4Address("10.9.8.254"), None, 10)
+    s = f.create_cli()
+    out = run_all(s, """config firewall policy
+edit 1
+set name "out"
+set srcintf "port2"
+set dstintf "port1"
+set srcaddr "all"
+set dstaddr "all"
+set action accept
+set service "ALL"
+next
+end
+show""")
+    assert str(p.ip) == "10.9.8.1/24" and len(f.static_routes) == 1
+    assert "set ip 10.9.8.1 255.255.255.0" in out and 'set alias "uplink"' in out and "set gateway 10.9.8.254" in out
+    assert 'set hostname "' in out

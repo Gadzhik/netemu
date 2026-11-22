@@ -124,6 +124,22 @@ python -m venv .venv
 - Running ISCC from Git Bash mangles `/Q` and `/D…` switches; call it from PowerShell.
 
 ## Gotchas learned the hard way
+- `engine.run(max_time=X)` is **relative** (X more virtual ms). `run(max_time=engine.now + X)` doubles the
+  clock every call; "Apply the solution" froze the GUI for minutes that way. Use `run_until(...)` for absolute.
+- `QAction.triggered(bool)` and `QPushButton.clicked(bool)` pass `checked` into slots with optional
+  parameters (`class_join(address=False)`). `MainWindow._act` wraps non-checkable actions; for buttons connect
+  a lambda.
+- Cisco `enable` asks for the enable secret on the console too (as real IOS); `lab.apply_script` answers the
+  prompt with the device's own secret. `plant_fault(..., lab=lab)` only keeps a fault that breaks a check.
+- The router/switch Config form: rebuild only the table you changed (`_load_routes`), not `load()`, or unsaved
+  edits are lost.
+- FortiGate keeps its config in `extra["forti"]`; `FortiSession._sync()` pulls form/project changes in before
+  `config`/`show`, otherwise the next CLI change overwrites them.
+- `Port.is_up` is hot (every packet): keep `Link.too_long` cheap (fast path when nothing is placed).
+- Exercising the real GUI: drive `MainWindow` with QTest (menus via `QAction.trigger()`, shortcuts sent to
+  the activated window's `view`), answer `QInputDialog`/`QFileDialog` by monkeypatching, record
+  `sys.excepthook` (exceptions in Qt slots) and `qInstallMessageHandler`. Run it maximized on the real
+  platform and look at the screenshots; this found most of the bugs fixed after 0.4.0.
 - **Do not write Python through bash heredocs** on this Windows machine: `\n` escapes inside the code
   get mangled (unterminated strings). Write a script file with the Write tool and run it instead.
 - Keep code **Python 3.11 compatible**:

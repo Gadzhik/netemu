@@ -65,9 +65,9 @@ class LightweightAP(AccessPoint):
     def _apply(self, wlans) -> None:
         if wlans:
             ssid, sec, key = wlans[0]
-            self.wifi.update(ssid=ssid, security=sec, key=key)
+            self.wifi.update(ssid=ssid, security=sec, key=key, extra=[list(x) for x in wlans[1:]])
         else:
-            self.wifi.update(ssid=None)
+            self.wifi.update(ssid=None, extra=[])
         topo = getattr(self.engine, "topology", None)
         if topo is not None:
             from .wireless import rescan

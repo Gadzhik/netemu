@@ -1676,12 +1676,12 @@ class CiscoSession(TreeSession):
         return "% All keys will be removed.\n% All router certs issued using these keys will also be removed."
 
     def enable_cmd(self):
-        if not self.vty:
-            self.mode = "priv"
-            return None
         secret = self._acc().get("enable_secret")
         if not secret:
-            return "% No password set"
+            if not self.vty:                   # console without enable secret/password: straight in
+                self.mode = "priv"
+                return None
+            return "% No password set"         # vty: IOS refuses enable without a password
         tries = [0]
 
         def check(line):

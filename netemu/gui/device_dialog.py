@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QCheckBox, QDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
-                               QLabel, QLineEdit, QMessageBox, QPushButton, QTableWidget,
+                               QLabel, QLineEdit, QMessageBox, QPushButton, QScrollArea, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
 from ..core.addresses import (IPv4Address, IPv4Network, default_mask_for, is_valid_ip, is_valid_mask,
@@ -468,6 +468,10 @@ class NetConfig(QWidget):
             self.ifaces.setItem(r, 3, self._cell(str(p.ip.netmask) if p.ip else "", l3))
             self.ifaces.setItem(r, 5, self._cell(p.description))
             self.ifaces.setItem(r, 6, self._cell(status, False))
+        self._load_routes()
+
+    def _load_routes(self) -> None:
+        d = self.dialog.device
         if True:
             self.routes.setRowCount(0)
             for s in d.static_routes:
@@ -553,7 +557,7 @@ class NetConfig(QWidget):
         self.r_net.clear()
         self.r_mask.clear()
         self.r_nh.clear()
-        self.load()
+        self._load_routes()          # not load(): unsaved edits of the interface table must stay
 
     def _default_distance(self) -> int:
         return {"huawei": 60, "juniper": 5}.get(self.dialog.device.vendor, 1)
@@ -564,7 +568,17 @@ class NetConfig(QWidget):
         for r in rows:
             if r < len(d.static_routes):
                 del d.static_routes[r]
-        self.load()
+        d.routes_changed()
+        self._load_routes()
+
+
+def scrolled(widget) -> QScrollArea:
+    """Long forms scroll instead of stretching the window past the screen (server services, 150 % scale)."""
+    area = QScrollArea()
+    area.setWidgetResizable(True)
+    area.setFrameShape(QScrollArea.NoFrame)
+    area.setWidget(widget)
+    return area
 
 
 def terminal_page(term) -> QWidget:
@@ -599,7 +613,7 @@ class DeviceDialog(QDialog):
         if cat in ("pc", "server"):
             from .services_panel import ServicesPanel, WebBrowser
             self.config = HostConfig(self)
-            self.tabs.addTab(self.config, tr("Настройка"))
+            self.tabs.addTab(scrolled(self.config), tr("Настройка"))
             self.terminal = TerminalWidget(device.create_cli())
             self.tabs.addTab(terminal_page(self.terminal), tr("Терминал (Linux)") if getattr(device, "os", "") == "linux"
                              else tr("Командная строка"))
@@ -610,7 +624,7 @@ class DeviceDialog(QDialog):
             self.tabs.addTab(self.mail, tr("Почта"))
             if cat == "server":
                 self.services = ServicesPanel(self)
-                self.tabs.addTab(self.services, tr("Службы"))
+                self.tabs.addTab(scrolled(self.services), tr("Службы"))
         elif cat in ("router", "switch"):
             self.config = NetConfig(self)
             self.tabs.addTab(self.config, tr("Настройка"))
@@ -620,13 +634,13 @@ class DeviceDialog(QDialog):
             self.tabs.addTab(cloud_info(device), tr("Интернет"))
         elif cat == "iot":
             self.config = HostConfig(self)
-            self.tabs.addTab(self.config, tr("Настройка"))
+            self.tabs.addTab(scrolled(self.config), tr("Настройка"))
             from .iot_panel import IotPanel
             self.iot = IotPanel(self)
             self.tabs.addTab(self.iot, tr("Устройство IoT"))
         elif cat == "wlc":
             self.config = HostConfig(self)
-            self.tabs.addTab(self.config, tr("Настройка"))
+            self.tabs.addTab(scrolled(self.config), tr("Настройка"))
             from .wlc_panel import WlcPanel
             self.wlc = WlcPanel(self)
             self.tabs.addTab(self.wlc, tr("Контроллер"))

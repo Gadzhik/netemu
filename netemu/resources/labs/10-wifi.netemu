@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "8720810a1c1b",
+   "id": "05df55d62a9f",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
    "y": 80,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Router",
     "interfaces": {
@@ -51,12 +52,13 @@
    "startup": null
   },
   {
-   "id": "fddf79710ace",
+   "id": "1cff61b2b0c7",
    "model": "access-point",
    "name": "AP1",
    "x": 400,
    "y": 230,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "AP1",
     "interfaces": {
@@ -84,12 +86,13 @@
    "startup": null
   },
   {
-   "id": "cfec47375420",
+   "id": "367f2a5e5959",
    "model": "laptop",
    "name": "Laptop1",
    "x": 300,
    "y": 360,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Laptop1",
     "interfaces": {
@@ -111,12 +114,13 @@
    "startup": null
   },
   {
-   "id": "24e610e1d1a1",
+   "id": "c422f2d01b66",
    "model": "laptop",
    "name": "Laptop2",
    "x": 500,
    "y": 360,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Laptop2",
     "interfaces": {
@@ -141,11 +145,11 @@
  "links": [
   {
    "a": [
-    "8720810a1c1b",
+    "05df55d62a9f",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "fddf79710ace",
+    "1cff61b2b0c7",
     "Ethernet0"
    ]
   }

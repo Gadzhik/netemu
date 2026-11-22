@@ -23,6 +23,7 @@ include = ["netemu*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+faulthandler_timeout = 60      # a hung test prints every thread's stack instead of hanging silently
 
 [tool.setuptools.package-data]
 netemu = ["resources/*.png", "resources/*.ico", "resources/labs/*.netemu"]

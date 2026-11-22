@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "2648b2a57f31",
+   "id": "d17f0bd84f69",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
    "y": 200,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -147,12 +148,13 @@
    "startup": null
   },
   {
-   "id": "685457b3e32d",
+   "id": "6e508086a4bd",
    "model": "pc",
    "name": "PC1",
    "x": 160,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -170,12 +172,13 @@
    "startup": null
   },
   {
-   "id": "ef5aca459ae2",
+   "id": "d4c61dc6898c",
    "model": "pc",
    "name": "PC2",
    "x": 320,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC2",
     "interfaces": {
@@ -193,12 +196,13 @@
    "startup": null
   },
   {
-   "id": "dd8a2d49d8e8",
+   "id": "9b012136d2c0",
    "model": "pc",
    "name": "PC3",
    "x": 480,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC3",
     "interfaces": {
@@ -216,12 +220,13 @@
    "startup": null
   },
   {
-   "id": "cb5a78e886ad",
+   "id": "a2428aea689a",
    "model": "pc",
    "name": "PC4",
    "x": 640,
    "y": 400,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC4",
     "interfaces": {
@@ -242,41 +247,41 @@
  "links": [
   {
    "a": [
-    "685457b3e32d",
+    "6e508086a4bd",
     "FastEthernet0"
    ],
    "b": [
-    "2648b2a57f31",
+    "d17f0bd84f69",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "ef5aca459ae2",
+    "d4c61dc6898c",
     "FastEthernet0"
    ],
    "b": [
-    "2648b2a57f31",
+    "d17f0bd84f69",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "dd8a2d49d8e8",
+    "9b012136d2c0",
     "FastEthernet0"
    ],
    "b": [
-    "2648b2a57f31",
+    "d17f0bd84f69",
     "FastEthernet0/3"
    ]
   },
   {
    "a": [
-    "cb5a78e886ad",
+    "a2428aea689a",
     "FastEthernet0"
    ],
    "b": [
-    "2648b2a57f31",
+    "d17f0bd84f69",
     "FastEthernet0/4"
    ]
   }

@@ -111,7 +111,9 @@ class MainWindow(QMainWindow):
             a.setShortcut(QKeySequence(shortcut))
         a.setCheckable(checkable)
         if slot:
-            a.triggered.connect(slot)
+            # triggered(bool) would hand `checked` to slots with optional parameters
+            # (class_join(address=False), class_open(port=False), ...): only checkable actions get it
+            a.triggered.connect(slot if checkable else (lambda _checked=False, f=slot: f()))
         return a
 
     def _build_actions(self) -> None:
@@ -456,8 +458,7 @@ class MainWindow(QMainWindow):
         self.teacher = False
         self._sync_teacher_actions()
         self.lab_panel.load()
-        if self.topology.lab is not None:
-            self.lab_dock.show()
+        self.lab_dock.setVisible(self.topology.lab is not None)
         self.statusBar().showMessage(tr("Открыт {path}", path=path), 5000)
         return True
 
@@ -467,6 +468,11 @@ class MainWindow(QMainWindow):
         self._reset()
         build_demo(self.topology)
         self.topology.undo.reset()
+        self.scene.load_annotations()
+        self.teacher = False
+        self._sync_teacher_actions()
+        self.lab_panel.load()
+        self.lab_dock.hide()                  # a lab opened before must not stay on screen
         self.center_view()
         self.file_path = None
         self._saved_snapshot = self._snapshot()
@@ -626,7 +632,7 @@ class MainWindow(QMainWindow):
     def plant_fault(self) -> None:
         import random
         from ..core.lab import Lab, plant_fault
-        desc = plant_fault(self.topology, random.Random())
+        desc = plant_fault(self.topology, random.Random(), lab=self.topology.lab)   # must break one of its checks
         if desc is None:
             QMessageBox.information(self, tr("Неисправность"), tr("В схеме нечего сломать: нужны настроенные "
                                                                    "устройства и кабели."))
@@ -700,6 +706,7 @@ class MainWindow(QMainWindow):
             self.physical_dock.setObjectName("physical")
             self.physical_dock.setWidget(self.physical_panel)
             self.addDockWidget(Qt.RightDockWidgetArea, self.physical_dock)
+            self.resizeDocks([self.physical_dock], [560], Qt.Horizontal)
         self.physical_panel.refresh()
         self.physical_dock.show()
         self.physical_dock.raise_()

@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "a3e9b57e5bf1",
+   "id": "0f123b01698e",
    "model": "cisco-2911",
    "name": "R1",
    "x": 150,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "R1",
     "interfaces": {
@@ -63,12 +64,13 @@
    "startup": null
   },
   {
-   "id": "391409c69388",
+   "id": "26ba10d0d562",
    "model": "cisco-2911",
    "name": "R2",
    "x": 400,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "R2",
     "interfaces": {
@@ -123,12 +125,13 @@
    "startup": null
   },
   {
-   "id": "18e7a6b43228",
+   "id": "fb8ae7316d50",
    "model": "cisco-2911",
    "name": "R3",
    "x": 650,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "R3",
     "interfaces": {
@@ -183,12 +186,13 @@
    "startup": null
   },
   {
-   "id": "f63cbad10bde",
+   "id": "1fbc51a24891",
    "model": "pc",
    "name": "PC1",
    "x": 150,
    "y": 350,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -206,12 +210,13 @@
    "startup": null
   },
   {
-   "id": "cae97c60870b",
+   "id": "c61f806b2880",
    "model": "pc",
    "name": "PC3",
    "x": 650,
    "y": 350,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC3",
     "interfaces": {
@@ -232,41 +237,41 @@
  "links": [
   {
    "a": [
-    "a3e9b57e5bf1",
+    "0f123b01698e",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "391409c69388",
+    "26ba10d0d562",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "391409c69388",
+    "26ba10d0d562",
     "GigabitEthernet0/2"
    ],
    "b": [
-    "18e7a6b43228",
+    "fb8ae7316d50",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "f63cbad10bde",
+    "1fbc51a24891",
     "FastEthernet0"
    ],
    "b": [
-    "a3e9b57e5bf1",
+    "0f123b01698e",
     "GigabitEthernet0/0"
    ]
   },
   {
    "a": [
-    "cae97c60870b",
+    "c61f806b2880",
     "FastEthernet0"
    ],
    "b": [
-    "18e7a6b43228",
+    "fb8ae7316d50",
     "GigabitEthernet0/0"
    ]
   }

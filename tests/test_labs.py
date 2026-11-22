@@ -71,3 +71,19 @@ def test_attempt_report():
     html = report_html(lab, a)
     assert "Иванов" in html and "0 из 1" in html and lab.attempts == [a]
     assert json.loads(json.dumps(lab.to_dict()))["attempts"][0]["student"] == "Иванов"
+
+
+def test_planted_fault_always_breaks_a_check_when_the_lab_is_given():
+    """A fault that no check notices (a server port nobody tests) makes an unsolvable troubleshooting task."""
+    for stem in ("02-inter-vlan", "04-ospf", "19-exam-office"):
+        t = persistence.load(next(p for p in LABS if p.stem == stem))
+        t.engine.run(max_time=3000)
+        apply_script(t, t.lab.script)
+        assert all(ok for _, ok, _ in evaluate(t, t.lab))
+        for seed in range(5):
+            t2 = persistence.topology_from_dict(persistence.topology_to_dict(t))
+            t2.engine.run(max_time=3000)
+            desc = plant_fault(t2, random.Random(seed), lab=t2.lab)
+            assert desc
+            failed = [c.text for c, ok, _ in evaluate(t2, t2.lab) if not ok]
+            assert failed, f"{stem} seed {seed}: '{desc}' broke no check"

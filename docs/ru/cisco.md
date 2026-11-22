@@ -290,7 +290,7 @@ transport input ssh telnet
 end
 ```
 
-Подключение с другого устройства: `ssh -l admin 10.0.0.2`, `telnet 10.0.0.2`. Только пароль линии вместо пользователей: `password cisco` и `login` в `line vty 0 4`. Проверка: `show ip ssh`, `show users`.
+Подключение с другого устройства: `ssh -l admin 10.0.0.2`, `telnet 10.0.0.2`. Только пароль линии вместо пользователей: `password cisco` и `login` в `line vty 0 4`. Проверка: `show ip ssh`, `show users`. После `enable secret` команда `enable` спрашивает пароль и на консоли, как на настоящем IOS (три неверные попытки — `% Bad secrets`).
 
 ## EtherChannel (агрегирование каналов)
 

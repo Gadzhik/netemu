@@ -13,6 +13,7 @@ REALTIME = "realtime"
 SIMULATION = "simulation"
 
 TICK_MS = 30
+MAX_CATCHUP_MS = 1000          # most virtual time one tick may advance (see _on_tick)
 
 
 @dataclass
@@ -97,7 +98,9 @@ class SimController(QObject):
     # -- clock ----------------------------------------------------------------------
     def _on_tick(self) -> None:
         now = self._clock.elapsed()
-        dt = max(0, now - self._last)
+        # cap the catch-up: after the event loop stalled (laptop sleep, a modal dialog, a busy test run)
+        # the simulation resumes instead of replaying the whole gap at once and freezing the window
+        dt = min(max(0, now - self._last), MAX_CATCHUP_MS)
         self._last = now
         self.advance(dt)
         self.tick.emit()

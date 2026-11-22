@@ -1202,7 +1202,7 @@ class LinuxSession(CliSession):
             ap, _, _ = wifi_status(d) if wl else (None, 0, [])
             typ = "wifi" if wl else "ethernet"
             st = "connected" if d.nic.is_up else "disconnected"
-            conn = ap.wifi["ssid"] if ap else ("Wired connection 1" if d.nic.is_up else "--")
+            conn = (d.wifi or {}).get("ssid", ap.wifi["ssid"]) if ap else ("Wired connection 1" if d.nic.is_up else "--")
             return (f"DEVICE  TYPE      STATE         CONNECTION\n{d.nic.name:<8}{typ:<10}{st:<14}{conn}\n"
                     "lo      loopback  connected (externally)  lo")
         if words[:3] in (["dev", "wifi", "list"], ["device", "wifi", "list"]):

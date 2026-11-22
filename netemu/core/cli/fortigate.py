@@ -60,7 +60,45 @@ class FortiSession(CliSession):
     def _fail(self, what="command parse error"):
         return f"{what}\nCommand fail. Return code -61"
 
+    def _sync(self) -> None:
+        """Pull state changed outside FortiOS (the Config form, a loaded project) into the FortiOS tables,
+        so that show prints it and the next CLI change does not wipe it."""
+        d, fo = self.device, self.fo
+        for p in d.ports.values():
+            e = fo["interface"].get(p.name)
+            want_ip = [str(p.ip.ip), str(p.ip.netmask)] if p.ip is not None else None
+            if e is None and want_ip is None and p.admin_up and not p.description:
+                continue
+            e = fo["interface"].setdefault(p.name, {})
+            if want_ip is None:
+                e.pop("ip", None)
+            else:
+                e["ip"] = want_ip
+            if p.description:
+                e["alias"] = p.description
+            else:
+                e.pop("alias", None)
+            if p.admin_up:
+                e.pop("status", None)
+            else:
+                e["status"] = "down"
+        cur = [(str(r.network.network_address), str(r.network.netmask), str(r.next_hop) if r.next_hop else None,
+                r.interface) for r in d.static_routes]
+        mine = [(e.get("dst", ["0.0.0.0", "0.0.0.0"])[0], e.get("dst", ["0.0.0.0", "0.0.0.0"])[1], e.get("gateway"),
+                 e.get("device")) for _, e in sorted(fo["static"].items(), key=lambda x: int(x[0]))]
+        if cur != mine:
+            fo["static"] = {}
+            for i, (net, mask, gw, dev) in enumerate(cur, 1):
+                e = {"dst": [net, mask]}
+                if gw:
+                    e["gateway"] = gw
+                if dev:
+                    e["device"] = dev
+                fo["static"][str(i)] = e
+
     def _top(self, cmd, args, line):
+        if cmd in ("config", "show"):
+            self._sync()
         if cmd == "config":
             path = " ".join(args)
             if path not in TABLES:
@@ -237,7 +275,7 @@ class FortiSession(CliSession):
     # -- show / get / execute ---------------------------------------------------------------------
     def show(self, path):
         if not path:
-            return "\n".join(self.show(t) for t in TABLES if t != "system global")
+            return "\n".join(self.show(t) for t in TABLES)
         if path not in TABLES:
             return self._fail()
         if path == "system global":

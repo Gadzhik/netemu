@@ -101,8 +101,15 @@ class DeviceItem(QGraphicsItem):
         pm = device_pixmap(self.device.category, getattr(self.device, "vendor", "generic"), kind=kind)
         p.drawPixmap(QPointF(-ICON_W / 2, -ICON_H / 2), pm)
         p.setFont(self._font)
+        r = self._label_rect()
+        tw = p.fontMetrics().horizontalAdvance(self.device.name) + 6
+        bg = theme.color("canvas")
+        bg.setAlpha(225)
+        p.setPen(Qt.NoPen)
+        p.setBrush(bg)                                   # cables running below the icon do not cross the name
+        p.drawRoundedRect(QRectF(-tw / 2, r.top(), tw, p.fontMetrics().height() + 1), 3, 3)
         p.setPen(theme.color("label"))
-        p.drawText(self._label_rect(), Qt.AlignHCenter | Qt.AlignTop, self.device.name)
+        p.drawText(r, Qt.AlignHCenter | Qt.AlignTop, self.device.name)
 
     def apply_scale(self) -> None:
         self.prepareGeometryChange()

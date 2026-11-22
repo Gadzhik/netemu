@@ -27,6 +27,11 @@ def main(argv: list[str] | None = None) -> int:
     lang = lang or QSettings().value("language") or \
         ("ru" if QLocale.system().language() in (QLocale.Russian, QLocale.Ukrainian, QLocale.Belarusian) else "en")
     set_language(str(lang))
+    if str(lang) == "ru":                         # Qt's own buttons and dialogs (OK, Cancel, Yes, No, file dialogs)
+        from PySide6.QtCore import QLibraryInfo, QTranslator
+        qt_tr = QTranslator(app)
+        if qt_tr.load("qtbase_ru", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
+            app.installTranslator(qt_tr)
     from .gui import theme
     if "--self-test" in argv:                     # packaged-build check (CI): English UI, light theme
         i = argv.index("--self-test")

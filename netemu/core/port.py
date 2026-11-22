@@ -273,11 +273,22 @@ class Link:
     def length(self) -> float:
         if self.length_m is not None:
             return float(self.length_m)
-        return estimate_length(self.a.device, self.b.device)
+        la, lb = getattr(self.a.device, "location", ""), getattr(self.b.device, "location", "")
+        if not la or not lb:
+            return 5.0                                  # fast path: nothing placed (same room)
+        key = (la, lb)
+        cached = getattr(self, "_len_cache", None)
+        if cached is None or cached[0] != key:
+            self._len_cache = cached = (key, estimate_length(self.a.device, self.b.device))
+        return cached[1]
 
     @property
     def too_long(self) -> bool:
-        return not self.wireless and self.length > self.MAX_LENGTH.get(self.media, 100)
+        # is_up asks this on every packet: keep it cheap
+        if self.wireless or (self.length_m is None and not (getattr(self.a.device, "location", "")
+                                                              and getattr(self.b.device, "location", ""))):
+            return False
+        return self.length > self.MAX_LENGTH.get(self.media, 100)
 
     def set_physical(self, media: str | None = None, length_m: float | None = None) -> None:
         if media is not None:

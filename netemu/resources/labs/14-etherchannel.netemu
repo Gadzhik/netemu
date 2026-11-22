@@ -3,12 +3,13 @@
  "version": 1,
  "devices": [
   {
-   "id": "ebc935f46350",
+   "id": "fd80fbdc2cdb",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 250,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -147,12 +148,13 @@
    "startup": null
   },
   {
-   "id": "770b3886d560",
+   "id": "ebf0749d0d7e",
    "model": "cisco-2960",
    "name": "SW2",
    "x": 550,
    "y": 150,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -291,12 +293,13 @@
    "startup": null
   },
   {
-   "id": "49ef7e9ab3b7",
+   "id": "6a466db77388",
    "model": "pc",
    "name": "PC1",
    "x": 250,
    "y": 350,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -314,12 +317,13 @@
    "startup": null
   },
   {
-   "id": "93b58140fa59",
+   "id": "c229efc88ff6",
    "model": "pc",
    "name": "PC2",
    "x": 550,
    "y": 350,
    "powered": true,
+   "location": "",
    "config": {
     "hostname": "PC2",
     "interfaces": {
@@ -340,41 +344,41 @@
  "links": [
   {
    "a": [
-    "ebc935f46350",
+    "fd80fbdc2cdb",
     "FastEthernet0/23"
    ],
    "b": [
-    "770b3886d560",
+    "ebf0749d0d7e",
     "FastEthernet0/23"
    ]
   },
   {
    "a": [
-    "ebc935f46350",
+    "fd80fbdc2cdb",
     "FastEthernet0/24"
    ],
    "b": [
-    "770b3886d560",
+    "ebf0749d0d7e",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "49ef7e9ab3b7",
+    "6a466db77388",
     "FastEthernet0"
    ],
    "b": [
-    "ebc935f46350",
+    "fd80fbdc2cdb",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "93b58140fa59",
+    "c229efc88ff6",
     "FastEthernet0"
    ],
    "b": [
-    "770b3886d560",
+    "ebf0749d0d7e",
     "FastEthernet0/1"
    ]
   }

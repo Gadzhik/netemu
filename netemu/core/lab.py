@@ -404,8 +404,12 @@ def apply_script(topology, script: dict, settle_ms: float = 60000.0) -> str:
             job = s.execute(line, r.append)
             if job is not None:
                 topology.engine.run_until(lambda: job.done)
+            if getattr(s, "secret_input", lambda: False)() and line.strip().split()[:1] and \
+                    "enable".startswith(line.strip().split()[0]):
+                from .services.remote import access     # the script acts with the device's own secret
+                s.execute(access(dev).get("enable_secret") or "", r.append)
             out.append("".join(r))
-    topology.engine.run(max_time=topology.engine.now + settle_ms)
+    topology.engine.run(max_time=settle_ms)            # max_time is relative to now
     return "".join(out)
 
 
@@ -443,12 +447,9 @@ def _host_settings(dev, text: str) -> str:
 
 
 # ------------------------------------------------------------------------------------ faults
-def plant_fault(topology, rng: random.Random | None = None) -> str | None:
-    """Break something at random (vendor-neutral, on the device objects); returns the description."""
-    rng = rng or random.Random()
-    devs = list(topology.devices.values())
+def _fault_options(topology) -> list:
     options = []
-    for d in devs:
+    for d in topology.devices.values():
         if d.category in ("router", "switch"):
             for p in d.ports.values():
                 if p.is_up and p.peer is not None and not getattr(p, "is_wireless", False):
@@ -463,35 +464,77 @@ def plant_fault(topology, rng: random.Random | None = None) -> str | None:
             for p in d.ports.values():
                 if getattr(p, "mode", None) == "access" and p.pvid != 1 and p.is_up:
                     options.append(("vlan", d, p))
-    if not options:
-        return None
-    kind, d, x = rng.choice(options)
+    return options
+
+
+def _apply_fault(kind, d, x):
+    """Break one thing; returns (description, undo function)."""
     if kind == "shut":
         x.set_admin(False)
-        desc = f"{d.name}: interface {x.name} administratively shut down"
-    elif kind == "route":
+        return f"{d.name}: interface {x.name} administratively shut down", lambda: x.set_admin(True)
+    if kind == "route":
+        idx = d.static_routes.index(x)
         d.static_routes.remove(x)
         if hasattr(d, "routes_changed"):
             d.routes_changed()
-        desc = f"{d.name}: static route {getattr(x, 'network', x)} removed"
-    elif kind == "gw":
+
+        def undo():
+            d.static_routes.insert(idx, x)
+            if hasattr(d, "routes_changed"):
+                d.routes_changed()
+        return f"{d.name}: static route {getattr(x, 'network', x)} removed", undo
+    if kind == "gw":
         net = d.nic.ip.network
         bad = next(h for h in net.hosts() if h != d.gateway and h != d.nic.ip.ip)
         old = d.gateway
         d.set_gateway(str(bad))
-        desc = f"{d.name}: default gateway changed from {old} to {bad}"
-    elif kind == "mask":
+        return f"{d.name}: default gateway changed from {old} to {bad}", lambda: d.set_gateway(str(old))
+    if kind == "mask":
         ip = d.nic.ip
         from .addresses import prefix_to_mask
         new_len = 30 if ip.network.prefixlen < 30 else 24
         d.set_ip(str(ip.ip), prefix_to_mask(new_len))
-        desc = f"{d.name}: subnet mask changed from /{ip.network.prefixlen} to /{new_len}"
-    else:
-        old = x.pvid
-        new = 999 if old != 999 else 998
-        x.access_vlan = x.pvid = new
+        return (f"{d.name}: subnet mask changed from /{ip.network.prefixlen} to /{new_len}",
+                lambda: d.set_ip(str(ip.ip), str(ip.netmask)))
+    old = x.pvid
+    new = 999 if old != 999 else 998
+    old_access = x.access_vlan
+    x.access_vlan = x.pvid = new
+    d.link_state_changed(x)
+
+    def undo_vlan():
+        x.access_vlan, x.pvid = old_access, old
         d.link_state_changed(x)
-        desc = f"{d.name}: port {x.name} moved from VLAN {old} to VLAN {new}"
+    return f"{d.name}: port {x.name} moved from VLAN {old} to VLAN {new}", undo_vlan
+
+
+def plant_fault(topology, rng: random.Random | None = None, lab=None, tries: int = 30) -> str | None:
+    """Break something at random (vendor-neutral, on the device objects); returns the description.
+
+    With a *lab*, the fault must make at least one check fail that passes now (otherwise "find the fault"
+    has nothing to find): candidates are tried in random order and undone until one does.  When no
+    candidate breaks a check, the last one tried stays (the network has no checks to protect)."""
+    rng = rng or random.Random()
+    options = _fault_options(topology)
+    if not options:
+        return None
+    rng.shuffle(options)
+    checks = list(getattr(lab, "checks", None) or [])
+    passing = [c for c in checks if run_check(topology, c)[0]] if checks else []
+    desc = None
+    for kind, d, x in options[:max(1, tries)] if passing else options[:1]:
+        desc, undo = _apply_fault(kind, d, x)
+        if not passing:
+            break
+        topology.engine.run(max_time=3000)              # let link state / ARP react before checking
+        if any(not run_check(topology, c)[0] for c in passing):
+            break
+        undo()
+        topology.engine.run(max_time=500)
+        desc = None
+    if desc is None:                                     # nothing breaks a check: keep a random fault
+        kind, d, x = options[0]
+        desc, _ = _apply_fault(kind, d, x)
     d.engine.emit("device_changed", d)
     return desc
 
