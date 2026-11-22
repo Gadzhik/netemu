@@ -1008,7 +1008,7 @@ def test_security_tab_and_infection_monitor(win):
     d.close()
 
 
-def test_classroom_roster_status_column():
+def test_classroom_roster_status_column(qtbot):
     """The attack-and-defend roster shows each student's live status (data-model only, no sockets)."""
     from netemu.gui.classroom import RosterPanel, TeacherClass
     teacher = TeacherClass({}, "Defend the LAN")
@@ -1017,15 +1017,18 @@ def test_classroom_roster_status_column():
     teacher.roster.join("Sidorov")
     teacher.roster.alerts("Sidorov", 0, 0)             # defended
     panel = RosterPanel(teacher)
+    qtbot.addWidget(panel)                             # qtbot owns and destroys it (no leaked Qt objects)
+    teacher.setParent(panel)                           # destroy the teacher QObject with the panel
     panel.refresh()
     rows = {panel.table.item(i, 0).text(): panel.table.item(i, 1).text() for i in range(panel.table.rowCount())}
     assert rows["Petrov"] == "под атакой" and rows["Sidorov"] == "чисто"
     teacher.stop()
 
 
-def test_classroom_attack_and_defend_wiring(monkeypatch):
+def test_classroom_attack_and_defend_wiring(qtbot, monkeypatch):
     """The teacher's start/stop-attacks command is broadcast to named students; core set_all_attacks
     toggles the attack devices.  (No sockets/windows: those crash the suite on Windows+Qt.)"""
+    from PySide6.QtWidgets import QWidget
     from netemu.gui import classroom
     from netemu.gui.classroom import TeacherClass
     from netemu.core.siem import set_all_attacks
@@ -1033,14 +1036,16 @@ def test_classroom_attack_and_defend_wiring(monkeypatch):
     from netemu.core.topology import Topology
     sent = []
     monkeypatch.setattr(classroom, "_send", lambda sock, obj: sent.append((sock, obj)))
+    holder = QWidget()
+    qtbot.addWidget(holder)                            # qtbot destroys the holder -> and the parented teacher
     teacher = TeacherClass({}, "Defend the LAN")
+    teacher.setParent(holder)
     teacher.clients = {"s1": {"name": "Petrov", "buf": b""}, "s2": {"name": None, "buf": b""}}
     teacher.set_attacks(True)
     assert sent == [("s1", {"attacks": True})]         # only the joined student, not the unnamed socket
     sent.clear()
     teacher.set_attacks(False)
     assert sent == [("s1", {"attacks": False})]
-    teacher.stop = lambda: None                        # no real server to stop
     # core: starting/stopping attacks toggles every attack device
     t = Topology()
     atk = t.add_device("lan-attacker", "ATK")
