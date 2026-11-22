@@ -139,7 +139,7 @@ class LinuxSession(CliSession):
 
     CMDS = ["arp", "cat", "clear", "curl", "date", "dhclient", "dig", "echo", "ethtool", "exit", "help", "host",
             "hostname", "hostnamectl", "id", "ifconfig", "ip", "logout", "netstat", "nslookup", "ping", "ping6", "pwd",
-            "iw", "nmcli", "passwd", "ufw", "apt", "freshclam", "clamscan", "reboot", "resolvectl", "route", "ss", "ssh", "su", "sudo", "sysctl", "systemctl", "telnet", "tracepath", "traceroute", "traceroute6", "uname", "uptime", "wget",
+            "iw", "nmcli", "passwd", "ufw", "apt", "freshclam", "clamscan", "fail2ban-client", "reboot", "resolvectl", "route", "ss", "ssh", "su", "sudo", "sysctl", "systemctl", "telnet", "tracepath", "traceroute", "traceroute6", "uname", "uptime", "wget",
             "whoami"]
 
     def complete(self, line: str) -> str | None:
@@ -1168,6 +1168,23 @@ class LinuxSession(CliSession):
         if len(a) < 2:
             return "systemctl: usage: systemctl start|stop|enable|disable|status ssh"
         verb, unit = a[0], a[-1].removesuffix(".service")
+        if unit in ("fail2ban", "smbd", "nmbd", "samba"):
+            from ..security import malware as mw
+            sec = mw.sec(self.device)
+            if verb == "status":
+                if unit == "fail2ban":
+                    st = "active (running)" if sec.get("fail2ban") else "inactive (dead)"
+                else:
+                    st = "active (running)" if sec.get("samba") else "inactive (dead)"
+                return f"● {unit}.service\n     Active: {st}"
+            if not root:
+                return f"Failed to {verb} {unit}.service: Access denied"
+            if unit == "fail2ban":
+                sec["fail2ban"] = verb in ("start", "enable", "restart")
+            else:
+                sec["samba"] = verb in ("start", "enable", "restart")
+            self.device.engine.emit("device_changed", self.device)
+            return None
         if unit not in ("ssh", "sshd"):
             return f"Failed to {verb} {unit}.service: Unit {unit}.service not found."
         acc = access(self.device)
@@ -1198,6 +1215,10 @@ class LinuxSession(CliSession):
             if pw != first["pw"]:
                 return "Sorry, passwords do not match.\npasswd: Authentication token manipulation error\npasswd: password unchanged"
             acc.setdefault("users", {})[user] = pw
+            from ..security import malware as mw
+            if len(pw) >= 8:                              # a non-trivial password defeats brute force
+                mw.sec(self.device)["ssh_weak"] = False
+                self.device.engine.emit("device_changed", self.device)
             return "passwd: password updated successfully"
 
         def one(pw):

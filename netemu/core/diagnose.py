@@ -208,6 +208,9 @@ def malware_hints(topology, k, a) -> list[str]:
             return []
         if fam.vuln == "default-password":
             return [tr("{dev}: смените заводской пароль или отключите Telnet.", dev=dev.name)]
+        if fam.vuln == "weak-password":
+            return [tr("{dev}: смените слабый пароль SSH (passwd), включите fail2ban или вход только по ключам.",
+                       dev=dev.name)]
         return [tr("{dev} уязвим: установите обновление {kb} ({vuln}), отключите службу (TCP {port}), закройте порт "
                    "межсетевым экраном хоста или обновите базы антивируса.", dev=dev.name,
                    kb=mw.PATCHES.get(fam.vuln, ("—",))[0], vuln=fam.vuln, port=fam.port)]
@@ -221,6 +224,9 @@ def malware_hints(topology, k, a) -> list[str]:
         if fam.memory_only:
             return [tr("{dev}: вредонос живёт в памяти — перезагрузите устройство, но сначала смените пароль, "
                        "иначе оно заразится снова.", dev=dev.name)]
+        if fam.targets == "linux":
+            return [tr("{dev}: закройте причину (смените пароль SSH и включите fail2ban, либо `apt upgrade` против "
+                       "SambaCry) и переустановите систему, иначе соседи заразят его снова.", dev=dev.name)]
         s = mw.sec(dev)
         if s["av_sigs"] < fam.sig:
             return [tr("{dev}: антивирус не знает {fam} — обновите базы (MpCmdRun -SignatureUpdate) и проверьте "

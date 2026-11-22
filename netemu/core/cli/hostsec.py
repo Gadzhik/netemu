@@ -167,10 +167,20 @@ def linux(session, cmd: str, a: list[str], root: bool):
     if cmd == "apt":
         if not root:
             return "E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)"
-        if a[:2] == ["install", "clamav"] or a[:3] == ["install", "-y", "clamav"]:
+        pkgs = [x for x in a[1:] if not x.startswith("-")][1:] if a[:1] == ["install"] else []
+        if a[:1] == ["install"] and "clamav" in pkgs:
             s["av"] = True
             d.engine.emit("device_changed", d)
             return "Setting up clamav (1.0.7+dfsg-1ubuntu1) ..."
+        if a[:1] == ["install"] and "fail2ban" in pkgs:
+            s["fail2ban"] = True
+            d.engine.emit("device_changed", d)
+            return ("Setting up fail2ban (1.0.2-2) ...\n"
+                    "Created symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service.")
+        if a[:1] in (["purge"], ["remove"]) and ("samba" in a or "smbd" in a):
+            s["samba"] = False
+            d.engine.emit("device_changed", d)
+            return "Removing samba (2:4.19.5) ..."
         if a[:1] in (["upgrade"], ["full-upgrade"]):
             for v in mw.PATCHES:
                 mw.patch(d, v)
@@ -185,6 +195,12 @@ def linux(session, cmd: str, a: list[str], root: bool):
             return mw.update_sigs(d, lambda ok, msg: session.write(msg + "\n"))
         found, rep = mw.av_scan(d)
         return "----------- SCAN SUMMARY -----------\n" + rep
+    if cmd == "fail2ban-client":
+        if a[:1] == ["status"]:
+            if not s.get("fail2ban"):
+                return "ERROR  Failed to access socket path: /var/run/fail2ban/fail2ban.sock."
+            return "Status\n|- Number of jail:\t1\n`- Jail list:\tsshd"
+        return "Usage: fail2ban-client status [sshd]"
     if cmd == "reboot":
         if not root:
             return "Call to Reboot failed: Access denied"

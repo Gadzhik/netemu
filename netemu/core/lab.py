@@ -542,8 +542,13 @@ def _sec_directive(dev, w) -> None:
         dev.engine.run_until(lambda: job.done)
     elif w[0] == "scan":
         mw.av_scan(dev)
-    elif w[0] in ("smb", "telnet"):
+    elif w[0] in ("smb", "telnet", "samba", "fail2ban"):
         s[w[0]] = on
+    elif w[0] == "sshpass":                             # @sec sshpass: SSH password is no longer weak
+        s["ssh_weak"] = False
+    elif w[0] == "upgrade":                             # @sec upgrade: install all patches (apt upgrade)
+        for v in mw.PATCHES:
+            mw.patch(dev, v)
     elif w[0] == "password":                           # @sec password NEW: factory password changed
         s["default_password"] = False
     elif w[0] == "block":

@@ -36,8 +36,9 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     intercept, SYN cookies, per-IP limits, a JS challenge and connection limits on servers; scrubbing, RTBH
     and FlowSpec at the provider; switching a domain's DNS record to the provider's protection service
     (reverse proxy, TTL-aware client DNS caches) ([guide](docs/en/ddos.md));
-  - malware: an SMB worm, a ransomware worm with a kill switch, a Mirai-style IoT botnet and a trojan with a
-    command-and-control server spread with real packets through routing, ACLs, NAT and IPS;
+  - malware: an SMB worm, a ransomware worm with a kill switch, a Mirai-style IoT botnet, a C2 trojan, plus
+    Linux families (SambaCry over Samba, an SSH brute-force worm) spread with real packets through routing,
+    ACLs, NAT and IPS;
   - malware defences on hosts (updates, antivirus signatures, services, host firewall, backups: Security
     tab, `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`, `wbadmin`, `ufw`, ClamAV) and in the network
     (segmentation, IPS on Cisco IOS, FortiGate and Juniper, egress filtering, DNS sinkhole); an infection monitor
@@ -46,7 +47,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     and STP root takeover; switch defences — Dynamic ARP Inspection (`ip arp inspection`, `ip source
     binding`), port security, DHCP snooping, BPDU Guard and Root Guard; a LAN-attack monitor
     ([guide](docs/en/l2.md));
-  - 14 new labs (20–33): six on DDoS, five on malware and three on L2 attacks; new lab checks `available`,
+  - 15 new labs (20–34): six on DDoS, six on malware and three on L2 attacks; new lab checks `available`,
     `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **New in 0.4**:
   - routing and MPLS: EIGRP (DUAL, feasible successors) and IS-IS, both also for IPv6; MPLS with LDP;

@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "87dcce5a866d",
+   "id": "469686ff955d",
    "model": "cisco-2911",
    "name": "R1",
    "x": 250,
@@ -35,7 +35,7 @@
    "startup": null
   },
   {
-   "id": "2445cdaa6d33",
+   "id": "5e254e7e666c",
    "model": "cisco-2911",
    "name": "R2",
    "x": 550,
@@ -67,7 +67,7 @@
    "startup": null
   },
   {
-   "id": "0e8465a60b74",
+   "id": "82b8da693b6a",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
@@ -213,7 +213,7 @@
    "startup": null
   },
   {
-   "id": "f406a33642f3",
+   "id": "28d493a0ed5a",
    "model": "cisco-2960",
    "name": "SW2",
    "x": 400,
@@ -359,7 +359,7 @@
    "startup": null
   },
   {
-   "id": "a8c10eb07c74",
+   "id": "5381220d736e",
    "model": "pc",
    "name": "PC1",
    "x": 400,
@@ -384,7 +384,7 @@
    "startup": null
   },
   {
-   "id": "d38fef1b6a7f",
+   "id": "8101581020d3",
    "model": "server",
    "name": "Server",
    "x": 650,
@@ -456,61 +456,61 @@
  "links": [
   {
    "a": [
-    "87dcce5a866d",
+    "469686ff955d",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "0e8465a60b74",
+    "82b8da693b6a",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "2445cdaa6d33",
+    "5e254e7e666c",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "0e8465a60b74",
+    "82b8da693b6a",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "a8c10eb07c74",
+    "5381220d736e",
     "FastEthernet0"
    ],
    "b": [
-    "0e8465a60b74",
+    "82b8da693b6a",
     "FastEthernet0/10"
    ]
   },
   {
    "a": [
-    "87dcce5a866d",
+    "469686ff955d",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "f406a33642f3",
+    "28d493a0ed5a",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "2445cdaa6d33",
+    "5e254e7e666c",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "f406a33642f3",
+    "28d493a0ed5a",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "d38fef1b6a7f",
+    "8101581020d3",
     "FastEthernet0"
    ],
    "b": [
-    "f406a33642f3",
+    "28d493a0ed5a",
     "FastEthernet0/10"
    ]
   }

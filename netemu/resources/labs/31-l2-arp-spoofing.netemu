@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "5b64db6bfd92",
+   "id": "50e394022dca",
    "model": "cisco-2911",
    "name": "GW",
    "x": 420,
@@ -58,7 +58,7 @@
    "startup": null
   },
   {
-   "id": "24bd910c4880",
+   "id": "bdb8bd06f1e4",
    "model": "cisco-2960",
    "name": "SW",
    "x": 420,
@@ -204,7 +204,7 @@
    "startup": null
   },
   {
-   "id": "316b51a970a3",
+   "id": "7a29286c862e",
    "model": "pc",
    "name": "PC1",
    "x": 240,
@@ -229,7 +229,7 @@
    "startup": null
   },
   {
-   "id": "f175eb5a61de",
+   "id": "597039f7b0ad",
    "model": "pc",
    "name": "PC2",
    "x": 390,
@@ -254,7 +254,7 @@
    "startup": null
   },
   {
-   "id": "154c77db7ad0",
+   "id": "2a69ca39e0e0",
    "model": "lan-attacker",
    "name": "ATK",
    "x": 620,
@@ -290,41 +290,41 @@
  "links": [
   {
    "a": [
-    "5b64db6bfd92",
+    "50e394022dca",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "24bd910c4880",
+    "bdb8bd06f1e4",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "316b51a970a3",
+    "7a29286c862e",
     "FastEthernet0"
    ],
    "b": [
-    "24bd910c4880",
+    "bdb8bd06f1e4",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "f175eb5a61de",
+    "597039f7b0ad",
     "FastEthernet0"
    ],
    "b": [
-    "24bd910c4880",
+    "bdb8bd06f1e4",
     "FastEthernet0/3"
    ]
   },
   {
    "a": [
-    "154c77db7ad0",
+    "2a69ca39e0e0",
     "FastEthernet0"
    ],
    "b": [
-    "24bd910c4880",
+    "bdb8bd06f1e4",
     "FastEthernet0/10"
    ]
   }
@@ -348,7 +348,7 @@
   },
   "solution": "Подмену ARP в локальной сети останавливает Dynamic ARP Inspection, опирающийся на таблицу DHCP snooping (или на статические привязки ip source binding). Защищать нужно на коммутаторе, а не на конечных узлах.",
   "script": {
-   "SW": "enable\nconfigure terminal\nip source binding 0060.2f3b.09c6 vlan 1 192.168.1.11 interface fa0/2\nip source binding 0060.2f51.09c7 vlan 1 192.168.1.12 interface fa0/3\ninterface gi0/1\nip arp inspection trust\nexit\nip arp inspection vlan 1\nend"
+   "SW": "enable\nconfigure terminal\nip source binding 0004.9ae5.0a00 vlan 1 192.168.1.11 interface fa0/2\nip source binding 000a.4177.0a01 vlan 1 192.168.1.12 interface fa0/3\ninterface gi0/1\nip arp inspection trust\nexit\nip arp inspection vlan 1\nend"
   }
  }
 }
