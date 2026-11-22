@@ -23,8 +23,8 @@
   а также Linux-семейства (SambaCry через Samba, червь-подборщик паролей SSH) распространяются настоящими пакетами; монитор заражения ([руководство](docs/ru/malware.md)); атаки канального уровня (L2) с устройства «Атакующий (LAN)»
   настоящими кадрами — подмена ARP (MITM), переполнение MAC-таблицы, захват корня STP; защита коммутатора — Dynamic ARP
   Inspection (`ip arp inspection`, `ip source binding`), port security, DHCP snooping, BPDU Guard и Root Guard, монитор
-  атак ([руководство](docs/ru/l2.md)); 15 новых лабораторных (20–34): шесть по DDoS, шесть по вредоносам и три по
-  атакам L2; новые проверки `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
+  атак ([руководство](docs/ru/l2.md)); SIEM («Инструменты → Мониторинг»): единое окно, которое собирает события со всех устройств и мониторов DDoS/вредоносов/L2 в тревоги по важности с рекомендациями ([руководство](docs/ru/siem.md)); 16 новых лабораторных (20–35): шесть по DDoS, шесть по вредоносам, три по
+  атакам L2 и поиск атаки по SIEM; новые проверки `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **Новое в 0.4**: EIGRP и IS-IS (в том числе для IPv6), MPLS/LDP, MPLS L3VPN (MP-BGP VPNv4), MPLS TE с RSVP-TE,
   VRF, вторичные IPv4-адреса на интерфейсах; межсетевой экран с отслеживанием состояния (Cisco ZBF,
   зоны Junos SRX), 802.1X с RADIUS, AAA/TACACS+; серверы TFTP и FTP, почта SMTP/POP3 с почтовым клиентом,

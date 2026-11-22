@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "022c516dfb7b",
+   "id": "798f07ce6fbe",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
@@ -44,7 +44,7 @@
    "startup": null
   },
   {
-   "id": "22559b71624f",
+   "id": "efcf1d2c1a92",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
@@ -210,7 +210,7 @@
    "startup": null
   },
   {
-   "id": "eda35eaa5e63",
+   "id": "3061286725b7",
    "model": "ip-phone",
    "name": "Phone1",
    "x": 250,
@@ -239,7 +239,7 @@
    "startup": null
   },
   {
-   "id": "758f7fe84e4d",
+   "id": "bca5e15f2328",
    "model": "ip-phone",
    "name": "Phone2",
    "x": 550,
@@ -271,31 +271,31 @@
  "links": [
   {
    "a": [
-    "022c516dfb7b",
+    "798f07ce6fbe",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "22559b71624f",
+    "efcf1d2c1a92",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "eda35eaa5e63",
+    "3061286725b7",
     "Switch"
    ],
    "b": [
-    "22559b71624f",
+    "efcf1d2c1a92",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "758f7fe84e4d",
+    "bca5e15f2328",
     "Switch"
    ],
    "b": [
-    "22559b71624f",
+    "efcf1d2c1a92",
     "FastEthernet0/2"
    ]
   }

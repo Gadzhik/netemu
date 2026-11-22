@@ -47,8 +47,10 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     and STP root takeover; switch defences — Dynamic ARP Inspection (`ip arp inspection`, `ip source
     binding`), port security, DHCP snooping, BPDU Guard and Root Guard; a LAN-attack monitor
     ([guide](docs/en/l2.md));
-  - 15 new labs (20–34): six on DDoS, six on malware and three on L2 attacks; new lab checks `available`,
-    `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
+  - a SIEM (Tools → Monitoring): one pane of glass that correlates events from every device and the DDoS,
+    malware and L2 monitors into ranked alerts with advice ([guide](docs/en/siem.md));
+  - 16 new labs (20–35): six on DDoS, six on malware, three on L2 attacks and a SIEM find-the-attack lab;
+    new lab checks `available`, `ddos`, `clean`, `immune`, `outbreak`, `c2blocked`, `mitm`.
 - **New in 0.4**:
   - routing and MPLS: EIGRP (DUAL, feasible successors) and IS-IS, both also for IPv6; MPLS with LDP;
     MPLS L3VPN (VRFs with RD/route targets, MP-BGP VPNv4, two-label forwarding); MPLS traffic engineering

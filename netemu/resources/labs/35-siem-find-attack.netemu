@@ -1,0 +1,354 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "5f3eed7433f3",
+   "model": "cisco-2911",
+   "name": "GW",
+   "x": 420,
+   "y": 80,
+   "powered": true,
+   "location": "",
+   "pps_limit": null,
+   "config": {
+    "hostname": "GW",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [],
+    "dhcp_server": {
+     "enabled": true,
+     "pools": [
+      {
+       "name": "LAN",
+       "network": "192.168.1.0/24",
+       "gateway": "192.168.1.1",
+       "dns": null,
+       "domain": "",
+       "start": null,
+       "end": null,
+       "lease": 86400,
+       "tftp": null
+      }
+     ],
+     "excluded": [
+      [
+       "192.168.1.1",
+       "192.168.1.10"
+      ]
+     ],
+     "interfaces": null
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "f02f0a6f41e6",
+   "model": "cisco-2960",
+   "name": "SW",
+   "x": 420,
+   "y": 240,
+   "powered": true,
+   "location": "",
+   "pps_limit": null,
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "1535aae8bf5e",
+   "model": "pc",
+   "name": "PC1",
+   "x": 240,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "pps_limit": null,
+   "config": {
+    "hostname": "PC1",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.11/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "91af7d9d8fb2",
+   "model": "pc",
+   "name": "PC2",
+   "x": 390,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "pps_limit": null,
+   "config": {
+    "hostname": "PC2",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.12/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "38aed3d936e6",
+   "model": "lan-attacker",
+   "name": "ATK",
+   "x": 620,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "pps_limit": null,
+   "config": {
+    "hostname": "ATK",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.13/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null,
+    "l2attacks": [
+     {
+      "kind": "arp-spoof",
+      "target": "",
+      "gateway": "192.168.1.1",
+      "running": true
+     }
+    ]
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "5f3eed7433f3",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "f02f0a6f41e6",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "1535aae8bf5e",
+    "FastEthernet0"
+   ],
+   "b": [
+    "f02f0a6f41e6",
+    "FastEthernet0/2"
+   ]
+  },
+  {
+   "a": [
+    "91af7d9d8fb2",
+    "FastEthernet0"
+   ],
+   "b": [
+    "f02f0a6f41e6",
+    "FastEthernet0/3"
+   ]
+  },
+  {
+   "a": [
+    "38aed3d936e6",
+    "FastEthernet0"
+   ],
+   "b": [
+    "f02f0a6f41e6",
+    "FastEthernet0/10"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "Мониторинг: найди атаку по SIEM",
+  "text": "**Найди атаку по мониторингу.** Пользователи жалуются, что сеть «ведёт себя странно». На схеме ничего подозрительного. Ваша задача — как аналитик центра мониторинга (SOC) — найти атаку и остановить её.\n\n1. Откройте **«Инструменты → Мониторинг (SIEM)»** (`Ctrl+Shift+M`). SIEM собирает события со всех устройств и мониторов безопасности и показывает тревоги по важности. Найдите тревогу и прочитайте рекомендацию внизу.\n2. В журнале событий и в «Инструменты → Атаки в сети (L2)» видно подробности: кто атакует и сколько кадров перехвачено. Это **подмена ARP** — чужое устройство выдаёт себя за шлюз и перехватывает трафик (атака «человек посередине»).\n3. Остановите атаку: включите на коммутаторе **Dynamic ARP Inspection** для VLAN 1, доверенный порт — к шлюзу (gi0/1). Адреса статические, поэтому заполните таблицу привязок `ip source binding`.\n4. Проверьте, что перехват прекратился, а связь сохранилась. В SIEM тревога исчезнет.\n\nЧем SIEM помогает по сравнению с просмотром каждого устройства по отдельности? Какие ещё тревоги он показывает (DDoS, черви, командные серверы)?",
+  "checks": [
+   "mitm ATK 0 | Перехват прекращён, атака остановлена",
+   "ping PC1 192.168.1.1 | Связь со шлюзом сохранилась"
+  ],
+  "translations": {
+   "en": {
+    "title": "Monitoring: find the attack with the SIEM",
+    "text": "**Find the attack with monitoring.** Users complain that the network \"behaves strangely\". Nothing looks suspicious on the canvas. Your job, as a SOC analyst, is to find the attack and stop it.\n\n1. Open **Tools → Monitoring (SIEM)** (`Ctrl+Shift+M`). The SIEM collects events from every device and security monitor and shows alerts by severity. Find the alert and read the advice at the bottom.\n2. The event log and Tools → LAN attacks show the detail: who is attacking and how many frames are intercepted. This is **ARP spoofing** — a foreign device impersonates the gateway and intercepts traffic (a man-in-the-middle attack).\n3. Stop it: turn on **Dynamic ARP Inspection** for VLAN 1 on the switch, with the port to the gateway (gi0/1) trusted. The addresses are static, so fill the binding table with `ip source binding`.\n4. Check that interception stopped and connectivity is kept. The alert disappears in the SIEM.\n\nHow does a SIEM help compared with checking each device separately? What other alerts does it show (DDoS, worms, C2 servers)?",
+    "checks": [
+     "Interception stopped, the attack is halted",
+     "Connectivity to the gateway is kept"
+    ]
+   }
+  },
+  "solution": "SIEM (центр мониторинга) собирает события со всех устройств в одном месте и превращает их в тревоги по важности, поэтому атаку видно сразу, не просматривая каждое устройство вручную.",
+  "script": {
+   "SW": "enable\nconfigure terminal\nip source binding 0050.0fed.0b40 vlan 1 192.168.1.11 interface fa0/2\nip source binding 0060.2f59.0b41 vlan 1 192.168.1.12 interface fa0/3\ninterface gi0/1\nip arp inspection trust\nexit\nip arp inspection vlan 1\nend"
+  }
+ }
+}

@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "eb3240096913",
+   "id": "02dd9a3b5aac",
    "model": "internet",
    "name": "ISP",
    "x": 420,
@@ -123,7 +123,7 @@
    "startup": null
   },
   {
-   "id": "34a7ac80def5",
+   "id": "c64dc67c8801",
    "model": "cisco-2911",
    "name": "EDGE",
    "x": 420,
@@ -189,7 +189,7 @@
    "startup": null
   },
   {
-   "id": "0581af630ee0",
+   "id": "1d24e8aaed30",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 420,
@@ -335,7 +335,7 @@
    "startup": null
   },
   {
-   "id": "b330d2c7d09e",
+   "id": "543ebc54d09d",
    "model": "server",
    "name": "WEB",
    "x": 300,
@@ -406,7 +406,7 @@
    "startup": null
   },
   {
-   "id": "ff1d2c83101c",
+   "id": "ac39f5bb0b54",
    "model": "pc",
    "name": "CLIENT",
    "x": 120,
@@ -431,7 +431,7 @@
    "startup": null
   },
   {
-   "id": "910088a54acb",
+   "id": "8f27db187155",
    "model": "botnet",
    "name": "BOTNET",
    "x": 720,
@@ -483,51 +483,51 @@
  "links": [
   {
    "a": [
-    "34a7ac80def5",
+    "c64dc67c8801",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "eb3240096913",
+    "02dd9a3b5aac",
     "ISP0"
    ]
   },
   {
    "a": [
-    "ff1d2c83101c",
+    "ac39f5bb0b54",
     "FastEthernet0"
    ],
    "b": [
-    "eb3240096913",
+    "02dd9a3b5aac",
     "ISP2"
    ]
   },
   {
    "a": [
-    "910088a54acb",
+    "8f27db187155",
     "FastEthernet0"
    ],
    "b": [
-    "eb3240096913",
+    "02dd9a3b5aac",
     "ISP3"
    ]
   },
   {
    "a": [
-    "34a7ac80def5",
+    "c64dc67c8801",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "0581af630ee0",
+    "1d24e8aaed30",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "b330d2c7d09e",
+    "543ebc54d09d",
     "FastEthernet0"
    ],
    "b": [
-    "0581af630ee0",
+    "1d24e8aaed30",
     "GigabitEthernet0/2"
    ]
   }

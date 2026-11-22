@@ -179,6 +179,9 @@ class MainWindow(QMainWindow):
         self.act_l2 = self._act("Атаки в сети (L2)", self.show_l2attacks, "Ctrl+Shift+L")
         m.addAction(self.act_l2)
         self.l2_dock = None
+        self.act_siem = self._act("Мониторинг (SIEM)", self.show_siem, "Ctrl+Shift+M")
+        m.addAction(self.act_siem)
+        self.siem_dock = None
 
         m = mb.addMenu(tr("&Вид"))
         self.act_labels = self._act("Подписи портов", self._toggle_labels, checkable=True)
@@ -720,6 +723,19 @@ class MainWindow(QMainWindow):
         self.load_dock.raise_()
         return self.load_panel
 
+    def show_siem(self):
+        from .siem_panel import SiemPanel
+        if self.siem_dock is None:
+            self.siem_panel = SiemPanel(self)
+            self.siem_dock = QDockWidget(tr("Мониторинг (SIEM)"), self)
+            self.siem_dock.setObjectName("siem")
+            self.siem_dock.setWidget(self.siem_panel)
+            self.addDockWidget(Qt.BottomDockWidgetArea, self.siem_dock)
+        self.siem_panel.refresh()
+        self.siem_dock.show()
+        self.siem_dock.raise_()
+        return self.siem_panel
+
     def show_l2attacks(self):
         from .l2attack_panel import L2Monitor
         if self.l2_dock is None:
@@ -992,6 +1008,8 @@ class MainWindow(QMainWindow):
             self.malware_panel.shutdown()
         if getattr(self, "l2_dock", None) is not None:
             self.l2_panel.shutdown()
+        if getattr(self, "siem_dock", None) is not None:
+            self.siem_panel.shutdown()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()

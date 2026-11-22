@@ -52,7 +52,7 @@ python -m venv .venv
 .venv/Scripts/python -m pyflakes netemu tools         # lint, must print nothing
 .venv/Scripts/python -m pytest -q tests                # ~396 tests, ~10-20 s, GUI tests off screen
 .venv/Scripts/python tools/gen_docs.py                 # regenerate CLI command tables in docs/*/*.md
-.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 34 ready-made labs (…: labs_more/ddos/malware.py, 31-33: labs_l2.py)
+.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 35 ready-made labs (…: labs_more/ddos/malware.py, 31-33: labs_l2.py)
 .venv/Scripts/python tools/screenshots.py              # re-render docs/images/*.png (English UI, off screen)
 .venv/Scripts/python tools/build.py                    # PyInstaller build -> release/ (zip; setup.exe via Inno Setup)
 ```
@@ -214,7 +214,15 @@ python -m venv .venv
    what-if on a copy), host CLI in `cli/hostsec.py` (netsh advfirewall, sc, wusa, wmic qfe, MpCmdRun, wbadmin;
    ufw, clamav), Cisco `ip ips`, cloud update.example/c2.example, `gui/malware_panel.py` (Security tab,
    Tools → Network infection); checks clean/immune/outbreak/c2blocked, `@sec` directives; labs 26-30;
-   docs `docs/*/malware.md` (help topic "malware").
+   docs `docs/*/malware.md` (help topic "malware"). SambaCry (`samba-worm`, 445) and `ssh-worm` (22) target
+   Linux (sec flags samba/ssh_weak/fail2ban); IPS also on FortiGate (`config ips sensor`) and Juniper IDP.
+8. **0.5.0, L2 attacks**: `security/l2attack.py` (arp-spoof, mac-flood, stp-root; `L2Attacker` in
+   `devices/attacker.py`, switch state `l2sec()`, `intercepted_by()`), switch hooks in `devices/l2.py` (DAI,
+   BPDU/Root Guard, CAM overflow), Cisco `ip arp inspection`/`ip source binding`/`spanning-tree bpduguard`,
+   `gui/l2attack_panel.py`; check `mitm`, directive `@l2`; labs 31-33; docs `docs/*/l2.md` (topic "l2").
+9. **0.5.0, SIEM** (item 4): `core/siem.py` aggregates the DDoS/malware/L2 monitors + device syslog buffers
+   into `alerts()`/`events()`; `gui/siem_panel.py` (Tools → Monitoring, Ctrl+Shift+M); lab 35; docs
+   `docs/*/siem.md` (help topic "siem"). Also: router/switch `pps_limit` (DDoS by packets/s).
 
 ## Known gaps / ideas for next time (also listed in README "Limitations")
 - CME and HSRP only on Cisco (Cisco technologies; VRRP everywhere) - by design.

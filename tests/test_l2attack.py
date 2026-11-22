@@ -141,3 +141,35 @@ def test_l2_gui_panel_and_monitor(qtbot):
     assert l2.monitor(t).stats["poisoned"] > 0
     win._saved_snapshot = win._snapshot()
     win.shutdown()
+
+
+def test_siem_aggregates_alerts(qtbot):
+    from netemu.core import siem
+    from netemu.gui.main_window import MainWindow
+    win = MainWindow()
+    qtbot.addWidget(win)
+    t = win.topology
+    sw = t.add_device("cisco-2960", "SW")
+    gw = t.add_device("cisco-2911", "GW")
+    t.connect(gw.get_port("gi0/0"), sw.get_port("Gi0/1"))
+    run_all(gw.create_cli(), "enable\nconfigure terminal\ninterface gi0/0\nip address 192.168.1.1 255.255.255.0\n"
+                             "no shutdown\nexit\nip dhcp pool LAN\nnetwork 192.168.1.0 255.255.255.0\n"
+                             "default-router 192.168.1.1\nend")
+    pc = t.add_device("pc", "PC1")
+    t.connect(pc.nic, sw.get_port("Fa0/2"))
+    pc.start_dhcp()
+    atk = t.add_device("lan-attacker", "ATK")
+    t.connect(atk.nic, sw.get_port("Fa0/10"))
+    atk.start_dhcp()
+    t.engine.run(max_time=4000)
+    assert siem.alerts(t) == []                                  # quiet network, no alerts
+    atk.l2attacks = [l2.L2Attack("arp-spoof", gateway="192.168.1.1")]
+    atk.start()
+    t.engine.run(max_time=4000)
+    al = siem.alerts(t)
+    assert any(a.category == "arp-spoof" for a in al) and al[0].advice
+    panel = win.show_siem()
+    panel.refresh()
+    assert panel.alerts.rowCount() == len(al) and "ARP" in panel.log.toPlainText().upper()
+    win._saved_snapshot = win._snapshot()
+    win.shutdown()
