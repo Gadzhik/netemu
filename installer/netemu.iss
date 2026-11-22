@@ -5,7 +5,7 @@
 
 #define AppName "NetEmu"
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "0.5.0"
 #endif
 
 [Setup]

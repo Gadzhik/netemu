@@ -19,8 +19,31 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
 |---|---|
 | ![Lab](docs/images/lab.png) | ![Dark theme](docs/images/dark.png) |
 
+| DDoS: an overloaded link and the load monitor | Malware: a worm in the office and the infection monitor |
+|---|---|
+| ![DDoS](docs/images/ddos.png) | ![Malware](docs/images/malware.png) |
+
+| Host security: updates, antivirus, services, backup |
+|---|
+| ![Security tab](docs/images/security.png) |
+
 ## Features
 
+- **New in 0.5** (security training):
+  - DDoS attacks of any power from a Botnet device: UDP/ICMP/SYN/HTTP floods, Slowloris, DNS/NTP
+    amplification; a load monitor and red overloaded cables show where the network breaks;
+  - DDoS defences on every level: ACLs, policing, uRPF (BCP 38) and null routes on every vendor, Cisco TCP
+    intercept, SYN cookies, per-IP limits, a JS challenge and connection limits on servers; scrubbing, RTBH
+    and FlowSpec at the provider; switching a domain's DNS record to the provider's protection service
+    (reverse proxy, TTL-aware client DNS caches) ([guide](docs/en/ddos.md));
+  - malware: an SMB worm, a ransomware worm with a kill switch, a Mirai-style IoT botnet and a trojan with a
+    command-and-control server spread with real packets through routing, ACLs, NAT and IPS;
+  - malware defences on hosts (updates, antivirus signatures, services, host firewall, backups: Security
+    tab, `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`, `wbadmin`, `ufw`, ClamAV) and in the network
+    (segmentation, Cisco IOS IPS, egress filtering, DNS sinkhole); an infection monitor
+    ([guide](docs/en/malware.md));
+  - 11 new labs (20–30): six on DDoS and five on malware; new lab checks `available`, `ddos`, `clean`,
+    `immune`, `outbreak`, `c2blocked`.
 - **New in 0.4**:
   - routing and MPLS: EIGRP (DUAL, feasible successors) and IS-IS, both also for IPv6; MPLS with LDP;
     MPLS L3VPN (VRFs with RD/route targets, MP-BGP VPNv4, two-label forwarding); MPLS traffic engineering
@@ -32,18 +55,8 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     DHCP option 82;
   - new devices: Cisco ASA 5506-X (ASA CLI), FortiGate 60F (FortiOS CLI), Cisco WLC 2504 with lightweight
     access points, IoT sensors and actuators with an IoT server and IF … THEN rules;
-  - DDoS: a Botnet device launches UDP/ICMP/SYN/HTTP floods, Slowloris and DNS/NTP amplification of any
-    power; a load monitor and red overloaded cables show where the network breaks; defences on every level:
-    ACLs, policing, uRPF (BCP 38) and null routes on every vendor, Cisco TCP intercept, SYN cookies, per-IP
-    limits and a JS challenge on servers, scrubbing, RTBH and FlowSpec at the provider, switching a
-    domain's DNS record to the provider's protection service (reverse proxy, TTL-aware client caches)
-    ([guide](docs/en/ddos.md));
-  - malware: SMB worm, ransomware worm with a kill switch, Mirai-style IoT botnet and a C2 trojan
-    spread with real packets through routing, ACLs, NAT and IPS; defences on hosts (updates, antivirus
-    signatures, services, host firewall, backups) and in the network (segmentation, Cisco IPS, egress
-    filtering, DNS sinkhole); an infection monitor ([guide](docs/en/malware.md));
-  - teaching: 30 ready-made labs (new: BGP, EtherChannel, port security, site-to-site VPN, VoIP,
-    IPv6/OSPFv3, an exam, six DDoS labs, five malware labs); classroom mode (the teacher hands out a lab over the LAN and sees every student's
+  - teaching: 19 ready-made labs (new: BGP, EtherChannel, port security, site-to-site VPN, VoIP,
+    IPv6/OSPFv3, an exam); classroom mode (the teacher hands out a lab over the LAN and sees every student's
     checks live); hints that explain why a check failed;
   - tools: packet analyzer with display filters and `.pcap` export for Wireshark; physical view
     (building / floor / rack, cable type and length, copper limited to 100 m); terminal syntax highlighting,

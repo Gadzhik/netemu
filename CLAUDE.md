@@ -12,7 +12,7 @@ NetEmu is an educational network simulator in the spirit of Cisco Packet Tracer.
 There is a canvas with cables, a simulation mode with packet animation, labs with automatic checks,
 teacher mode, LAN collaboration and a Russian/English UI.
 
-Current version: **0.4.0** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
+Current version: **0.5.0** (`netemu/__init__.py`, `pyproject.toml`, `installer/netemu.iss`).
 - README.md is in English, README.ru.md in Russian.
 - User docs are in `docs/en` and `docs/ru`; they are also shown in the app via F1.
 
@@ -202,14 +202,14 @@ python -m venv .venv
    - EIGRP for IPv6 (`v6igp.Eigrp6`) and IS-IS for IPv6 (TLV 236 in `isis.py`), MPLS L3VPN (VPNv4 in
      `bgp.py`, VPN labels / `_send_vpn` in `router.py`), RSVP-TE (`routing/te.py`, `TunnelPort.tmode == "te"`;
      note `Port.mode` is the switchport mode, do not reuse it), secondary IPv4 addresses (`Port.ip2`).
-6. **DDoS** (after 0.4.0): `devices/botnet.py` (category "attack"), `security/ddos.py` (`Attack`, `FloodTag`,
+6. **0.5.0, DDoS**: `devices/botnet.py` (category "attack"), `security/ddos.py` (`Attack`, `FloodTag`,
    `DdosMonitor` = `topology.ddos`, server `guard()`), `gui/ddos_panel.py` (attacks, provider protection,
    server guard, Tools → Load and DDoS); uRPF/null routes on every vendor, Cisco TCP intercept, cloud
    scrub/RTBH/FlowSpec (`Internet.protect`); lab checks `available`/`ddos`, directives `@ddos`/`@isp`/`@attack`;
    labs 20-25; docs `docs/*/ddos.md` (help topic "ddos"). DNS switching: `Internet.zones` (DNS hosting,
    TTL), `shield` sends the domain to the reverse proxy 198.51.100.200 (`Internet._shield`); clients cache
    records with a TTL (`Host.dns_expiry`, `services.dns.cached`); botnets can attack a domain name.
-7. **Malware** (after 0.4.0): `security/malware.py` (families smb-worm, ransomworm + kill switch, iot-botnet,
+7. **0.5.0, Malware**: `security/malware.py` (families smb-worm, ransomworm + kill switch, iot-botnet,
    trojan + C2; `sec(dev)` host state, `dev.infection`, `MalwareMonitor` = `topology.malware`, `outbreak()`
    what-if on a copy), host CLI in `cli/hostsec.py` (netsh advfirewall, sc, wusa, wmic qfe, MpCmdRun, wbadmin;
    ufw, clamav), Cisco `ip ips`, cloud update.example/c2.example, `gui/malware_panel.py` (Security tab,
