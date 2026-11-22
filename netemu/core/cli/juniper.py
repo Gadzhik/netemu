@@ -216,7 +216,13 @@ class JunosSession(TreeSession):
             nodes = [P.kw("zones", "Show security zone information", handler=lambda s, a, n: s.show_security("zones")),
                      P.kw("policies", "Show security policies", handler=lambda s, a, n: s.show_security("policies")),
                      P.kw("flow", "Show flow information", P.kw("session", "Show session information",
-                          handler=lambda s, a, n: s.show_security("flow")))]
+                          handler=lambda s, a, n: s.show_security("flow"))),
+                     P.kw("idp", "Show IDP information",
+                          P.kw("status", "Show IDP status", handler=lambda s, a, n: s.show_security("idp")),
+                          P.kw("counters", "Show IDP counters", P.kw("application-identification",
+                               "", handler=lambda s, a, n: s.show_security("idp")),
+                               handler=lambda s, a, n: s.show_security("idp")),
+                          handler=lambda s, a, n: s.show_security("idp"))]
             if sec is None:
                 show.children.append(P.kw("security", "Show security information", *nodes))
             else:
@@ -680,7 +686,11 @@ class JunosSession(TreeSession):
                                       P.kw("nat", "Configure Network Address Translation",
                                            *([] if delete else [P.arg(P.LineArg("source|static|destination ..."), "NAT statement",
                                                                       handler=lambda s, a, n: s.cfg_jnat(a[0], False))]),
-                                           handler=(lambda s, a, n: s.cfg_jnat("", True)) if delete else None)))
+                                           handler=(lambda s, a, n: s.cfg_jnat("", True)) if delete else None),
+                                      P.kw("idp", "Intrusion Detection and Prevention",
+                                           *([] if delete else [P.arg(P.LineArg("active-policy <name> | idp-policy <name> ..."), "IDP statement",
+                                                                      handler=lambda s, a, n: s.cfg_idp(a[0], False))]),
+                                           handler=(lambda s, a, n: s.cfg_idp("", True)) if delete else None)))
                 paths.append(P.kw("policy-options", "Policy option configuration",
                                   P.kw("policy-statement", "Routing policy",
                                        P.arg(P.WordArg("<policy-name>"), "Name to identify a policy filter",
@@ -1560,6 +1570,23 @@ class JunosSession(TreeSession):
             return self.err_invalid(self.prompt, 0)
         return None
 
+    def cfg_idp(self, text, delete):
+        ex = self._extra()
+        if delete:
+            ex.pop("idp_active", None)
+            ex.pop("idp_policies", None)
+            return None
+        w = [x.strip('"') for x in text.split()]
+        if w[:1] == ["active-policy"] and len(w) > 1:
+            ex["idp_active"] = w[1]
+        elif w[:1] == ["idp-policy"] and len(w) > 1:
+            ex.setdefault("idp_policies", [])
+            if w[1] not in ex["idp_policies"]:
+                ex["idp_policies"].append(w[1])
+        else:
+            return self.err_invalid(self.prompt, 0)
+        return None
+
     def cfg_srx(self, section, text, delete):
         ex = self._extra()
         if delete:
@@ -1628,6 +1655,16 @@ class JunosSession(TreeSession):
     def show_security(self, what):
         d = self.device
         ex = d.extra
+        if what == "idp":
+            ips = ex.get("ips") or {}
+            active = ex.get("idp_active")
+            if not active:
+                return "node0:\n--------------------------------------------------------------------------\n" \
+                       "IDP is not enabled"
+            return (f"node0:\n{'-' * 70}\nState of IDP: enabled, Up since: 2026-11-22\n"
+                    f"Packets/second: 0, KBits/second: 0\nActive policy: {active}\n"
+                    f"Interfaces with IDP: {len(ips.get('ifaces', {}))}\n"
+                    f"Sessions dropped by IDP: {ex.get('ips', {}).get('drops', 0)}")
         if what == "zones":
             out = []
             for z, ifs in (ex.get("srx_zones") or {}).items():
@@ -1656,6 +1693,19 @@ class JunosSession(TreeSession):
                     f"  Out: {dst}/{dp} --> {src}/{sp};{name}"]
         out.append(f"Total sessions: {len(d.conntrack.active())}")
         return "\n".join(out)
+
+    def _resolve_idp(self, cfg) -> str | None:
+        ex = cfg.setdefault("extra", {})
+        name = ex.get("idp_active")
+        if not name:
+            if (ex.get("ips") or {}).get("_idp"):
+                ex.pop("ips", None)
+            return None
+        ifaces = {p.name: name for p in self.device.ports.values()
+                  if p.ip is not None and not getattr(p, "is_loopback", False)}
+        ex["ips"] = {"names": [name], "ifaces": ifaces, "_idp": True,
+                     "drops": (ex.get("ips") or {}).get("drops", 0)}
+        return None
 
     def _resolve_vpn(self, cfg) -> str | None:
         vpn = cfg.get("extra", {}).get("vpn") or {}
@@ -2354,7 +2404,7 @@ class JunosSession(TreeSession):
         if err:
             return err
         cfg = copy.deepcopy(self.candidate)
-        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_vpn(cfg) or self._resolve_zones(cfg) or self._resolve_security(cfg)
+        err = (self._resolve_switching(cfg) or self._resolve_ospf(cfg) or self._resolve_vpn(cfg) or self._resolve_zones(cfg) or self._resolve_idp(cfg) or self._resolve_security(cfg)
                or self._resolve_bgp(cfg) or self._resolve_dhcp(cfg) or self._resolve_rip(cfg)
                or self._resolve_stp(cfg) or self._resolve_irb(cfg) or self._resolve_lag(cfg)
                or self._resolve_dhcp6(cfg))
@@ -2995,6 +3045,14 @@ def render_config(device, cfg: dict) -> str:
                     lines.append("                }")
                 lines.append("            }")
             lines.append("        }")
+        lines += ["    }", "}"]
+    if ex.get("idp_active") or ex.get("idp_policies"):
+        lines.append("security {")
+        lines.append("    idp {")
+        for name in ex.get("idp_policies", []):
+            lines += [f"        idp-policy {name} {{", "        }"]
+        if ex.get("idp_active"):
+            lines.append(f"        active-policy {ex['idp_active']};")
         lines += ["    }", "}"]
     pools = ex.get("dhcp_pools", {})
     if pools:

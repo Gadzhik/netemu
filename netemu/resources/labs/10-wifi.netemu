@@ -3,13 +3,14 @@
  "version": 1,
  "devices": [
   {
-   "id": "d7fb49acbc5a",
+   "id": "2d3180e9fb60",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
    "y": 80,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Router",
     "interfaces": {
@@ -52,13 +53,14 @@
    "startup": null
   },
   {
-   "id": "b753a8a5e0e8",
+   "id": "21a3af61e788",
    "model": "access-point",
    "name": "AP1",
    "x": 400,
    "y": 230,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "AP1",
     "interfaces": {
@@ -86,13 +88,14 @@
    "startup": null
   },
   {
-   "id": "edf81648e0b3",
+   "id": "4d11cb91d461",
    "model": "laptop",
    "name": "Laptop1",
    "x": 300,
    "y": 360,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Laptop1",
     "interfaces": {
@@ -114,13 +117,14 @@
    "startup": null
   },
   {
-   "id": "99ea78a5d8a6",
+   "id": "8cdf898a00ab",
    "model": "laptop",
    "name": "Laptop2",
    "x": 500,
    "y": 360,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Laptop2",
     "interfaces": {
@@ -145,11 +149,11 @@
  "links": [
   {
    "a": [
-    "d7fb49acbc5a",
+    "2d3180e9fb60",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "b753a8a5e0e8",
+    "21a3af61e788",
     "Ethernet0"
    ]
   }

@@ -19,7 +19,7 @@
   шифровальщик-червь с kill switch, IoT-ботнет в духе Mirai и троян с командным сервером — распространяются
   настоящими пакетами через маршрутизацию, ACL, NAT и IPS; защита на узлах (обновления, антивирус, службы,
   межсетевой экран хоста, резервные копии: вкладка «Безопасность», `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`,
-  `wbadmin`, `ufw`, ClamAV) и в сети (сегментация, IPS Cisco IOS, фильтрация исходящего трафика, DNS sinkhole),
+  `wbadmin`, `ufw`, ClamAV) и в сети (сегментация, IPS на Cisco IOS, FortiGate и Juniper, фильтрация исходящего трафика, DNS sinkhole),
   монитор заражения ([руководство](docs/ru/malware.md)); атаки канального уровня (L2) с устройства «Атакующий (LAN)»
   настоящими кадрами — подмена ARP (MITM), переполнение MAC-таблицы, захват корня STP; защита коммутатора — Dynamic ARP
   Inspection (`ip arp inspection`, `ip source binding`), port security, DHCP snooping, BPDU Guard и Root Guard, монитор

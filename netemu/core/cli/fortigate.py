@@ -14,7 +14,8 @@ from ipaddress import IPv4Address, IPv4Network
 from ..addresses import make_interface, mask_to_prefix
 from .base import CliSession, make_ping
 
-TABLES = ("system global", "system interface", "router static", "firewall address", "firewall policy")
+TABLES = ("system global", "system interface", "router static", "firewall address", "firewall policy",
+          "ips sensor")
 SERVICES = {"ALL": "any", "HTTP": "http", "HTTPS": "https", "SSH": "ssh", "DNS": "dns", "PING": "icmp",
             "ALL_ICMP": "icmp", "TELNET": "telnet"}
 
@@ -28,7 +29,7 @@ class FortiSession(CliSession):
 
     @property
     def fo(self) -> dict:
-        return self.device.extra.setdefault("forti", {"interface": {}, "static": {}, "address": {}, "policy": {}})
+        return self.device.extra.setdefault("forti", {"interface": {}, "static": {}, "address": {}, "policy": {}, "ips": {}})
 
     @property
     def prompt(self) -> str:
@@ -127,7 +128,9 @@ class FortiSession(CliSession):
         return self._fail("Unknown action 0")
 
     def _in_table(self, cmd, args):
-        t = self.fo[self.table.split()[-1] if self.table != "router static" else "static"]
+        tkey = {"system interface": "interface", "router static": "static", "firewall address": "address",
+                "firewall policy": "policy", "ips sensor": "ips"}[self.table]
+        t = self.fo[tkey]
         if cmd == "edit" and args:
             name = args[0]
             if self.table in ("router static", "firewall policy") and not name.isdigit():
@@ -209,7 +212,7 @@ class FortiSession(CliSession):
             self.work = None
             return
         key = {"system interface": "interface", "router static": "static", "firewall address": "address",
-               "firewall policy": "policy"}[self.table]
+               "firewall policy": "policy", "ips sensor": "ips"}[self.table]
         self.fo[key][self.entry] = self.work
         self.entry, self.work = None, None
         self._apply()
@@ -266,6 +269,21 @@ class FortiSession(CliSession):
                             nat_rules.append(NatRule("dynamic", prefix=addr(sa), interface=dp.name, out_iface=dp.name,
                                                      overload=True, text=f"policy {idx}"))
         d.zfw = zf
+        ips_ifaces = {}
+        for idx in sorted(fo["policy"], key=int):
+            e = fo["policy"][idx]
+            if e.get("status") == "disable" or e.get("action") != "accept":
+                continue
+            sensor = e.get("ips-sensor")
+            if sensor and sensor in fo.get("ips", {}):
+                for si in lst(e.get("srcintf", [])):
+                    if d.get_port(si) is not None:
+                        ips_ifaces[si] = sensor
+        if ips_ifaces:
+            d.extra["ips"] = {"names": sorted(set(ips_ifaces.values())), "ifaces": ips_ifaces,
+                              "drops": (d.extra.get("ips") or {}).get("drops", 0)}
+        else:
+            d.extra.pop("ips", None)
         if nat_rules:
             d.nat_engine().cfg = NatConfig(sorted(inside), sorted(outside), nat_rules, {})
         elif d.nat is not None:
@@ -281,7 +299,7 @@ class FortiSession(CliSession):
         if path == "system global":
             return f'config system global\n    set hostname "{self.device.hostname}"\nend'
         key = {"system interface": "interface", "router static": "static", "firewall address": "address",
-               "firewall policy": "policy"}[path]
+               "firewall policy": "policy", "ips sensor": "ips"}[path]
         out = [f"config {path}"]
         for name, e in self.fo[key].items():
             out.append(f'    edit "{name}"' if not name.isdigit() else f"    edit {name}")

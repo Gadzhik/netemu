@@ -40,7 +40,7 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     command-and-control server spread with real packets through routing, ACLs, NAT and IPS;
   - malware defences on hosts (updates, antivirus signatures, services, host firewall, backups: Security
     tab, `netsh advfirewall`, `sc`, `wusa`, `MpCmdRun`, `wbadmin`, `ufw`, ClamAV) and in the network
-    (segmentation, Cisco IOS IPS, egress filtering, DNS sinkhole); an infection monitor
+    (segmentation, IPS on Cisco IOS, FortiGate and Juniper, egress filtering, DNS sinkhole); an infection monitor
     ([guide](docs/en/malware.md));
   - LAN (layer-2) attacks from a LAN attacker device, with real frames: ARP spoofing (MITM), MAC flooding
     and STP root takeover; switch defences — Dynamic ARP Inspection (`ip arp inspection`, `ip source

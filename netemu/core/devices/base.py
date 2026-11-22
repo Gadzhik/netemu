@@ -183,6 +183,7 @@ class Device:
 
     # -- configuration -----------------------------------------------------
     location: str = ""                       # "Building / Floor / Rack" (physical view)
+    pps_limit = None                         # forwarding capacity (packets/s) for DDoS; None = unlimited
 
     def to_config(self) -> dict[str, Any]:
         """Vendor-neutral configuration state (used for save/load)."""

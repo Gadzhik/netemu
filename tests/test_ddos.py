@@ -325,3 +325,23 @@ def test_dns_switch_to_protection_service():
     t2 = topology_from_dict(topology_to_dict(t), Topology())
     assert t2.devices[inet.id].zones["shop.example"] == {"a": "203.0.113.2", "ttl": 30, "shield": True}
     assert t2.devices[bot.id].attacks[0].target == "shop.example"
+
+
+def test_router_packets_per_second_capacity():
+    """A small-packet flood (high pps, low bps) overwhelms a router by its forwarding capacity, not the link."""
+    t, isp, edge, sw, srv, client, bot = site()
+    bot.attacks = [Attack("udp", "203.0.113.130", 80, bots=2000, rate=100, size=64, spoof=True, running=True)]
+    bot.start()
+    t.engine.run(max_time=3000)
+    m = monitor(t)
+    assert m.device_pps(edge) > 150_000 and m.attack_bps_at(edge) < 200e6   # high pps, modest bps
+    assert availability(t, client, "http://203.0.113.130") >= 0.8           # fat link, no pps limit: fine
+    edge.pps_limit = 150_000
+    t.engine.run(max_time=3000)
+    assert m.device_overloaded(edge) or availability(t, client, "http://203.0.113.130") < 0.5
+    assert availability(t, client, "http://203.0.113.130") < 0.6            # router CPU saturated
+    t2 = topology_from_dict(topology_to_dict(t), Topology())
+    assert t2.devices[edge.id].pps_limit == 150_000
+    edge.pps_limit = None
+    t.engine.run(max_time=2000)
+    assert availability(t, client, "http://203.0.113.130") >= 0.8

@@ -321,8 +321,8 @@ class Link:
                 cap = capacity_bps(from_port)
                 if tag.bps > cap:
                     frame = replace(frame, payload=replace(frame.payload, flood=tag.capped_bps(cap)))
-            elif mon.legit_drop(self, from_port):
-                return True                             # lost on a saturated cable
+            elif mon.legit_drop(self, from_port) or mon.device_overloaded(to_port.device):
+                return True                             # lost on a saturated cable or an overwhelmed device
 
         if frame.uid == 0:
             object.__setattr__(frame, "uid", self.engine.next_frame_uid())

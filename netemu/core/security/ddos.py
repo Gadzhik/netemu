@@ -217,6 +217,23 @@ class DdosMonitor:
             return True
         return False
 
+    def device_pps(self, dev) -> float:
+        """Attack packets per second the device had to forward last second."""
+        return sum(v[1] for v in self.received(dev).values())
+
+    def device_overloaded(self, dev) -> bool:
+        """A router/switch whose forwarding capacity (packets/s) the attack exceeds drops legitimate frames."""
+        limit = getattr(dev, "pps_limit", None)
+        if not limit:
+            return False
+        ratio = self.device_pps(dev) / float(limit)
+        if ratio <= 1.0:
+            return False
+        if self.rng.random() < min(0.97, 1.0 - 1.0 / ratio):
+            self.drops += 1
+            return True
+        return False
+
     def rows(self):
         """[(link, from port, bps, pps, utilisation, kinds)] for the GUI, busiest first."""
         out = []

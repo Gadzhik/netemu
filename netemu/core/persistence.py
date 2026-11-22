@@ -21,6 +21,7 @@ def topology_to_dict(topo: Topology) -> dict[str, Any]:
         devices.append({
             "id": d.id, "model": d.model_key, "name": d.name,
             "x": round(d.x, 1), "y": round(d.y, 1), "powered": d.powered, "location": getattr(d, "location", ""),
+            "pps_limit": getattr(d, "pps_limit", None),
             "config": d.to_config(), "startup": d.startup_config,
         })
     links = []
@@ -54,6 +55,8 @@ def topology_from_dict(data: dict[str, Any], topo: Topology | None = None) -> To
         dev.powered = dd.get("powered", True)
         dev.startup_config = dd.get("startup")
         dev.location = dd.get("location", "")
+        if dd.get("pps_limit"):
+            dev.pps_limit = dd["pps_limit"]
     for ld in data.get("links", []):
         a = topo.devices[ld["a"][0]].ports[ld["a"][1]]
         b = topo.devices[ld["b"][0]].ports[ld["b"][1]]

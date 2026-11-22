@@ -437,6 +437,15 @@ class LoadMonitor(QWidget):
                                                                   else ""))
             if parts:
                 lines.append(f"{d.name}: " + ", ".join(parts))
+        if m is not None:
+            for d in topo.devices.values():
+                if d.category not in ("router", "switch") or not getattr(d, "pps_limit", None):
+                    continue
+                pps = m.device_pps(d)
+                if pps:
+                    over = pps > d.pps_limit
+                    lines.append(tr("{dev}: пересылка {pps} из {cap}", dev=d.name, pps=human_pps(pps),
+                                    cap=human_pps(d.pps_limit)) + (" ⚠" if over else ""))
         self.servers.setPlainText("\n".join(lines) or tr("Серверы работают в штатном режиме."))
         running = sum(1 for d in topo.devices.values() for a in getattr(d, "attacks", []) if a.running)
         drops = m.drops if m is not None else 0

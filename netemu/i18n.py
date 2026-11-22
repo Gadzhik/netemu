@@ -260,6 +260,7 @@ EN: dict[str, str] = {
     "Браузер": "Web Browser",
     "Службы": "Services",
     "Служба включена": "Service on",
+    "{dev}: пересылка {pps} из {cap}": "{dev}: forwarding {pps} of {cap}",
     "{atk} всё ещё перехватывает трафик. На коммутаторе включите Dynamic ARP Inspection (против подмены ARP), port security (против переполнения MAC-таблицы) или BPDU Guard (против захвата корня STP) на порту атакующего.": "{atk} still intercepts traffic. On the switch turn on Dynamic ARP Inspection (against ARP spoofing), port security (against MAC flooding) or BPDU Guard (against STP root takeover) on the attacker's port.",
     "корень STP захвачен через порт {port}": "STP root hijacked via port {port}",
     "Атаки L2": "L2 attacks",

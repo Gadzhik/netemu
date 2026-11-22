@@ -247,6 +247,6 @@ Solution scripts have directives for servers, the cloud and botnets:
 ## Limits of the model
 
 - An attack is an aggregated flow in one-second steps. Its individual packets are not simulated; only the probes are visible.
-- Router performance in packets/s is not modelled: the limits are the cables and the servers' resources.
+- A router or switch can be given a forwarding capacity in packets/s (`pps_limit`). A small-packet flood (SYN, 64-byte UDP) produces many packets at a low volume and overwhelms the device by packets/s even when the link is not full, and then legitimate traffic is lost too. No limit is set by default. The device's load is shown in Load and DDoS.
 - ASA and FortiGate filter the flow by their rules, but their connection tables do not overflow.
 - L7 protection is simplified: the JS challenge filters out every bot, and limits apply to the rate of one bot.

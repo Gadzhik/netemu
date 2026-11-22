@@ -311,6 +311,17 @@ set system ntp server 192.168.1.100
 
 Check: `show ntp status`, `show ntp associations`, `show log messages`, `show ospf3 database`.
 
+## IDP: against worms and exploits
+
+The Juniper intrusion prevention system (IDP) drops exploit packets and contacts with command-and-control servers (see [Malware](malware.md)):
+
+```
+set security idp idp-policy protect
+set security idp active-policy protect
+```
+
+Status: `show security idp status`.
+
 ## All commands: SRX300 router
 
 <!-- BEGIN GENERATED COMMANDS router -->
@@ -356,6 +367,10 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `show security zones` | Show security zone information |
 | `show security policies` | Show security policies |
 | `show security flow session` | Show session information |
+| `show security idp` | Show IDP information |
+| `show security idp status` | Show IDP status |
+| `show security idp counters` | Show IDP counters |
+| `show security idp counters application-identification` | Show IDP counters |
 | `show system uptime` | Show time since system and processes started |
 | `show version` | Show software process revision levels |
 | `show ospf3 neighbor` | Show neighbor status |
@@ -447,6 +462,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete security ike` | IKE configuration |
 | `delete security ipsec` | IPsec configuration |
 | `delete security nat` | Configure Network Address Translation |
+| `delete security idp` | Intrusion Detection and Prevention |
 | `delete system host-name` | Hostname for this router |
 | `delete system services dhcp-local-server` | Dynamic Host Configuration Protocol server |
 | `delete system services dhcp-local-server group <group-name>` | Group name |
@@ -523,6 +539,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set security ike policy/gateway/proposal ...` | IKE statement |
 | `set security ipsec vpn/policy/proposal ...` | IPsec statement |
 | `set security nat source/static/destination ...` | NAT statement |
+| `set security idp active-policy <name> / idp-policy <name> ...` | IDP statement |
 | `set system host-name <host-name>` | Hostname for this router |
 | `set system services dhcp-local-server group <group-name> interface <interface-name>` | Interface name |
 | `set system services dhcp-local-server dhcpv6 group <group-name> interface <interface-name>` | Interface |

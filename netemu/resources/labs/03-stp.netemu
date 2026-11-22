@@ -3,13 +3,14 @@
  "version": 1,
  "devices": [
   {
-   "id": "a88772839e55",
+   "id": "e48c15699aec",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
    "y": 100,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -148,13 +149,14 @@
    "startup": null
   },
   {
-   "id": "246c08e0be95",
+   "id": "15e604ed8fb8",
    "model": "cisco-2960",
    "name": "SW2",
    "x": 220,
    "y": 300,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -300,13 +302,14 @@
    "startup": null
   },
   {
-   "id": "c88d804dd709",
+   "id": "6eb8bf526a1b",
    "model": "cisco-2960",
    "name": "SW3",
    "x": 580,
    "y": 300,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "Switch",
     "interfaces": {
@@ -445,13 +448,14 @@
    "startup": null
   },
   {
-   "id": "67fdeee421f7",
+   "id": "7837eae397e3",
    "model": "pc",
    "name": "PC1",
    "x": 120,
    "y": 460,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "PC1",
     "interfaces": {
@@ -469,13 +473,14 @@
    "startup": null
   },
   {
-   "id": "3aa4c1af833d",
+   "id": "ef42b164fe22",
    "model": "pc",
    "name": "PC2",
    "x": 680,
    "y": 460,
    "powered": true,
    "location": "",
+   "pps_limit": null,
    "config": {
     "hostname": "PC2",
     "interfaces": {
@@ -496,51 +501,51 @@
  "links": [
   {
    "a": [
-    "a88772839e55",
+    "e48c15699aec",
     "FastEthernet0/1"
    ],
    "b": [
-    "246c08e0be95",
-    "FastEthernet0/1"
-   ]
-  },
-  {
-   "a": [
-    "a88772839e55",
-    "FastEthernet0/2"
-   ],
-   "b": [
-    "c88d804dd709",
+    "15e604ed8fb8",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "246c08e0be95",
+    "e48c15699aec",
     "FastEthernet0/2"
    ],
    "b": [
-    "c88d804dd709",
+    "6eb8bf526a1b",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "15e604ed8fb8",
+    "FastEthernet0/2"
+   ],
+   "b": [
+    "6eb8bf526a1b",
     "FastEthernet0/2"
    ]
   },
   {
    "a": [
-    "67fdeee421f7",
+    "7837eae397e3",
     "FastEthernet0"
    ],
    "b": [
-    "246c08e0be95",
+    "15e604ed8fb8",
     "FastEthernet0/10"
    ]
   },
   {
    "a": [
-    "3aa4c1af833d",
+    "ef42b164fe22",
     "FastEthernet0"
    ],
    "b": [
-    "c88d804dd709",
+    "6eb8bf526a1b",
     "FastEthernet0/10"
    ]
   }
