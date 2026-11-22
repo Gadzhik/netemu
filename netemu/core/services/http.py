@@ -27,7 +27,8 @@ class HttpMessage:
     def summary(self) -> str:
         if self.request:
             return f"{self.method} {self.path} HTTP/1.1"
-        return f"HTTP/1.1 {self.status} {'OK' if self.status == 200 else 'Not Found'}"
+        return f"HTTP/1.1 {self.status} " + {200: "OK", 503: "Service Unavailable", 502: "Bad Gateway",
+                                             504: "Gateway Timeout"}.get(self.status, "Not Found")
 
     def layer_lines(self) -> list[str]:
         if self.request:
@@ -42,6 +43,13 @@ class HttpServer:
         self.enabled = enabled
         self.requests = 0
 
+    def _rng(self):
+        import random
+        r = getattr(self, "_r", None)
+        if r is None:
+            r = self._r = random.Random(11)
+        return r
+
     def page(self, path: str) -> tuple[int, str]:
         key = path.lstrip("/") or "index.html"
         if key in self.pages:
@@ -54,10 +62,18 @@ class HttpServer:
         if not self.enabled:
             return
         seg = pkt.payload
+        from ..security.ddos import monitor_of, overloaded_http, refuses_connection
+        under_attack = monitor_of(self.dev) is not None
         if "SYN" in seg.flags and "ACK" not in seg.flags:
+            if under_attack and refuses_connection(self.dev, self._rng()):
+                return                              # backlog / connection slots exhausted: no SYN-ACK
             self.dev.send_tcp(pkt.src, HTTP_PORT, seg.sport, None, "SYN,ACK", src=pkt.dst)
         elif isinstance(seg.data, HttpMessage) and seg.data.request:
             self.requests += 1
+            if under_attack and overloaded_http(self.dev, self._rng()):
+                self.dev.send_tcp(pkt.src, HTTP_PORT, seg.sport, HttpMessage(False, status=503, body=(
+                    "<html><body><h1>503 Service Unavailable</h1></body></html>")), "PSH,ACK,FIN", src=pkt.dst)
+                return
             status, body = self.page(seg.data.path)
             self.dev.send_tcp(pkt.src, HTTP_PORT, seg.sport, HttpMessage(False, status=status, body=body),
                               "PSH,ACK,FIN", src=pkt.dst)
@@ -68,10 +84,11 @@ class HttpGet(Job):
 
     TIMEOUT_MS = 4000.0
 
-    def __init__(self, host, url: str, on_result):
+    def __init__(self, host, url: str, on_result, src=None):
         super().__init__()
         self.host = host
         self.on_result = on_result
+        self.src = src                                 # source address (a reverse proxy's front address)
         u = url.strip()
         if u.lower().startswith("http://"):
             u = u[7:]
@@ -82,6 +99,7 @@ class HttpGet(Job):
         self.path = "/" + path
         self.sport = 1025 + next(_ports) % 30000
         self.dst = None
+        self.host_header = ""
         self._timer = None
         self._resolver = None
 
@@ -98,7 +116,7 @@ class HttpGet(Job):
             return
         self.dst = ip
         self.host.bind_tcp(self.sport, self._receive)
-        if not self.host.send_tcp(ip, self.sport, HTTP_PORT, None, "SYN"):
+        if not self.host.send_tcp(ip, self.sport, HTTP_PORT, None, "SYN", src=self.src):
             self._done(None, "no route to host")
             return
         self._timer = self.host.engine.schedule(self.TIMEOUT_MS, lambda: self._done(None, "Request Timeout"))
@@ -109,9 +127,10 @@ class HttpGet(Job):
             return
         if "SYN" in seg.flags and "ACK" in seg.flags:
             self.host.send_tcp(self.dst, self.sport, HTTP_PORT,
-                               HttpMessage(True, path=self.path, host=self.name), "PSH,ACK")
+                               HttpMessage(True, path=self.path, host=self.host_header or self.name), "PSH,ACK",
+                               src=self.src)
         elif isinstance(seg.data, HttpMessage) and not seg.data.request:
-            self.host.send_tcp(self.dst, self.sport, HTTP_PORT, None, "ACK")
+            self.host.send_tcp(self.dst, self.sport, HTTP_PORT, None, "ACK", src=self.src)
             self._done(seg.data.status, seg.data.body)
 
     def _done(self, status, body) -> None:

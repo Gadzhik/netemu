@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "f8816f8631e0",
+   "id": "5469759aa5c2",
    "model": "cisco-2911",
    "name": "R1",
    "x": 250,
@@ -34,7 +34,7 @@
    "startup": null
   },
   {
-   "id": "10333aeda014",
+   "id": "f834554a823f",
    "model": "cisco-2911",
    "name": "R2",
    "x": 550,
@@ -65,7 +65,7 @@
    "startup": null
   },
   {
-   "id": "614e424f9210",
+   "id": "25a69229da9a",
    "model": "pc",
    "name": "PC1",
    "x": 250,
@@ -89,7 +89,7 @@
    "startup": null
   },
   {
-   "id": "9aa425702d5e",
+   "id": "27c4107ea3c0",
    "model": "pc",
    "name": "PC2",
    "x": 550,
@@ -116,31 +116,31 @@
  "links": [
   {
    "a": [
-    "f8816f8631e0",
+    "5469759aa5c2",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "10333aeda014",
+    "f834554a823f",
     "GigabitEthernet0/1"
    ]
   },
   {
    "a": [
-    "614e424f9210",
+    "25a69229da9a",
     "FastEthernet0"
    ],
    "b": [
-    "f8816f8631e0",
+    "5469759aa5c2",
     "GigabitEthernet0/0"
    ]
   },
   {
    "a": [
-    "9aa425702d5e",
+    "27c4107ea3c0",
     "FastEthernet0"
    ],
    "b": [
-    "10333aeda014",
+    "f834554a823f",
     "GigabitEthernet0/0"
    ]
   }

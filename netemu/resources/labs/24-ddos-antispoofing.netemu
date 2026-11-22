@@ -1,0 +1,375 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "d95e7020f374",
+   "model": "cisco-2911",
+   "name": "ISP-R",
+   "x": 400,
+   "y": 220,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "ISP-R",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "198.51.100.65/26",
+      "description": "customer 198.51.100.64/26"
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "192.0.2.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "7654117f74e2",
+   "model": "cisco-2960",
+   "name": "CUST-SW",
+   "x": 160,
+   "y": 380,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "80096c0cd701",
+   "model": "botnet",
+   "name": "INFECTED",
+   "x": 80,
+   "y": 540,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "INFECTED",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "198.51.100.66/26",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "198.51.100.65",
+    "dns": null,
+    "attacks": [
+     {
+      "kind": "udp",
+      "target": "192.0.2.10",
+      "port": 80,
+      "bots": 50,
+      "rate": 100,
+      "size": 1000,
+      "spoof": true,
+      "reflectors": [],
+      "running": true
+     }
+    ]
+   },
+   "startup": null
+  },
+  {
+   "id": "324b639e5e11",
+   "model": "pc",
+   "name": "CUST-PC",
+   "x": 260,
+   "y": 540,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "CUST-PC",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "198.51.100.70/26",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "198.51.100.65",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "5613a9742551",
+   "model": "server",
+   "name": "VICTIM",
+   "x": 660,
+   "y": 380,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "VICTIM",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.0.2.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.0.2.1",
+    "dns": null,
+    "services": {
+     "dhcp": {
+      "enabled": false,
+      "pools": [],
+      "excluded": [],
+      "interfaces": null
+     },
+     "dns": {
+      "enabled": false,
+      "records": {}
+     },
+     "http": {
+      "enabled": true,
+      "pages": {}
+     },
+     "syslog": {
+      "enabled": true
+     },
+     "ntp": {
+      "enabled": true
+     },
+     "aaa": {
+      "radius": false,
+      "tacacs": false,
+      "secret": "netemu",
+      "users": {}
+     },
+     "files": {
+      "tftp": true,
+      "ftp": true,
+      "mail": false,
+      "domain": "netemu.lab",
+      "files": {},
+      "ftp_users": {
+       "cisco": "cisco"
+      },
+      "mail_users": {},
+      "mailboxes": {}
+     },
+     "iot": {
+      "enabled": false,
+      "rules": []
+     }
+    }
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "d95e7020f374",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "7654117f74e2",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "80096c0cd701",
+    "FastEthernet0"
+   ],
+   "b": [
+    "7654117f74e2",
+    "FastEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "324b639e5e11",
+    "FastEthernet0"
+   ],
+   "b": [
+    "7654117f74e2",
+    "FastEthernet0/2"
+   ]
+  },
+  {
+   "a": [
+    "5613a9742551",
+    "FastEthernet0"
+   ],
+   "b": [
+    "d95e7020f374",
+    "GigabitEthernet0/1"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "DDoS: антиспуфинг uRPF (BCP 38)",
+  "text": "**Антиспуфинг (BCP 38).** Вы — инженер провайдера. У клиента (сеть 198.51.100.64/26 на интерфейсе gi0/0 маршрутизатора ISP-R) заражённые машины атакуют сервер VICTIM, **подделывая адреса источника** — жертва видит «случайные» адреса со всего интернета и не может их заблокировать.\n\nПо BCP 38 провайдер не должен выпускать из сети клиента пакеты с чужими адресами:\n1. На ISP-R на интерфейсе к клиенту включите строгий uRPF: `ip verify unicast source reachable-via rx`. Маршрутизатор отбросит пакет, если обратный маршрут к его источнику ведёт не через этот же интерфейс.\n2. Убедитесь, что легитимный трафик клиента (CUST-PC) по-прежнему ходит, а поток с подменёнными адресами до VICTIM не доходит.\n3. Почему строгий uRPF нельзя включать на интерфейсе к вышестоящему провайдеру с маршрутом по умолчанию и при асимметричной маршрутизации? Чем loose-режим (`reachable-via any`) отличается?",
+  "checks": [
+   "ddos VICTIM 1 | Поток с подменёнными адресами не доходит до VICTIM",
+   "ping CUST-PC 192.0.2.10 | Легитимный трафик клиента проходит"
+  ],
+  "translations": {
+   "en": {
+    "title": "DDoS: anti-spoofing with uRPF (BCP 38)",
+    "text": "**Anti-spoofing (BCP 38).** You are a provider's engineer. In a customer's network (198.51.100.64/26 on gi0/0 of ISP-R) infected machines attack the VICTIM server with **forged source addresses**: the victim sees \"random\" addresses from all over the Internet and cannot block them.\n\nBy BCP 38 a provider must not let packets with foreign addresses out of a customer's network:\n1. On ISP-R, on the interface towards the customer, turn on strict uRPF: `ip verify unicast source reachable-via rx`. The router drops a packet when the route back to its source does not go through that same interface.\n2. Check that the customer's legitimate traffic (CUST-PC) still flows while the spoofed stream no longer reaches VICTIM.\n3. Why must strict uRPF not be used towards an upstream provider with a default route, or with asymmetric routing? How does loose mode (`reachable-via any`) differ?",
+    "checks": [
+     "The spoofed stream does not reach VICTIM",
+     "The customer's legitimate traffic passes"
+    ]
+   }
+  },
+  "solution": "uRPF на всех клиентских интерфейсах провайдеров сделал бы невозможными атаки с подменой адреса и отражённые атаки.",
+  "script": {
+   "ISP-R": "enable\nconfigure terminal\ninterface gi0/0\nip verify unicast source reachable-via rx\nend"
+  }
+ }
+}

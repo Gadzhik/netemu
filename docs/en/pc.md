@@ -108,6 +108,29 @@ snmpset -v2c -c private 192.168.1.1 sysLocation.0 s Lab-2
 cat /var/log/syslog
 ```
 
+## Malware protection
+
+Malware and defences are explained in [Malware](malware.md). Windows commands behind the Security tab:
+
+```
+wusa KB4012212.msu /quiet
+wmic qfe list brief
+sc query lanmanserver
+sc config lanmanserver start= disabled
+sc stop lanmanserver
+netsh advfirewall firewall add rule name="Block SMB" dir=in action=block protocol=TCP localport=445
+netsh advfirewall firewall show rule name=all
+MpCmdRun -Scan -ScanType 1
+wbadmin start backup
+wbadmin get versions
+```
+
+- `wusa` installs an update (KB4012212 closes MS17-010); `wmic qfe list` lists the installed ones.
+- `sc … lanmanserver` controls the Server service (file sharing, SMB, TCP 445).
+- `netsh advfirewall firewall` adds, deletes and shows Windows Firewall rules.
+- `MpCmdRun -SignatureUpdate` downloads Microsoft Defender signatures from update.example (Internet access needed); `MpCmdRun -Scan` scans the computer.
+- `wbadmin start backup|recovery` makes a backup and restores from it; `shutdown /r` restarts.
+
 ## All commands
 
 <!-- BEGIN GENERATED COMMANDS host -->
@@ -175,12 +198,14 @@ resolvectl resolvectl status | resolvectl dns eth0 <server>
 cat        cat /etc/resolv.conf | /etc/hostname | /etc/hosts | /proc/sys/net/ipv4/ip_forward
 echo       echo nameserver <ip> > /etc/resolv.conf   (also: ... | sudo tee /etc/resolv.conf)
 ss         ss -tuln            (also netstat -tuln, netstat -rn, netstat -i)
-sysctl     sysctl net.ipv4.ip_forward | sysctl -w net.ipv6.conf.eth0.accept_ra=0|1
+sysctl     sysctl net.ipv4.ip_forward | sysctl -w net.ipv6.conf.eth0.accept_ra=0|1 | sysctl -w net.ipv4.tcp_syncookies=1
 ethtool    ethtool eth0
 hostname   hostname [new-name] | hostnamectl [set-hostname <name>]
 snmp       snmpget|snmpwalk -v2c -c <community> <agent> [oid] | snmpset -v2c -c <c> <agent> sysName.0 s <value>
 syslog     cat /var/log/syslog   (Linux server: messages from network devices)
 ssh        ssh [-l user] [-p port] [user@]<ip>  |  telnet <ip> [port]
+security   sudo ufw deny|allow <port> | ufw status | sudo apt install clamav | sudo apt upgrade
+           sudo freshclam | clamscan -r / | sudo reboot
 wifi       nmcli dev status | nmcli dev wifi list | nmcli dev wifi connect <SSID> password <key> | iw dev wlan0 link
 sshd       sudo systemctl start|stop|enable ssh | systemctl status ssh | passwd [user]
 other      sudo, sudo -i, su, exit, logout, whoami, id, uname [-a], pwd, date, uptime, clear, help

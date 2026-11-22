@@ -18,6 +18,7 @@ VENDOR_COLORS = {
     "linux": QColor("#d35400"),
     "generic": QColor("#4f5bbd"),
     "isp": QColor("#2b8fd6"),
+    "attack": QColor("#8e1b1b"),
 }
 
 ICON_W, ICON_H = 64, 56
@@ -94,6 +95,15 @@ def classic_svg(kind: str, color: str) -> str:
                                       (20, 46), (33, 46), (46, 46)))
         body = (f'<path d="M14 22h36v32H14z" fill="{color}"/><path d="M50 22l6-5v32l-6 5z" fill="{dark}"/>'
                 f'<path d="M14 22l6-5h36l-6 5z" fill="{lite}"/>{bricks}{joints}')
+    elif kind == "botnet":                        # a command node with infected hosts around it
+        nodes = "".join(f'<line x1="32" y1="32" x2="{x}" y2="{y}" stroke="{dark}" stroke-width="2"/>'
+                        for x, y in ((12, 14), (52, 14), (10, 44), (54, 44), (32, 56)))
+        bots = "".join(f'<circle cx="{x}" cy="{y}" r="6" fill="{lite}" stroke="{dark}" stroke-width="1.6"/>'
+                       f'<path d="M{x - 2.4} {y - 1}h1.2M{x + 1.2} {y - 1}h1.2" stroke="{dark}" stroke-width="1.6"/>'
+                       for x, y in ((12, 14), (52, 14), (10, 44), (54, 44), (32, 56)))
+        body = (f'{nodes}{bots}<circle cx="32" cy="32" r="11" fill="{color}"/>'
+                f'<path d="M27 29h3M34 29h3M27 36q5 3 10 0" stroke="{W}" stroke-width="2.2" fill="none" '
+                f'stroke-linecap="round"/>')
     elif kind == "iot":
         body = (f'<circle cx="32" cy="34" r="14" fill="{color}"/><circle cx="32" cy="34" r="5" fill="{W}"/>'
                 f'<path d="M20 16a17 17 0 0 1 24 0M24 21a11 11 0 0 1 16 0" fill="none" stroke="{dark}" '
@@ -142,6 +152,8 @@ def icon_kind(category: str, vendor: str) -> str:
         return "cloud"
     if category == "wireless":
         return "ap"
+    if category == "attack":
+        return "botnet"
     return category if category in ("hub", "server", "phone") else "switch"
 
 

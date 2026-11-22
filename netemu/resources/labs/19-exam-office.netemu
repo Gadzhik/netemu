@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "330169c2fc5b",
+   "id": "6c13391eefb8",
    "model": "internet",
    "name": "Internet",
    "x": 650,
@@ -80,6 +80,41 @@
       "description": "",
       "loopback": true,
       "short": "www.netemu.lab"
+     },
+     "open-resolver.example": {
+      "admin_up": true,
+      "ip": "198.51.100.53/32",
+      "description": "",
+      "loopback": true,
+      "short": "open-resolver.example"
+     },
+     "ntp.example": {
+      "admin_up": true,
+      "ip": "198.51.100.123/32",
+      "description": "",
+      "loopback": true,
+      "short": "ntp.example"
+     },
+     "shield.example": {
+      "admin_up": true,
+      "ip": "198.51.100.200/32",
+      "description": "",
+      "loopback": true,
+      "short": "shield.example"
+     },
+     "update.example": {
+      "admin_up": true,
+      "ip": "198.51.100.150/32",
+      "description": "",
+      "loopback": true,
+      "short": "update.example"
+     },
+     "c2.example": {
+      "admin_up": true,
+      "ip": "198.51.100.66/32",
+      "description": "",
+      "loopback": true,
+      "short": "c2.example"
      }
     },
     "static_routes": []
@@ -87,7 +122,7 @@
    "startup": null
   },
   {
-   "id": "094bcaf0790b",
+   "id": "5b43707ae9b1",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
@@ -118,7 +153,7 @@
    "startup": null
   },
   {
-   "id": "e9132f1c44ce",
+   "id": "9720edacbe34",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 400,
@@ -263,7 +298,7 @@
    "startup": null
   },
   {
-   "id": "f34216e26ae5",
+   "id": "5db24b51d752",
    "model": "pc",
    "name": "PC-SALES",
    "x": 250,
@@ -288,7 +323,7 @@
    "startup": null
   },
   {
-   "id": "2f3dd8f1f118",
+   "id": "80c0eb6d878a",
    "model": "pc",
    "name": "PC-HR",
    "x": 550,
@@ -316,41 +351,41 @@
  "links": [
   {
    "a": [
-    "094bcaf0790b",
+    "5b43707ae9b1",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "330169c2fc5b",
+    "6c13391eefb8",
     "ISP0"
    ]
   },
   {
    "a": [
-    "094bcaf0790b",
+    "5b43707ae9b1",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "e9132f1c44ce",
+    "9720edacbe34",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "f34216e26ae5",
+    "5db24b51d752",
     "FastEthernet0"
    ],
    "b": [
-    "e9132f1c44ce",
+    "9720edacbe34",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "2f3dd8f1f118",
+    "80c0eb6d878a",
     "FastEthernet0"
    ],
    "b": [
-    "e9132f1c44ce",
+    "9720edacbe34",
     "FastEthernet0/2"
    ]
   }

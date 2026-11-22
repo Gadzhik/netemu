@@ -95,6 +95,7 @@ _register(DeviceModel("laptop-linux", "pc", "linux", "Laptop (Linux, Wi-Fi)", "L
 _register(DeviceModel("pc-linux", "pc", "linux", "PC (Linux)", "Linux", "linux"))
 _register(DeviceModel("server-linux", "server", "linux", "Server (Linux)", "LinuxSrv", "linuxsrv"))
 _register(DeviceModel("ip-phone", "phone", "cisco", "IP Phone 7960", "Phone", "IPPhone"))
+_register(DeviceModel("botnet", "attack", "attack", "Botnet (DDoS)", "Botnet", "botnet", group="attack"))
 _register(DeviceModel("fortigate-60f", "router", "fortinet", "FortiGate 60F", "FGT", "FortiGate-60F",
                       _seq("port{}", "port{}", range(1, 8)), ports_admin_up=True, ttl=255,
                       group="security", dialect="fortios"))
@@ -110,6 +111,11 @@ def create_device(engine, model_key: str, name: str, device_id: str | None = Non
     if m.category == "iot":
         from .iot import IotDevice
         dev = IotDevice(engine, name, device_id, dtype=m.key.split("-", 1)[1])
+        dev.model_key, dev.vendor, dev.model = m.key, m.vendor, m.title
+        return dev
+    if m.category == "attack":
+        from .botnet import Botnet
+        dev = Botnet(engine, name, device_id)
         dev.model_key, dev.vendor, dev.model = m.key, m.vendor, m.title
         return dev
     if m.category == "wlc":

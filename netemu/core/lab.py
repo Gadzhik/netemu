@@ -33,10 +33,11 @@ from datetime import datetime
 from ipaddress import ip_address, ip_network
 
 CHECK_TYPES = ("ping", "noping", "route", "ospf", "hostname", "vlan", "ip", "dhcp", "nat", "ssh", "stproot", "fhrp",
-               "wifi", "access", "bgp", "channel", "psec", "phone", "ospf6", "http")
+               "wifi", "access", "bgp", "channel", "psec", "phone", "ospf6", "http", "available", "ddos",
+               "clean", "immune", "outbreak", "c2blocked")
 NEED = {"ping": 2, "noping": 2, "route": 2, "ospf": 2, "hostname": 2, "vlan": 2, "ip": 2, "dhcp": 1, "nat": 1,
         "ssh": 1, "stproot": 1, "fhrp": 2, "wifi": 1, "access": 3, "bgp": 2, "channel": 2, "psec": 2, "phone": 1,
-        "ospf6": 2, "http": 2}
+        "ospf6": 2, "http": 2, "available": 2, "ddos": 2, "clean": 1, "immune": 2, "outbreak": 3, "c2blocked": 1}
 
 
 # ------------------------------------------------------------------------------------ crypto
@@ -338,6 +339,18 @@ def run_check(topology, c: Check) -> tuple[bool, str]:
             return n >= int(a[1]), f"{n} OSPFv3 neighbour(s)"
         if k == "http":
             return _http(topology, dev, a[1])
+        if k == "available":
+            return _available(topology, dev, a[1], float(a[2]) if len(a) > 2 else 90.0)
+        if k == "ddos":
+            from .security.ddos import human_bps, monitor
+            m = monitor(topology)
+            m.ensure_running()
+            topology.engine.run(max_time=2500)               # two full measurement windows
+            got = m.attack_bps_at(dev)
+            ok = got <= float(a[1]) * 1e6
+            return ok, f"attack traffic at {dev.name}: {human_bps(got)}" + ("" if ok else f" (> {a[1]} Mbit/s)")
+        if k in ("clean", "immune", "outbreak", "c2blocked"):
+            return _malware_check(topology, k, dev, a)
         if k == "access":
             p = dev.get_port(a[1])
             if p is None:
@@ -365,6 +378,44 @@ def _ping(topology, dev, target) -> tuple[bool, str]:
         return False, f"bad address {target}"
     topology.engine.run_until(lambda: job.done)
     return res["ok"] > 0, f"{res['ok']}/3 replies"
+
+
+def _available(topology, dev, url, percent) -> tuple[bool, str]:
+    """A service is 'available' when at least *percent* of 10 requests succeed (under attack, too)."""
+    from .services.http import HttpGet
+    from .security.ddos import monitor
+    monitor(topology).ensure_running()
+    topology.engine.run(max_time=2500)                       # attacks have reached their full rate
+    ok = 0
+    for _ in range(10):
+        res = {}
+        job = HttpGet(dev, url, lambda s, b: res.__setitem__("s", s)).start()
+        topology.engine.run_until(lambda: job.done)
+        ok += res.get("s") == 200
+    return ok * 10 >= percent, f"{ok}/10 requests answered"
+
+
+def _malware_check(topology, k, dev, a) -> tuple[bool, str]:
+    from .security import malware as mw
+    if k == "clean":
+        mw.monitor(topology).ensure_running()
+        topology.engine.run(max_time=3000)               # a reinfection would show up meanwhile
+        st = mw.state(dev)
+        return st == "clean", f"{dev.name}: {st}"
+    if k == "immune":
+        fam = mw.FAMILIES[a[1]]
+        why = mw.protection(dev, fam)
+        return why is not None, f"{dev.name}: " + (why or f"vulnerable to {fam.title}")
+    if k == "outbreak":                                  # outbreak <patient> <family> <dev,dev,...>
+        hit = mw.outbreak(topology, dev.name, a[1])
+        bad = [n for n in a[2].split(",") if n.strip() in hit]
+        return not bad, "infected: " + (", ".join(hit) or "none")
+    from .services.http import HttpGet                  # c2blocked <dev>
+    res = {}
+    job = HttpGet(dev, f"http://{mw.C2_NAME}{mw.C2_PATH}", lambda s, b: res.__setitem__("s", s)).start()
+    topology.engine.run_until(lambda: job.done)
+    ok = res.get("s") is None
+    return ok, f"{dev.name} -> {mw.C2_NAME}: " + ("blocked" if ok else f"HTTP {res['s']}")
 
 
 def _http(topology, dev, url) -> tuple[bool, str]:
@@ -443,7 +494,63 @@ def _host_settings(dev, text: str) -> str:
             dev.wifi = {"ssid": w[1], "key": w[2] if len(w) > 2 else None}
             from .devices.wireless import rescan
             rescan(dev.engine.topology)
+        elif w[0] == "ddos":                                # server protection: @ddos syncookies on | httplimit 5 ...
+            from .security.ddos import guard
+            key = {"syncookies": "syncookies", "httplimit": "http_limit", "challenge": "challenge",
+                   "connlimit": "conn_limit", "resolver": "open_resolver", "monlist": "ntp_monlist"}[w[1]]
+            val = w[2] if len(w) > 2 else "on"
+            guard(dev)[key] = int(val) if val.isdigit() else val in ("on", "yes", "true")
+        elif w[0] == "isp" and w[1] == "dns":               # @isp dns NAME [ADDRESS] [ttl N] [shield on|off]
+            rest = w[3:]
+            a = rest[0] if rest and rest[0] not in ("ttl", "shield") else None
+            ttl = int(rest[rest.index("ttl") + 1]) if "ttl" in rest else None
+            shield = rest[rest.index("shield") + 1] == "on" if "shield" in rest else None
+            dev.set_zone(w[2], a, ttl, shield)
+        elif w[0] == "isp":                                 # provider protection: @isp ISP0 scrub on | rtbh IP | flowspec RULE
+            prot = dev.protect.setdefault(w[1], {})
+            if w[2] == "scrub":
+                prot["scrub"] = (w[3] if len(w) > 3 else "on") == "on"
+            elif w[2] == "rtbh":
+                prot.setdefault("rtbh", []).append(w[3])
+            elif w[2] == "flowspec":
+                prot.setdefault("flowspec", []).append(" ".join(w[3:]))
+        elif w[0] == "sec":                                 # malware training: @sec patch MS17-010 | avupdate ...
+            _sec_directive(dev, w[1:])
+        elif w[0] == "attack":                              # botnet: @attack start | stop
+            (dev.start if w[1] == "start" else dev.stop)()
     return ""
+
+
+def _sec_directive(dev, w) -> None:
+    from .security import malware as mw
+    s = mw.sec(dev)
+    on = (w[1] if len(w) > 1 else "on") in ("on", "yes", "true")
+    if w[0] == "patch":
+        mw.patch(dev, w[1])
+    elif w[0] == "av":
+        s["av"] = on
+    elif w[0] == "avupdate":
+        job = mw.update_sigs(dev, lambda ok, msg: None)
+        dev.engine.run_until(lambda: job.done)
+    elif w[0] == "scan":
+        mw.av_scan(dev)
+    elif w[0] in ("smb", "telnet"):
+        s[w[0]] = on
+    elif w[0] == "password":                           # @sec password NEW: factory password changed
+        s["default_password"] = False
+    elif w[0] == "block":
+        s["fw_rules"].append({"name": f"Block {w[1]}", "port": w[1], "proto": "TCP"})
+    elif w[0] == "reboot":
+        mw.reboot(dev)
+    elif w[0] == "backup":
+        mw.backup(dev)
+    elif w[0] == "restore":
+        mw.restore(dev)
+    elif w[0] == "infect":
+        mw.infect(dev, w[1])
+    elif w[0] == "clean":                              # reinstall: the infection is gone (files stay as they are)
+        mw.clean(dev, "переустановкой системы")
+    dev.engine.emit("device_changed", dev)
 
 
 # ------------------------------------------------------------------------------------ faults

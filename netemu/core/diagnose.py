@@ -143,6 +143,84 @@ def hints_for(topology, check) -> list[str]:
         return [tr("Проверьте SSID, пароль WPA2 и расстояние до точки доступа.")]
     if k == "channel":
         return [tr("Порты должны быть в одном channel-group с совместимыми режимами (active/passive) с обеих сторон.")]
+    if k in ("clean", "immune", "outbreak", "c2blocked"):
+        return malware_hints(topology, k, a)
+    if k in ("available", "ddos"):
+        return ddos_hints(topology, a[0] if k == "ddos" else None)
     if k == "phone":
         return [tr("Телефон не зарегистрирован: voice VLAN на порту, DHCP с опцией 150 и telephony-service на CME.")]
+    return []
+
+
+def ddos_hints(topology, device_name=None) -> list[str]:
+    """Where a DDoS hurts: overloaded cables, exhausted server resources, the attack kinds."""
+    from .security.ddos import TITLES, human_bps, monitor, server_pressure
+    m = monitor(topology)
+    out = []
+    rows = [r for r in m.rows() if r[4] > 1.0]
+    if rows:
+        link, port, bps, pps, util, kinds = rows[0]
+        other = link.other(port)
+        out.append(tr("Кабель {a} → {b} перегружен ({pct} %, {bps}): фильтр после этого кабеля его не освободит — "
+                      "нужна защита у провайдера (очистка трафика, FlowSpec, RTBH) или фильтр до кабеля.",
+                      a=port.device.name, b=other.device.name, pct=round(util * 100), bps=human_bps(bps)))
+    for d in topology.devices.values():
+        if d.category != "server":
+            continue
+        p = server_pressure(d)
+        if p["syn"][0] > p["syn"][1]:
+            out.append(tr("{dev}: очередь SYN переполнена — включите SYN cookies или TCP intercept перед сервером.",
+                          dev=d.name))
+        if p["http"][0] > p["http"][1]:
+            out.append(tr("{dev}: {rps} запросов/с при производительности {cap} — лимит на IP, JS-проверка или WAF.",
+                          dev=d.name, rps=round(p["http"][0]), cap=p["http"][1]))
+        if p["conn"][0] >= p["conn"][1]:
+            out.append(tr("{dev}: все слоты соединений заняты (медленная атака) — лимит соединений с одного IP.",
+                          dev=d.name))
+    kinds = sorted({k for r in m.rows() for k in r[5]})
+    if kinds and not out:
+        out.append(tr("Идут атаки: {kinds}. Откройте «Инструменты → Нагрузка и DDoS».",
+                      kinds=", ".join(TITLES.get(k, k) for k in kinds)))
+    if device_name and not out:
+        out.append(tr("Атакующий трафик всё ещё доходит до {dev}: найдите на пути место, где его можно отбросить.",
+                      dev=device_name))
+    return out
+
+
+def malware_hints(topology, k, a) -> list[str]:
+    from .security import malware as mw
+    dev = topology.find(a[0])
+    if k == "c2blocked":
+        return [tr("{dev} всё ещё связывается с командным сервером {c2}: запретите исходящий трафик к нему (ACL, "
+                   "межсетевой экран) или подмените имя на своём DNS (sinkhole).", dev=a[0], c2=mw.C2_NAME)]
+    if k == "outbreak":
+        return [tr("Червь из {dev} добирается до защищаемых узлов: разделите сеть (ACL/межсетевой экран между "
+                   "сегментами, запрет TCP 445), включите IPS или закройте уязвимость на самих узлах.", dev=a[0])]
+    if dev is None:
+        return []
+    if k == "immune":
+        fam = mw.FAMILIES.get(a[1])
+        if fam is None:
+            return []
+        if fam.vuln == "default-password":
+            return [tr("{dev}: смените заводской пароль или отключите Telnet.", dev=dev.name)]
+        return [tr("{dev} уязвим: установите обновление {kb} ({vuln}), отключите службу (TCP {port}), закройте порт "
+                   "межсетевым экраном хоста или обновите базы антивируса.", dev=dev.name,
+                   kb=mw.PATCHES.get(fam.vuln, ("—",))[0], vuln=fam.vuln, port=fam.port)]
+    st = mw.state(dev)
+    if st == "encrypted":
+        return [tr("{dev}: файлы зашифрованы — восстановите их из резервной копии (wbadmin start recovery) после "
+                   "лечения.", dev=dev.name)]
+    inf = getattr(dev, "infection", None)
+    if inf:
+        fam = mw.FAMILIES[inf["family"]]
+        if fam.memory_only:
+            return [tr("{dev}: вредонос живёт в памяти — перезагрузите устройство, но сначала смените пароль, "
+                       "иначе оно заразится снова.", dev=dev.name)]
+        s = mw.sec(dev)
+        if s["av_sigs"] < fam.sig:
+            return [tr("{dev}: антивирус не знает {fam} — обновите базы (MpCmdRun -SignatureUpdate) и проверьте "
+                       "компьютер (MpCmdRun -Scan -ScanType 1).", dev=dev.name, fam=mw.name(fam.key))]
+        return [tr("{dev}: запустите проверку антивирусом и закройте уязвимость, иначе соседи заразят его снова.",
+                   dev=dev.name)]
     return []

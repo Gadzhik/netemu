@@ -332,6 +332,8 @@ class CiscoSession(TreeSession):
                     handler=lambda s, a, n: s.relay_trust_all(n), negatable=True), negatable=True), negatable=True))
             self._add_vrf_trees(t)
             self._add_vpn_trees(t)
+            self._add_ddos_trees(t)
+            self._add_ips_trees(t)
             self._add_isis_trees(t)
             self._add_mpls_trees(t)
             de3 = [next(x for x in t["config"] if x.word in w) for w in (("do",), ("end",))]
@@ -1029,6 +1031,10 @@ class CiscoSession(TreeSession):
                                negatable=True))
         if True:
             route_tail = [
+                P.kw("Null0", "Null interface (discard: RTBH, sinkhole)",
+                     P.arg(P.NumArg(1, 255), "Distance metric for this route",
+                           handler=lambda s, a, n: s.ip_route_null(a[0], a[1], a[2], n), negatable=True),
+                     handler=lambda s, a, n: s.ip_route_null(a[0], a[1], 1, n), negatable=True),
                 P.arg(P.IpArg(), "Forwarding router's address",
                       P.arg(P.NumArg(1, 255), "Distance metric for this route",
                             handler=lambda s, a, n: s.ip_route(a[0], a[1], a[2], None, a[3], n),
@@ -4447,6 +4453,118 @@ class CiscoSession(TreeSession):
         return secondary_cmd(self.device, self.iface, iface, negate,
                              f"% {iface.network.network_address} overlaps with {self.iface.name}")
 
+    def ip_route_null(self, net, mask, distance, negate):
+        try:
+            network = IPv4Network(f"{net}/{mask}")
+        except ValueError:
+            return "%Inconsistent address and mask"
+        if negate:
+            self.device.remove_static_route(network, None, "Null0")
+        else:
+            self.device.add_static_route(network, None, "Null0", distance)
+        self.device.routes_changed()
+        return None
+
+    # -- DDoS mitigation: uRPF, TCP intercept ---------------------------------------------------------
+    def if_urpf(self, mode, negate):
+        if not self.is_router and not self.iface.is_svi:
+            return self._l2_only() or "% Invalid input"
+        self.iface.urpf = None if negate else mode
+        return None
+
+    def tcp_intercept(self, acl, negate):
+        if negate:
+            self.device.extra.pop("tcp_intercept", None)
+        else:
+            self.device.extra["tcp_intercept"] = str(acl)
+        return None
+
+    def _add_ips_trees(self, t):
+        ipg = next(x for x in t["config"] if x.word == "ip")
+        ipg.children.append(P.kw("ips", "Intrusion Prevention System",
+            P.kw("name", "Specify an IPS rule",
+                 P.arg(P.WordArg("WORD"), "IPS rule name", handler=lambda s, a, n: s.ips_name(a[0], n), negatable=True),
+                 negatable=True), negatable=True))
+        ifip = next(x for x in t["config-if"] if x.word == "ip")
+        ifip.children.append(P.kw("ips", "Intrusion Prevention System",
+            P.arg(P.WordArg("WORD"), "IPS rule name",
+                  P.kw("in", "Inbound IPS", handler=lambda s, a, n: s.if_ips(a[0], n), negatable=True),
+                  P.kw("out", "Outbound IPS (inspected on input in NetEmu)",
+                       handler=lambda s, a, n: s.if_ips(a[0], n), negatable=True),
+                  negatable=True), negatable=True))
+        show = next((x for x in t["priv"] if x.word == "show"), None)
+        sip = next((x for x in show.children if x.word == "ip"), None) if show else None
+        if sip is not None:
+            sip.children.append(P.kw("ips", "IPS information",
+                P.kw("statistics", "IPS statistics", handler=lambda s, a, n: s.show_ips()),
+                P.kw("all", "IPS configuration and statistics", handler=lambda s, a, n: s.show_ips()),
+                handler=lambda s, a, n: s.show_ips()))
+
+    def ips_name(self, name, negate):
+        ips = self.device.extra.setdefault("ips", {"names": [], "ifaces": {}, "drops": 0})
+        if negate:
+            ips["names"] = [x for x in ips["names"] if x != name]
+            ips["ifaces"] = {k: v for k, v in ips["ifaces"].items() if v != name}
+        elif name not in ips["names"]:
+            ips["names"].append(name)
+        if not ips["names"]:
+            self.device.extra.pop("ips", None)
+        return None
+
+    def if_ips(self, name, negate):
+        ips = self.device.extra.get("ips")
+        if ips is None or name not in ips["names"]:
+            return None if negate else f"%IPS rule {name} is not configured (ip ips name {name})"
+        if negate:
+            ips["ifaces"].pop(self.iface.name, None)
+        else:
+            ips["ifaces"][self.iface.name] = name
+        return None
+
+    def show_ips(self):
+        ips = self.device.extra.get("ips")
+        if not ips:
+            return "IPS is not configured"
+        lines = ["IPS Signature File Configuration Status", "    Configured Config Locations: nvram:",
+                 "    Signature categories: worm exploits (MS17-010, telnet default credentials), C2 beacons", "",
+                 "Interface Configuration"]
+        for port, name in ips["ifaces"].items():
+            lines.append(f"    Interface {port}  Inbound IPS rule is {name}")
+        lines.append(f"\nPackets dropped by IPS signatures: {ips.get('drops', 0)}")
+        return "\n".join(lines)
+
+    def _add_ddos_trees(self, t):
+        ifip = next(x for x in t["config-if"] if x.word == "ip")
+        ifip.children.append(P.kw("verify", "Enable per packet validation",
+            P.kw("unicast", "Enable per packet validation for unicast",
+                 P.kw("source", "Validation of source address",
+                      P.kw("reachable-via", "Specify reachability check to apply to the source address",
+                           P.kw("rx", "Source is reachable via interface on which packet was received (strict)",
+                                P.arg(P.LineArg(), "allow-default | allow-self-ping",
+                                      handler=lambda s, a, n: s.if_urpf("strict", n), negatable=True),
+                                handler=lambda s, a, n: s.if_urpf("strict", n), negatable=True),
+                           P.kw("any", "Source is reachable via any interface (loose)",
+                                handler=lambda s, a, n: s.if_urpf("loose", n), negatable=True),
+                           handler=lambda s, a, n: s.if_urpf(None, True) if n else s.err_incomplete("", 0),
+                           negatable=True), negatable=True), negatable=True), negatable=True))
+        ipg = next(x for x in t["config"] if x.word == "ip")
+        tcp = next((x for x in ipg.children if x.word == "tcp"), None)
+        node = P.kw("intercept", "Enable TCP intercepting",
+                    P.kw("list", "Specify access-list to use",
+                         P.arg(P.WordArg("<100-199>"), "Access list number or name",
+                               handler=lambda s, a, n: s.tcp_intercept(a[0], n), negatable=True),
+                         handler=lambda s, a, n: s.tcp_intercept(None, True) if n else s.err_incomplete("", 0),
+                         negatable=True),
+                    P.kw("mode", "Specify intercepting mode",
+                         P.kw("intercept", "Intercept connections", handler=lambda s, a, n: None, negatable=True),
+                         P.kw("watch", "Watch connections", handler=lambda s, a, n: None, negatable=True),
+                         negatable=True),
+                    negatable=True)
+        if tcp is None:
+            ipg.children.append(P.kw("tcp", "Global TCP parameters", node, negatable=True))
+        else:
+            tcp.children.append(node)
+
     def ip_route(self, net, mask, next_hop, port, distance, negate):
         try:
             network = IPv4Network(f"{net}/{mask}")
@@ -5126,6 +5244,11 @@ def render_running(device, cfg: dict) -> str:
             lines.append(" shutdown")
         for h in ic.get("helpers", []):
             lines.append(f" ip helper-address {h}")
+        if ic.get("urpf"):
+            lines.append(" ip verify unicast source reachable-via " + ("rx" if ic["urpf"] == "strict" else "any"))
+        ips_if = ((cfg.get("extra") or {}).get("ips") or {}).get("ifaces", {})
+        if name in ips_if:
+            lines.append(f" ip ips {ips_if[name]} in")
         if ic.get("acl_in"):
             lines.append(f" ip access-group {ic['acl_in']} in")
         if ic.get("acl_out"):
@@ -5403,6 +5526,10 @@ def render_running(device, cfg: dict) -> str:
             lines.append(" ".join(parts))
         if router:
             lines.append("ip classless")
+        if (cfg.get("extra") or {}).get("tcp_intercept"):
+            lines.append(f"ip tcp intercept list {cfg['extra']['tcp_intercept']}")
+        for n in ((cfg.get("extra") or {}).get("ips") or {}).get("names", []):
+            lines.append(f"ip ips name {n}")
         for s in cfg.get("static_routes", []):
             n = IPv4Network(s["network"])
             parts = [f"ip route{' vrf ' + s['vrf'] if s.get('vrf') else ''} {n.network_address} {n.netmask}"]

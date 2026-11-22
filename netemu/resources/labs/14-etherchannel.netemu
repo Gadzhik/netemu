@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "fd80fbdc2cdb",
+   "id": "a4aafddbe4fe",
    "model": "cisco-2960",
    "name": "SW1",
    "x": 250,
@@ -148,7 +148,7 @@
    "startup": null
   },
   {
-   "id": "ebf0749d0d7e",
+   "id": "1ec804958362",
    "model": "cisco-2960",
    "name": "SW2",
    "x": 550,
@@ -293,7 +293,7 @@
    "startup": null
   },
   {
-   "id": "6a466db77388",
+   "id": "ce3a424bb71f",
    "model": "pc",
    "name": "PC1",
    "x": 250,
@@ -317,7 +317,7 @@
    "startup": null
   },
   {
-   "id": "c229efc88ff6",
+   "id": "911f90c3d002",
    "model": "pc",
    "name": "PC2",
    "x": 550,
@@ -344,41 +344,41 @@
  "links": [
   {
    "a": [
-    "fd80fbdc2cdb",
+    "a4aafddbe4fe",
     "FastEthernet0/23"
    ],
    "b": [
-    "ebf0749d0d7e",
+    "1ec804958362",
     "FastEthernet0/23"
    ]
   },
   {
    "a": [
-    "fd80fbdc2cdb",
+    "a4aafddbe4fe",
     "FastEthernet0/24"
    ],
    "b": [
-    "ebf0749d0d7e",
+    "1ec804958362",
     "FastEthernet0/24"
    ]
   },
   {
    "a": [
-    "6a466db77388",
+    "ce3a424bb71f",
     "FastEthernet0"
    ],
    "b": [
-    "fd80fbdc2cdb",
+    "a4aafddbe4fe",
     "FastEthernet0/1"
    ]
   },
   {
    "a": [
-    "c229efc88ff6",
+    "911f90c3d002",
     "FastEthernet0"
    ],
    "b": [
-    "ebf0749d0d7e",
+    "1ec804958362",
     "FastEthernet0/1"
    ]
   }

@@ -218,7 +218,8 @@ class WindowsExtras:
             return "\nWindows IP Configuration\n\n Could not display the DNS Resolver Cache."
         lines = ["", "Windows IP Configuration", ""]
         for name, (ip, at) in d.dns_cache.items():
-            ttl = max(0, 86400 - int((d.engine.now - at) / 1000))
+            exp = d.dns_expiry.get(name)
+            ttl = max(0, int((exp - d.engine.now) / 1000)) if exp else max(0, 86400 - int((d.engine.now - at) / 1000))
             lines += [f"    {name}", "    " + "-" * 40, f"    Record Name . . . . . : {name}",
                       "    Record Type . . . . . : 1", f"    Time To Live  . . . . : {ttl}",
                       "    Data Length . . . . . : 4", "    Section . . . . . . . : Answer",
@@ -227,6 +228,7 @@ class WindowsExtras:
 
     def flushdns(self):
         self.device.dns_cache.clear()
+        self.device.dns_expiry.clear()
         return "\nWindows IP Configuration\n\nSuccessfully flushed the DNS Resolver Cache."
 
     # -- netsh --------------------------------------------------------------------------------

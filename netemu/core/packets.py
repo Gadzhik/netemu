@@ -123,13 +123,17 @@ class IPv4Packet:
     protocol: int = PROTO_ICMP
     ident: int = 0
     dscp: int = 0
+    flood: Any = field(default=None, compare=False)   # DDoS training: the aggregated flow this probe stands for
 
     def layer_lines(self) -> list[str]:
         from .security.qos import DSCP_NAMES
-        return [f"Source IP: {self.src}", f"Destination IP: {self.dst}",
-                f"TTL: {self.ttl}", f"Protocol: {self.protocol} ({PROTO_NAMES.get(self.protocol, 'data')})",
-                f"DSCP: {self.dscp} ({DSCP_NAMES.get(self.dscp, '-')})",
-                f"Identification: 0x{self.ident:04x}"]
+        out = [f"Source IP: {self.src}", f"Destination IP: {self.dst}",
+               f"TTL: {self.ttl}", f"Protocol: {self.protocol} ({PROTO_NAMES.get(self.protocol, 'data')})",
+               f"DSCP: {self.dscp} ({DSCP_NAMES.get(self.dscp, '-')})",
+               f"Identification: 0x{self.ident:04x}"]
+        if self.flood is not None:
+            out.append(f"DDoS flow (sample of {self.flood.text()})")
+        return out
 
 
 @dataclass(frozen=True)

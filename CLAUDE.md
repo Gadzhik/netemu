@@ -52,7 +52,7 @@ python -m venv .venv
 .venv/Scripts/python -m pyflakes netemu tools         # lint, must print nothing
 .venv/Scripts/python -m pytest -q tests                # ~396 tests, ~10-20 s, GUI tests off screen
 .venv/Scripts/python tools/gen_docs.py                 # regenerate CLI command tables in docs/*/*.md
-.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 19 ready-made labs (labs 13-19: tools/labs_more.py)
+.venv/Scripts/python tools/make_labs.py                # rebuild + verify the 30 ready-made labs (13-19: labs_more.py, 20-25: labs_ddos.py, 26-30: labs_malware.py)
 .venv/Scripts/python tools/screenshots.py              # re-render docs/images/*.png (English UI, off screen)
 .venv/Scripts/python tools/build.py                    # PyInstaller build -> release/ (zip; setup.exe via Inno Setup)
 ```
@@ -135,6 +135,13 @@ python -m venv .venv
   edits are lost.
 - FortiGate keeps its config in `extra["forti"]`; `FortiSession._sync()` pulls form/project changes in before
   `config`/`show`, otherwise the next CLI change overwrites them.
+- DDoS floods are **one probe IPv4 packet per second** carrying `pkt.flood` (a `FloodTag`). `Link.transmit`
+  calls `DdosMonitor.offer()` *before* capping to `capacity_bps` (else utilisation reads 1.0) and drops
+  legitimate frames by overload. Every filter (ACL, NAT, uRPF, QoS police, cloud protection) must handle
+  the probe as the whole flow. Traffic the cloud sends itself (reflectors) bypasses `egress_filter`, so
+  `Internet.send_ip` applies the provider protection too.
+- Worm exploits are real packets (TCP SYN carrying `ExploitPayload`) caught by `malware.on_packet` in
+  `Host.deliver_protocol` and `Server.deliver_protocol`; malware log messages go through `tr()` (Russian keys).
 - `Port.is_up` is hot (every packet): keep `Link.too_long` cheap (fast path when nothing is placed).
 - Exercising the real GUI: drive `MainWindow` with QTest (menus via `QAction.trigger()`, shortcuts sent to
   the activated window's `view`), answer `QInputDialog`/`QFileDialog` by monkeypatching, record
@@ -195,6 +202,19 @@ python -m venv .venv
    - EIGRP for IPv6 (`v6igp.Eigrp6`) and IS-IS for IPv6 (TLV 236 in `isis.py`), MPLS L3VPN (VPNv4 in
      `bgp.py`, VPN labels / `_send_vpn` in `router.py`), RSVP-TE (`routing/te.py`, `TunnelPort.tmode == "te"`;
      note `Port.mode` is the switchport mode, do not reuse it), secondary IPv4 addresses (`Port.ip2`).
+6. **DDoS** (after 0.4.0): `devices/botnet.py` (category "attack"), `security/ddos.py` (`Attack`, `FloodTag`,
+   `DdosMonitor` = `topology.ddos`, server `guard()`), `gui/ddos_panel.py` (attacks, provider protection,
+   server guard, Tools → Load and DDoS); uRPF/null routes on every vendor, Cisco TCP intercept, cloud
+   scrub/RTBH/FlowSpec (`Internet.protect`); lab checks `available`/`ddos`, directives `@ddos`/`@isp`/`@attack`;
+   labs 20-25; docs `docs/*/ddos.md` (help topic "ddos"). DNS switching: `Internet.zones` (DNS hosting,
+   TTL), `shield` sends the domain to the reverse proxy 198.51.100.200 (`Internet._shield`); clients cache
+   records with a TTL (`Host.dns_expiry`, `services.dns.cached`); botnets can attack a domain name.
+7. **Malware** (after 0.4.0): `security/malware.py` (families smb-worm, ransomworm + kill switch, iot-botnet,
+   trojan + C2; `sec(dev)` host state, `dev.infection`, `MalwareMonitor` = `topology.malware`, `outbreak()`
+   what-if on a copy), host CLI in `cli/hostsec.py` (netsh advfirewall, sc, wusa, wmic qfe, MpCmdRun, wbadmin;
+   ufw, clamav), Cisco `ip ips`, cloud update.example/c2.example, `gui/malware_panel.py` (Security tab,
+   Tools → Network infection); checks clean/immune/outbreak/c2blocked, `@sec` directives; labs 26-30;
+   docs `docs/*/malware.md` (help topic "malware").
 
 ## Known gaps / ideas for next time (also listed in README "Limitations")
 - CME and HSRP only on Cisco (Cisco technologies; VRRP everywhere) - by design.

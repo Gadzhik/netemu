@@ -519,6 +519,7 @@ return
 | `[undo] ip route-static A.B.C.D MASK/LEN` | IP address mask or mask length |
 | `[undo] ip route-static A.B.C.D MASK/LEN A.B.C.D` | Next hop IP address |
 | `[undo] ip route-static A.B.C.D MASK/LEN A.B.C.D preference <1-255>` | Preference value |
+| `[undo] ip route-static A.B.C.D MASK/LEN NULL0` | NULL interface (discard) |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE` | Outbound interface |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE A.B.C.D` | Next hop IP address |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE A.B.C.D preference <1-255>` | Preference value |
@@ -678,6 +679,10 @@ return
 | `[undo] shutdown` | Shutdown the interface |
 | `[undo] traffic-filter inbound acl INTEGER<2000-3999>` | ACL number |
 | `[undo] traffic-filter outbound acl INTEGER<2000-3999>` | ACL number |
+| `[undo] urpf` | Unicast reverse path forwarding (anti-spoofing) |
+| `[undo] urpf strict` | Strict check: the source must be reachable via this interface |
+| `[undo] urpf strict LINE` | allow-default-route |
+| `[undo] urpf loose` | Loose check: the source must be in the routing table |
 | `[undo] isis enable` | Enable IS-IS on the interface |
 | `[undo] isis enable INTEGER<1-65535>` | Process ID |
 | `[undo] isis cost INTEGER<1-16777214>` | Cost |
@@ -829,6 +834,7 @@ return
 | `[undo] ip route-static A.B.C.D MASK/LEN` | IP address mask or mask length |
 | `[undo] ip route-static A.B.C.D MASK/LEN A.B.C.D` | Next hop IP address |
 | `[undo] ip route-static A.B.C.D MASK/LEN A.B.C.D preference <1-255>` | Preference value |
+| `[undo] ip route-static A.B.C.D MASK/LEN NULL0` | NULL interface (discard) |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE` | Outbound interface |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE A.B.C.D` | Next hop IP address |
 | `[undo] ip route-static A.B.C.D MASK/LEN IFACE A.B.C.D preference <1-255>` | Preference value |
@@ -990,6 +996,10 @@ return
 | `[undo] stp cost INTEGER<1-200000000>` | Cost |
 | `[undo] traffic-filter inbound acl INTEGER<2000-3999>` | ACL number |
 | `[undo] traffic-filter outbound acl INTEGER<2000-3999>` | ACL number |
+| `[undo] urpf` | Unicast reverse path forwarding (anti-spoofing) |
+| `[undo] urpf strict` | Strict check: the source must be reachable via this interface |
+| `[undo] urpf strict LINE` | allow-default-route |
+| `[undo] urpf loose` | Loose check: the source must be in the routing table |
 | `[undo] eth-trunk` | Add the interface to an Eth-Trunk |
 | `[undo] eth-trunk INTEGER<0-63>` | Eth-Trunk ID |
 | `mode lacp` | LACP mode |

@@ -625,6 +625,9 @@ class DeviceDialog(QDialog):
             if cat == "server":
                 self.services = ServicesPanel(self)
                 self.tabs.addTab(scrolled(self.services), tr("Службы"))
+            from .malware_panel import HostSecurityPanel
+            self.security = HostSecurityPanel(self)
+            self.tabs.addTab(scrolled(self.security), tr("Безопасность"))
         elif cat in ("router", "switch"):
             self.config = NetConfig(self)
             self.tabs.addTab(self.config, tr("Настройка"))
@@ -632,12 +635,24 @@ class DeviceDialog(QDialog):
             self.tabs.addTab(terminal_page(self.terminal), tr(CLI_TITLES.get(device.vendor, "CLI")))
         elif cat == "cloud":
             self.tabs.addTab(cloud_info(device), tr("Интернет"))
+            from .ddos_panel import IspProtectPanel
+            self.isp = IspProtectPanel(self)
+            self.tabs.addTab(self.isp, tr("Защита провайдера"))
+        elif cat == "attack":
+            self.config = HostConfig(self)
+            self.tabs.addTab(scrolled(self.config), tr("Настройка"))
+            from .ddos_panel import AttackPanel
+            self.attacks = AttackPanel(self)
+            self.tabs.addTab(self.attacks, tr("Атаки"))
         elif cat == "iot":
             self.config = HostConfig(self)
             self.tabs.addTab(scrolled(self.config), tr("Настройка"))
             from .iot_panel import IotPanel
             self.iot = IotPanel(self)
             self.tabs.addTab(self.iot, tr("Устройство IoT"))
+            from .malware_panel import HostSecurityPanel
+            self.security = HostSecurityPanel(self)
+            self.tabs.addTab(scrolled(self.security), tr("Безопасность"))
         elif cat == "wlc":
             self.config = HostConfig(self)
             self.tabs.addTab(scrolled(self.config), tr("Настройка"))

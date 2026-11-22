@@ -170,6 +170,12 @@ class MainWindow(QMainWindow):
         self.act_physical = self._act("Физический вид (здания, стойки, кабели)", self.show_physical, "Ctrl+Shift+P")
         m.addAction(self.act_physical)
         self.physical_dock = None
+        self.act_load = self._act("Нагрузка и DDoS", self.show_load, "Ctrl+Shift+D")
+        m.addAction(self.act_load)
+        self.load_dock = None
+        self.act_malware = self._act("Заражение сети", self.show_malware, "Ctrl+Shift+V")
+        m.addAction(self.act_malware)
+        self.malware_dock = None
 
         m = mb.addMenu(tr("&Вид"))
         self.act_labels = self._act("Подписи портов", self._toggle_labels, checkable=True)
@@ -698,6 +704,32 @@ class MainWindow(QMainWindow):
         self._help.activateWindow()
         return self._help
 
+    def show_load(self):
+        from .ddos_panel import LoadMonitor
+        if self.load_dock is None:
+            self.load_panel = LoadMonitor(self)
+            self.load_dock = QDockWidget(tr("Нагрузка и DDoS"), self)
+            self.load_dock.setObjectName("load")
+            self.load_dock.setWidget(self.load_panel)
+            self.addDockWidget(Qt.BottomDockWidgetArea, self.load_dock)
+        self.load_panel.refresh()
+        self.load_dock.show()
+        self.load_dock.raise_()
+        return self.load_panel
+
+    def show_malware(self):
+        from .malware_panel import InfectionMonitor
+        if self.malware_dock is None:
+            self.malware_panel = InfectionMonitor(self)
+            self.malware_dock = QDockWidget(tr("Заражение сети"), self)
+            self.malware_dock.setObjectName("malware")
+            self.malware_dock.setWidget(self.malware_panel)
+            self.addDockWidget(Qt.BottomDockWidgetArea, self.malware_dock)
+        self.malware_panel.refresh()
+        self.malware_dock.show()
+        self.malware_dock.raise_()
+        return self.malware_panel
+
     def show_physical(self):
         from .physical_panel import PhysicalPanel
         if self.physical_dock is None:
@@ -938,6 +970,10 @@ class MainWindow(QMainWindow):
             self.capture_panel.shutdown()
         if getattr(self, "physical_dock", None) is not None:
             self.physical_panel.shutdown()
+        if getattr(self, "load_dock", None) is not None:
+            self.load_panel.shutdown()
+        if getattr(self, "malware_dock", None) is not None:
+            self.malware_panel.shutdown()
         self.close_dialogs()
         self.ctl.shutdown()
         self.scene.dispose()

@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "96ee54774e76",
+   "id": "f8402596b8e5",
    "model": "internet",
    "name": "Internet",
    "x": 650,
@@ -80,6 +80,41 @@
       "description": "",
       "loopback": true,
       "short": "www.netemu.lab"
+     },
+     "open-resolver.example": {
+      "admin_up": true,
+      "ip": "198.51.100.53/32",
+      "description": "",
+      "loopback": true,
+      "short": "open-resolver.example"
+     },
+     "ntp.example": {
+      "admin_up": true,
+      "ip": "198.51.100.123/32",
+      "description": "",
+      "loopback": true,
+      "short": "ntp.example"
+     },
+     "shield.example": {
+      "admin_up": true,
+      "ip": "198.51.100.200/32",
+      "description": "",
+      "loopback": true,
+      "short": "shield.example"
+     },
+     "update.example": {
+      "admin_up": true,
+      "ip": "198.51.100.150/32",
+      "description": "",
+      "loopback": true,
+      "short": "update.example"
+     },
+     "c2.example": {
+      "admin_up": true,
+      "ip": "198.51.100.66/32",
+      "description": "",
+      "loopback": true,
+      "short": "c2.example"
      }
     },
     "static_routes": []
@@ -87,7 +122,7 @@
    "startup": null
   },
   {
-   "id": "61dccf1990fc",
+   "id": "319e840fd7ee",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
@@ -118,7 +153,7 @@
    "startup": null
   },
   {
-   "id": "70bdbaecc8d8",
+   "id": "0363b8c5e609",
    "model": "pc",
    "name": "PC1",
    "x": 150,
@@ -145,21 +180,21 @@
  "links": [
   {
    "a": [
-    "61dccf1990fc",
+    "319e840fd7ee",
     "GigabitEthernet0/1"
    ],
    "b": [
-    "96ee54774e76",
+    "f8402596b8e5",
     "ISP0"
    ]
   },
   {
    "a": [
-    "70bdbaecc8d8",
+    "0363b8c5e609",
     "FastEthernet0"
    ],
    "b": [
-    "61dccf1990fc",
+    "319e840fd7ee",
     "GigabitEthernet0/0"
    ]
   }

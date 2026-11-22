@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "fc55e438284f",
+   "id": "6ec7fa807b70",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
@@ -34,7 +34,7 @@
    "startup": null
   },
   {
-   "id": "8d2ebc2b6441",
+   "id": "cf6d24705397",
    "model": "pc",
    "name": "PC1",
    "x": 200,
@@ -61,7 +61,7 @@
    "startup": null
   },
   {
-   "id": "352d8e2b41f7",
+   "id": "598784cc8fc5",
    "model": "pc",
    "name": "PC2",
    "x": 600,
@@ -91,21 +91,21 @@
  "links": [
   {
    "a": [
-    "8d2ebc2b6441",
+    "cf6d24705397",
     "FastEthernet0"
    ],
    "b": [
-    "fc55e438284f",
+    "6ec7fa807b70",
     "GigabitEthernet0/0"
    ]
   },
   {
    "a": [
-    "352d8e2b41f7",
+    "598784cc8fc5",
     "FastEthernet0"
    ],
    "b": [
-    "fc55e438284f",
+    "6ec7fa807b70",
     "GigabitEthernet0/1"
    ]
   }

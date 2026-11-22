@@ -11,6 +11,8 @@ Help topics:
 - [Huawei VRP](huawei.md)
 - [Extreme ExtremeXOS](extreme.md)
 - [PC and server](pc.md)
+- [DDoS attacks and defence](ddos.md)
+- [Malware: infection and defence](malware.md)
 
 ## Quick start
 
@@ -145,6 +147,17 @@ A project file can contain a lab: a task and its checks. When such a file is ope
 | IP telephony (voice VLAN, CME) | two phones register and call each other |
 | IPv6 and OSPFv3 | dynamic IPv6 routing |
 | Exam: an office from scratch | a full office configuration in one task |
+| DDoS: volumetric attack and scrubbing | why a filter on your side does not save a full link |
+| DDoS: SYN flood | SYN cookies on the Linux server or TCP intercept on the router |
+| DDoS: reflection with amplification (DNS) | FlowSpec at the provider against DNS responses |
+| DDoS: HTTP flood and Slowloris | JS challenge and a connection limit on the server |
+| DDoS: anti-spoofing (BCP 38) | uRPF on the provider's customer interface |
+| DDoS: switching DNS to the protection service | an attack by name, TTL, the provider's reverse proxy |
+| Malware: a network worm in the office | incident response: antivirus, updates |
+| Malware: segmentation and IPS against a worm | an ACL or IPS protects a server that cannot be patched |
+| Malware: an IoT botnet and factory passwords | Telnet, passwords, memory-resident malware |
+| Malware: ransomware and backups | cleaning, closing the hole, restoring |
+| Malware: the command-and-control server and the kill switch | blocking the C2, the kill switch |
 
 Every lab is verified when it is built: before the solution the checks fail, after it they all pass.
 
@@ -222,6 +235,14 @@ Packets travel along cables as envelopes: ARP yellow, ICMP pink. Clicking an env
 
 - **File → Save / Open**: projects in `*.netemu` format (JSON). The topology, positions and the configuration of every device, including the startup-config, are saved.
 - Ready examples are in the `examples` folder: `multivendor-demo.netemu` and `complex-lab.netemu` (22 devices, redundant paths).
+
+## DDoS attacks and defence
+
+The **Botnet** device (palette group Attacks (DDoS)) launches attacks of different kinds and power: UDP/ICMP floods, SYN floods, HTTP floods, Slowloris, reflection through DNS and NTP. Tools → Load and DDoS (`Ctrl+Shift+D`) shows the load of cables and server resources; overloaded cables turn red on the canvas. Defences: ACLs, policing, uRPF, null routes, TCP intercept, SYN cookies, limits and a JS challenge on the server, scrubbing, RTBH and FlowSpec at the provider, switching DNS to a protection service. Theory, commands and labs: [DDoS attacks and defence](ddos.md).
+
+## Malware
+
+Any PC, server or IoT device can be infected with training malware (Security tab): an SMB worm, a ransomware worm, an IoT botnet or a trojan. A worm sends exploit packets across the network, and ACLs, VLANs, NAT, firewalls and IPS act on them. Host defences: updates, an antivirus with current signatures, turning services off, the host firewall, backups. Tools → Network infection (`Ctrl+Shift+V`) shows who is infected and by whom. Theory, commands and labs: [Malware](malware.md).
 
 ## Packet analyzer
 

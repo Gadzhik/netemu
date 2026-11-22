@@ -102,7 +102,11 @@ def apply(dev, policy: QosPolicy, pkt, port, direction: str):
         c.matched += 1
         size = packet_size(pkt)
         c.bytes += size
-        if c.police_bps:
+        if c.police_bps and getattr(pkt, "flood", None) is not None:
+            if pkt.flood.bps > c.police_bps:              # DDoS flow: everything above the rate is dropped
+                c.dropped += int(pkt.flood.pps * (1 - c.police_bps / pkt.flood.bps))
+                pkt = replace(pkt, flood=pkt.flood.capped_bps(c.police_bps))
+        elif c.police_bps:
             key = (port.name, direction, policy.name, c.name)
             burst = max(1500.0, c.police_bps / 8 / 4)
             tokens, last = buckets.get(key, (burst, now))

@@ -443,7 +443,7 @@ def test_help_window_shows_guide_and_vendor_pages(qtbot, win, monkeypatch):
     win.act_help.trigger()
     h = win._help
     assert h.isVisible() and "NetEmu" in h.text()
-    assert h.topics.count() == 7
+    assert h.topics.count() == 9
     h.show_topic("mikrotik")
     assert "/ip route add" in h.text() and "/interface disable" in h.text()
     from PySide6.QtCore import QUrl
@@ -658,7 +658,7 @@ def test_extreme_dialog_and_svi_ip_in_form(win):
 def test_internet_cloud_dialog(win):
     inet = win.view.add_device("internet", QPointF(0, 0))
     dlg = win.open_device(inet)
-    assert [dlg.tabs.tabText(i) for i in range(dlg.tabs.count())] == ["Интернет"]
+    assert [dlg.tabs.tabText(i) for i in range(dlg.tabs.count())] == ["Интернет", "Защита провайдера"]
     assert dlg.terminal is None
 
 
@@ -780,10 +780,14 @@ def test_lan_collaboration_between_two_windows(win, qtbot, monkeypatch):
 def test_classroom_hand_out_and_progress(win, qtbot, monkeypatch, tmp_path):
     from netemu.gui.lab_panel import builtin_labs
     monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: pytest.fail(f"warning dialog: {a[2]}"))
     path = next(p for t, p, k in builtin_labs() if "01-vlan" in p.name)
     win.open_builtin_lab(path)
     win._saved_snapshot = win._snapshot()
-    port = 48000 + (id(win) % 1500)
+    import socket
+    with socket.socket() as probe:                       # a port nobody holds (a fixed guess was sometimes busy)
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
     assert win.class_open(port)
     student = MainWindow()
     qtbot.addWidget(student)
@@ -907,3 +911,98 @@ def test_realtime_clock_does_not_replay_a_long_stall(win):
     ctl._last = ctl._clock.elapsed() - 3_600_000          # an hour without ticks
     ctl._on_tick()
     assert ctl.engine.now - t0 <= MAX_CATCHUP_MS
+
+
+
+def test_ddos_panels(win, monkeypatch):
+    warnings = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warnings.append(a[2]) or QMessageBox.Ok)
+    from netemu.core.security.ddos import guard
+    from netemu.gui.ddos_panel import AttackPanel, IspProtectPanel
+    bot = win.topology.add_device("botnet", "BOTS")
+    srv = win.topology.add_device("server", "WEB")
+    inet = win.topology.add_device("internet", "ISP")
+    d = win.open_device(bot)
+    ap = d.findChildren(AttackPanel)[0]
+    ap.kind.setCurrentIndex(ap.kind.findData("dns-amp"))
+    ap.target.setText("203.0.113.2")
+    ap.bots.setValue(1000)
+    ap.rate.setValue(100)
+    ap.add()
+    assert not bot.attacks and warnings                  # no reflectors: refused with a message
+    ap.reflectors.setText("198.51.100.53")
+    ap.add()
+    assert bot.attacks[0].kind == "dns-amp" and "2.4 Gbit/s" in ap.total.text()
+    ap.table.selectRow(0)
+    ap._run(True)
+    assert bot.attacks[0].running
+    ap.stop_all()
+    assert not bot.attacks[0].running
+    d.close()
+    d = win.open_device(srv)
+    d.services.guard.syncookies.setChecked(True)
+    d.services.guard.http_limit.setValue(7)
+    assert d.services.apply()
+    assert guard(srv)["syncookies"] and guard(srv)["http_limit"] == 7
+    d.close()
+    d = win.open_device(inet)
+    ip = d.findChildren(IspProtectPanel)[0]
+    from PySide6.QtCore import Qt
+    ip.table.item(0, 1).setCheckState(Qt.Checked)
+    ip.table.item(0, 3).setText("udp src 53; icmp")
+    ip.apply()
+    assert inet.protect["ISP0"] == {"scrub": True, "rtbh": [], "flowspec": ["udp src 53", "icmp"]}
+    ip._add_zone()
+    ip.zones.item(0, 3).setCheckState(Qt.Checked)
+    assert ip.apply()
+    assert inet.zones == {"shop.example": {"a": "203.0.113.2", "ttl": 300, "shield": True}}
+    ip.zones.item(0, 1).setText("not-an-ip")
+    assert not ip.apply() and warnings
+    d.close()
+    panel = win.show_load()
+    panel.refresh()
+    assert "0" in panel.summary.text()
+
+
+
+def test_security_tab_and_infection_monitor(win):
+    from netemu.core.security import malware as mw
+    from netemu.gui.malware_panel import HostSecurityPanel
+    t = win.topology
+    sw = t.add_device("cisco-2960", "SW")
+    pcs = []
+    for i in range(3):
+        pc = t.add_device("pc", f"PC{i + 1}")
+        t.connect(pc.nic, sw.get_port(f"Fa0/{i + 1}"))
+        pc.set_ip(f"192.168.1.{11 + i}", "255.255.255.0")
+        pcs.append(pc)
+    d = win.open_device(pcs[1])
+    sec = d.findChildren(HostSecurityPanel)[0]
+    sec.patches["MS17-010"].setChecked(True)
+    assert mw.sec(pcs[1])["patches"] == ["MS17-010"]
+    d.close()
+    d = win.open_device(pcs[2])
+    sec = d.findChildren(HostSecurityPanel)[0]
+    sec.fw.setText("445")
+    assert sec.apply_firewall() and mw.fw_blocked(pcs[2]) == {445}
+    sec.fw.setText("http")
+    assert not sec.apply_firewall()
+    d.close()
+    d = win.open_device(pcs[0])
+    sec = d.findChildren(HostSecurityPanel)[0]
+    sec.family.setCurrentIndex(sec.family.findData("smb-worm"))
+    sec.infect()
+    assert pcs[0].infection["family"] == "smb-worm"
+    d.close()
+    t.engine.run(max_time=5000)
+    assert pcs[1].infection is None and pcs[2].infection is None
+    panel = win.show_malware()
+    panel.refresh()
+    assert panel.table.rowCount() == 3 and "1" in panel.summary.text()
+    assert any("smb" in panel.table.item(r, 1).text().lower() or "SMB" in panel.table.item(r, 1).text()
+               for r in range(3))
+    d = win.open_device(pcs[0])
+    sec = d.findChildren(HostSecurityPanel)[0]
+    sec.reinstall()
+    assert pcs[0].infection is None
+    d.close()

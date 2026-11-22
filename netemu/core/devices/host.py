@@ -16,6 +16,8 @@ class Host(IpStack, Ip6Stack, Device):
     default_ttl = 128
     NIC = ("FastEthernet0", "Fa0")
     os = "windows"
+    infection: dict | None = None                 # malware training (security/malware.py)
+    hostsec: dict | None = None
 
     def __init__(self, engine, name, device_id=None):
         Device.__init__(self, engine, name, device_id)
@@ -33,6 +35,13 @@ class Host(IpStack, Ip6Stack, Device):
         self.dhcp_info: dict = {}
         self.routes: list[tuple[IPv4Network, IPv4Address | None, bool]] = []   # (net, gw, persistent)
         self.dns_cache: dict[str, tuple[IPv4Address, float]] = {}
+        self.dns_expiry: dict[str, float] = {}      # name -> virtual ms when its TTL runs out
+
+    def deliver_protocol(self, pkt, port) -> None:
+        from ..security.malware import on_packet
+        if on_packet(self, pkt):                     # an exploit attempt (malware training)
+            return
+        super().deliver_protocol(pkt, port)
 
     def receive(self, frame: EthernetFrame, port: Port) -> None:
         if frame.ethertype == "EAPOL":
@@ -241,6 +250,8 @@ class Host(IpStack, Ip6Stack, Device):
             cfg["routes"] = [[str(n), str(g) if g else None, p] for n, g, p in self.routes]
         if self.dns_server_list[1:]:
             cfg["dns_alt"] = [str(x) for x in self.dns_server_list[1:]]
+        from ..security import malware
+        malware.to_config(self, cfg)
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -256,6 +267,8 @@ class Host(IpStack, Ip6Stack, Device):
             self.wifi = dict(cfg.get("wifi") or {"ssid": None, "key": None})
         self.routes = [(IPv4Network(n), IPv4Address(g) if g else None, bool(p)) for n, g, p in cfg.get("routes", [])]
         self.dns_alt = [IPv4Address(x) for x in cfg.get("dns_alt", [])]
+        from ..security import malware
+        malware.apply_config(self, cfg)
         self.nic._slaac = set()
         if self.nic.ipv6_auto:
             self.engine.schedule(300.0, self.start_slaac)
@@ -314,7 +327,18 @@ class Server(Host):
 
     def deliver_protocol(self, pkt, port) -> None:
         from ..packets import TcpSegment, UdpDatagram
+        from ..security.malware import on_packet
         l4 = pkt.payload
+        if on_packet(self, pkt):                              # an exploit attempt (malware training)
+            return
+        if getattr(pkt, "flood", None) is not None:          # DDoS probe: resources, reflection, nothing else
+            from ..security.ddos import guard, reflect
+            g = guard(self)
+            if isinstance(l4, UdpDatagram) and l4.dport == 53 and self.dns_server.enabled:
+                reflect(self, pkt, g["open_resolver"])
+            elif isinstance(l4, UdpDatagram) and l4.dport == 123 and self.ntp_server.enabled:
+                reflect(self, pkt, g["ntp_monlist"])
+            return
         if isinstance(l4, UdpDatagram) and l4.dport == 67:
             self.dhcp_server.handle(pkt, port)
         elif isinstance(l4, UdpDatagram) and l4.dport == 53:
@@ -344,6 +368,9 @@ class Server(Host):
                            "ntp": {"enabled": self.ntp_server.enabled},
                            "aaa": self.aaa_server.to_dict(), "files": self.file_server.to_dict(),
                            "iot": self.iot_service.to_dict()}
+        from ..security.ddos import DEFAULT_GUARD, guard
+        if guard(self) != DEFAULT_GUARD:
+            cfg["services"]["ddos"] = dict(guard(self))
         return cfg
 
     def apply_config(self, cfg: dict) -> None:
@@ -367,6 +394,8 @@ class Server(Host):
         self.file_server = FileServer.from_dict(sv.get("files"))
         from .iot import IotService
         self.iot_service = IotService.from_dict(sv.get("iot"))
+        from ..security.ddos import DEFAULT_GUARD
+        self.ddos = dict(DEFAULT_GUARD, **(sv.get("ddos") or {}))
 
 
 __all__ = ["Host", "Server", "IPv4Interface"]

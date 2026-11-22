@@ -429,6 +429,11 @@ class JunosSession(TreeSession):
                                 handler=(lambda s, a, n: s.cfg_esw_reset(a[0])) if delete else lambda s, a, n: None)]
                 return P.kw("family", "Protocol family",
                             P.kw("inet", "IPv4 parameters",
+                                 P.kw("rpf-check", "Reverse-path-forwarding checks (anti-spoofing)",
+                                      P.kw("mode", "Reverse-path-forwarding mode",
+                                           P.kw("loose", "Reverse-path-forwarding loose mode",
+                                                handler=lambda s, a, n: s.cfg_rpf(a[0], "loose", delete))),
+                                      handler=lambda s, a, n: s.cfg_rpf(a[0], "strict", delete)),
                                  P.kw("address", "Interface address/destination prefix",
                                       P.arg(P.PrefixArg("<name>"), "Interface address/destination prefix",
                                             handler=addr),
@@ -488,6 +493,8 @@ class JunosSession(TreeSession):
                                              handler=(lambda s, a, n: s.cfg_ae_lacp(a[0], None)) if delete else None))]),
                                handler=(lambda s, a, n: s.cfg_iface_reset(a[0])) if delete else None)
             route_node = P.arg(P.PrefixArg("<destination>"), "Destination prefix",
+                               P.kw("discard", "Drop packets to destination; send no ICMP unreachables",
+                                    handler=lambda s, a, n: s.cfg_route_discard(a[0], delete)),
                                P.kw("next-hop", "Next hop to destination",
                                     P.arg(P.IpArg("<next-hop>"), "",
                                           handler=lambda s, a, n: s.cfg_route(a[0], a[1], delete))),
@@ -2294,6 +2301,22 @@ class JunosSession(TreeSession):
         o["default_originate"] = default
         return None
 
+    def cfg_route_discard(self, prefix, delete):
+        routes = self.candidate.setdefault("static_routes", [])
+        net = str(IPv4Network(prefix, strict=False))
+        routes[:] = [r for r in routes if not (r["network"] == net and r.get("interface") == "Null0")]
+        if not delete:
+            routes.append({"network": net, "next_hop": None, "interface": "Null0", "distance": JUNOS_STATIC_PREF})
+        return None
+
+    def cfg_rpf(self, port, mode, delete):
+        ic = self._icfg(port)
+        if delete:
+            ic.pop("urpf", None)
+        else:
+            ic["urpf"] = mode
+        return None
+
     def cfg_route(self, prefix, nh, delete, preference=None):
         routes = self.candidate.setdefault("static_routes", [])
         if prefix is None:
@@ -2774,6 +2797,9 @@ def render_config(device, cfg: dict) -> str:
                             lines.append("                        no-preempt;")
                         lines.append("                    }")
                     lines.append("                }")
+                if ic.get("urpf"):
+                    lines.append("                rpf-check;" if ic["urpf"] == "strict" else
+                                 "                rpf-check { mode loose; }")
                 lines += ([] if vr else [f"                address {IPv4Interface(ic['ip']).with_prefixlen};"]) + [
                           f"                address {IPv4Interface(a2).with_prefixlen};" for a2 in ic.get("ip2", [])] + [
                           "            }", "        }"]
@@ -2823,7 +2849,9 @@ def render_config(device, cfg: dict) -> str:
         if routes:
             lines.append("    static {")
             for r in routes:
-                if r.get("distance", JUNOS_STATIC_PREF) == JUNOS_STATIC_PREF:
+                if r.get("interface") == "Null0":
+                    lines.append(f"        route {r['network']} discard;")
+                elif r.get("distance", JUNOS_STATIC_PREF) == JUNOS_STATIC_PREF:
                     lines.append(f"        route {r['network']} next-hop {r['next_hop']};")
                 else:
                     lines.append(f"        route {r['network']} qualified-next-hop {r['next_hop']} "

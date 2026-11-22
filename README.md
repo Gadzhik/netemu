@@ -32,8 +32,18 @@ Linux and macOS come from the same `netemu.spec` (GitHub Actions builds all thre
     DHCP option 82;
   - new devices: Cisco ASA 5506-X (ASA CLI), FortiGate 60F (FortiOS CLI), Cisco WLC 2504 with lightweight
     access points, IoT sensors and actuators with an IoT server and IF … THEN rules;
-  - teaching: 19 ready-made labs (new: BGP, EtherChannel, port security, site-to-site VPN, VoIP,
-    IPv6/OSPFv3, an exam); classroom mode (the teacher hands out a lab over the LAN and sees every student's
+  - DDoS: a Botnet device launches UDP/ICMP/SYN/HTTP floods, Slowloris and DNS/NTP amplification of any
+    power; a load monitor and red overloaded cables show where the network breaks; defences on every level:
+    ACLs, policing, uRPF (BCP 38) and null routes on every vendor, Cisco TCP intercept, SYN cookies, per-IP
+    limits and a JS challenge on servers, scrubbing, RTBH and FlowSpec at the provider, switching a
+    domain's DNS record to the provider's protection service (reverse proxy, TTL-aware client caches)
+    ([guide](docs/en/ddos.md));
+  - malware: SMB worm, ransomware worm with a kill switch, Mirai-style IoT botnet and a C2 trojan
+    spread with real packets through routing, ACLs, NAT and IPS; defences on hosts (updates, antivirus
+    signatures, services, host firewall, backups) and in the network (segmentation, Cisco IPS, egress
+    filtering, DNS sinkhole); an infection monitor ([guide](docs/en/malware.md));
+  - teaching: 30 ready-made labs (new: BGP, EtherChannel, port security, site-to-site VPN, VoIP,
+    IPv6/OSPFv3, an exam, six DDoS labs, five malware labs); classroom mode (the teacher hands out a lab over the LAN and sees every student's
     checks live); hints that explain why a check failed;
   - tools: packet analyzer with display filters and `.pcap` export for Wireshark; physical view
     (building / floor / rack, cable type and length, copper limited to 100 m); terminal syntax highlighting,
@@ -223,5 +233,9 @@ of the License, or (at your option) any later version. It is distributed WITHOUT
 - MPLS L3VPN and RSVP-TE are configured on Cisco; RSVP signalling is computed hop by hop, not sent as packets.
 - The packet analyzer serializes the simulated headers; payloads of application protocols are synthetic.
 - STP is computed per switch domain without max-age timers.
+- A DDoS attack is an aggregated flow (one probe packet per simulated second carries its rate); router
+  performance in packets/s is not modelled.
+- Malware is a training model (four families, one vulnerability); worms scan only the addresses present in the
+  topology.
 - In a collaboration session every participant runs their own simulation.
 - Linux and macOS builds are verified by CI only.

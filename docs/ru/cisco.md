@@ -522,6 +522,51 @@ end
 
 Проверка: `show ephone`, `show ephone registered`, `show ephone-dn summary`, `show telephony-service`.
 
+## Защита от DDoS
+
+Подробно об атаках и методах защиты — в разделе [DDoS-атаки и защита](ddos.md). Команды Cisco, которые там используются:
+
+```
+enable
+configure terminal
+interface gi0/2
+ip verify unicast source reachable-via rx
+exit
+ip route 203.0.113.99 255.255.255.255 Null0
+access-list 150 permit tcp any host 203.0.113.80 eq 80
+ip tcp intercept list 150
+ip tcp intercept mode intercept
+access-list 151 permit udp any any eq 123
+class-map match-all NTP-FLOOD
+match access-group 151
+exit
+policy-map DDOS-IN
+class NTP-FLOOD
+police 2000000
+exit
+exit
+end
+```
+
+- `ip verify unicast source reachable-via rx` — строгий uRPF (BCP 38): пакеты, обратный маршрут к источнику которых ведёт через другой интерфейс, отбрасываются; `reachable-via any` — свободный режим.
+- `ip route … Null0` — null-маршрут: весь трафик к адресу отбрасывается (RTBH, sinkhole).
+- `ip tcp intercept list` — маршрутизатор сам завершает TCP-рукопожатие с клиентами и пропускает к серверу только настоящие соединения (защита от SYN-флуда).
+- Полисер `police` в policy-map ограничивает класс трафика заданной скоростью.
+
+## IPS: защита от червей и командных серверов
+
+Система предотвращения вторжений отбрасывает пакеты-эксплойты учебных червей и обращения троянов к командному серверу (подробно — в разделе [Вредоносные программы](malware.md)):
+
+```
+enable
+configure terminal
+ip ips name OFFICE
+interface gi0/0
+ip ips OFFICE in
+end
+show ip ips statistics
+```
+
 ## Полный список команд: маршрутизатор Cisco 2911
 
 Описания команд взяты из встроенной справки CLI (`?`). `A.B.C.D` — IP-адрес или маска, `IFACE` — имя интерфейса (можно сокращать: `g0/0`), `WORD` — слово, `LINE` — остаток строки.
@@ -651,6 +696,9 @@ end
 | `show ip ssh` | Information on SSH |
 | `show ip vrf` | VPN Routing/Forwarding instance information |
 | `show ip vrf brief` | Brief VPN Routing/Forwarding instance information |
+| `show ip ips` | IPS information |
+| `show ip ips statistics` | IPS statistics |
+| `show ip ips all` | IPS configuration and statistics |
 | `show ip rsvp interface` | RSVP interface information |
 | `show ip explicit-paths` | Show the explicit paths |
 | `show ip eigrp neighbors` | IP-EIGRP neighbors |
@@ -773,6 +821,8 @@ end
 | `ip nat pool WORD A.B.C.D A.B.C.D netmask A.B.C.D` | Network mask |
 | `ip nat pool WORD A.B.C.D A.B.C.D prefix-length <1-32>` | Prefix length |
 | `ip route A.B.C.D A.B.C.D` | Destination prefix mask |
+| `ip route A.B.C.D A.B.C.D Null0` | Null interface (discard: RTBH, sinkhole) |
+| `ip route A.B.C.D A.B.C.D Null0 <1-255>` | Distance metric for this route |
 | `ip route A.B.C.D A.B.C.D A.B.C.D` | Forwarding router's address |
 | `ip route A.B.C.D A.B.C.D A.B.C.D <1-255>` | Distance metric for this route |
 | `ip route A.B.C.D A.B.C.D IFACE` | Exit interface |
@@ -785,6 +835,11 @@ end
 | `ip domain-name WORD` | Default domain name |
 | `ip ssh version <1-2>` | Protocol version |
 | `ip vrf WORD` | VRF name |
+| `ip tcp intercept list` | Specify access-list to use |
+| `ip tcp intercept list <100-199>` | Access list number or name |
+| `ip tcp intercept mode intercept` | Intercept connections |
+| `ip tcp intercept mode watch` | Watch connections |
+| `ip ips name WORD` | IPS rule name |
 | `ip explicit-path name WORD` | Explicit path name |
 | `ip explicit-path name WORD enable` | Enable the path |
 | `[no] ipv6 unicast-routing` | Enable unicast routing |
@@ -899,6 +954,12 @@ end
 | `ip address A.B.C.D A.B.C.D secondary` | Make this IP address a secondary address |
 | `ip vrf forwarding` | Configure forwarding table |
 | `ip vrf forwarding WORD` | VRF name |
+| `ip verify unicast source reachable-via` | Specify reachability check to apply to the source address |
+| `ip verify unicast source reachable-via rx` | Source is reachable via interface on which packet was received (strict) |
+| `ip verify unicast source reachable-via rx LINE` | allow-default / allow-self-ping |
+| `ip verify unicast source reachable-via any` | Source is reachable via any interface (loose) |
+| `ip ips WORD in` | Inbound IPS |
+| `ip ips WORD out` | Outbound IPS (inspected on input in NetEmu) |
 | `ip router isis` | IS-IS Routing for IP |
 | `ip router isis WORD` | Routing process tag |
 | `ip rsvp bandwidth` | RSVP reservable bandwidth (KBPS) |
@@ -1174,6 +1235,8 @@ end
 | `ip nat pool WORD A.B.C.D A.B.C.D netmask A.B.C.D` | Network mask |
 | `ip nat pool WORD A.B.C.D A.B.C.D prefix-length <1-32>` | Prefix length |
 | `ip route A.B.C.D A.B.C.D` | Destination prefix mask |
+| `ip route A.B.C.D A.B.C.D Null0` | Null interface (discard: RTBH, sinkhole) |
+| `ip route A.B.C.D A.B.C.D Null0 <1-255>` | Distance metric for this route |
 | `ip route A.B.C.D A.B.C.D A.B.C.D` | Forwarding router's address |
 | `ip route A.B.C.D A.B.C.D A.B.C.D <1-255>` | Distance metric for this route |
 | `ip route A.B.C.D A.B.C.D IFACE` | Exit interface |

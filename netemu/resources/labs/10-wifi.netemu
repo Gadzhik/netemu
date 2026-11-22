@@ -3,7 +3,7 @@
  "version": 1,
  "devices": [
   {
-   "id": "05df55d62a9f",
+   "id": "6951812079cd",
    "model": "cisco-2911",
    "name": "R1",
    "x": 400,
@@ -52,7 +52,7 @@
    "startup": null
   },
   {
-   "id": "1cff61b2b0c7",
+   "id": "4febb08a7e43",
    "model": "access-point",
    "name": "AP1",
    "x": 400,
@@ -86,7 +86,7 @@
    "startup": null
   },
   {
-   "id": "367f2a5e5959",
+   "id": "384d3569ba81",
    "model": "laptop",
    "name": "Laptop1",
    "x": 300,
@@ -114,7 +114,7 @@
    "startup": null
   },
   {
-   "id": "c422f2d01b66",
+   "id": "77220f1dce6e",
    "model": "laptop",
    "name": "Laptop2",
    "x": 500,
@@ -145,11 +145,11 @@
  "links": [
   {
    "a": [
-    "05df55d62a9f",
+    "6951812079cd",
     "GigabitEthernet0/0"
    ],
    "b": [
-    "1cff61b2b0c7",
+    "4febb08a7e43",
     "Ethernet0"
    ]
   }

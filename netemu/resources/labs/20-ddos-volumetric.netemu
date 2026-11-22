@@ -1,0 +1,540 @@
+{
+ "format": "netemu",
+ "version": 1,
+ "devices": [
+  {
+   "id": "02cfdd51c56f",
+   "model": "internet",
+   "name": "ISP",
+   "x": 420,
+   "y": 80,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "Internet",
+    "interfaces": {
+     "ISP0": {
+      "admin_up": true,
+      "ip": "203.0.113.1/30",
+      "description": ""
+     },
+     "ISP1": {
+      "admin_up": true,
+      "ip": "203.0.113.5/30",
+      "description": ""
+     },
+     "ISP2": {
+      "admin_up": true,
+      "ip": "203.0.113.9/30",
+      "description": ""
+     },
+     "ISP3": {
+      "admin_up": true,
+      "ip": "203.0.113.13/30",
+      "description": ""
+     },
+     "ISP4": {
+      "admin_up": true,
+      "ip": "203.0.113.17/30",
+      "description": ""
+     },
+     "ISP5": {
+      "admin_up": true,
+      "ip": "203.0.113.21/30",
+      "description": ""
+     },
+     "ISP6": {
+      "admin_up": true,
+      "ip": "203.0.113.25/30",
+      "description": ""
+     },
+     "ISP7": {
+      "admin_up": true,
+      "ip": "203.0.113.29/30",
+      "description": ""
+     },
+     "dns.google": {
+      "admin_up": true,
+      "ip": "8.8.8.8/32",
+      "description": "",
+      "loopback": true,
+      "short": "dns.google"
+     },
+     "one.one.one.one": {
+      "admin_up": true,
+      "ip": "1.1.1.1/32",
+      "description": "",
+      "loopback": true,
+      "short": "one.one.one.one"
+     },
+     "www.example.com": {
+      "admin_up": true,
+      "ip": "93.184.216.34/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.example.com"
+     },
+     "www.netemu.lab": {
+      "admin_up": true,
+      "ip": "198.51.100.80/32",
+      "description": "",
+      "loopback": true,
+      "short": "www.netemu.lab"
+     },
+     "open-resolver.example": {
+      "admin_up": true,
+      "ip": "198.51.100.53/32",
+      "description": "",
+      "loopback": true,
+      "short": "open-resolver.example"
+     },
+     "ntp.example": {
+      "admin_up": true,
+      "ip": "198.51.100.123/32",
+      "description": "",
+      "loopback": true,
+      "short": "ntp.example"
+     },
+     "shield.example": {
+      "admin_up": true,
+      "ip": "198.51.100.200/32",
+      "description": "",
+      "loopback": true,
+      "short": "shield.example"
+     },
+     "update.example": {
+      "admin_up": true,
+      "ip": "198.51.100.150/32",
+      "description": "",
+      "loopback": true,
+      "short": "update.example"
+     },
+     "c2.example": {
+      "admin_up": true,
+      "ip": "198.51.100.66/32",
+      "description": "",
+      "loopback": true,
+      "short": "c2.example"
+     }
+    },
+    "static_routes": []
+   },
+   "startup": null
+  },
+  {
+   "id": "45ffce0c725d",
+   "model": "cisco-2911",
+   "name": "EDGE",
+   "x": 420,
+   "y": 260,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "EDGE",
+    "interfaces": {
+     "GigabitEthernet0/0": {
+      "admin_up": true,
+      "ip": "192.168.1.1/24",
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": "203.0.113.2/30",
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": false,
+      "ip": null,
+      "description": ""
+     }
+    },
+    "static_routes": [
+     {
+      "network": "0.0.0.0/0",
+      "next_hop": "203.0.113.1",
+      "interface": null,
+      "distance": 1
+     }
+    ],
+    "nat": {
+     "inside": [
+      "GigabitEthernet0/0"
+     ],
+     "outside": [
+      "GigabitEthernet0/1"
+     ],
+     "rules": [
+      {
+       "kind": "static",
+       "local": "192.168.1.10",
+       "glob": "203.0.113.2",
+       "proto": "tcp",
+       "local_port": 80,
+       "global_port": 80,
+       "acl": null,
+       "prefix": null,
+       "out_iface": null,
+       "in_iface": null,
+       "interface": null,
+       "pool": null,
+       "overload": false,
+       "text": ""
+      }
+     ],
+     "pools": {}
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "6493327d6f5a",
+   "model": "cisco-2960",
+   "name": "SW1",
+   "x": 420,
+   "y": 420,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "Switch",
+    "interfaces": {
+     "FastEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/3": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/4": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/5": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/6": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/7": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/8": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/9": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/10": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/11": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/12": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/13": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/14": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/15": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/16": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/17": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/18": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/19": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/20": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/21": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/22": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/23": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "FastEthernet0/24": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/1": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     },
+     "GigabitEthernet0/2": {
+      "admin_up": true,
+      "ip": null,
+      "description": ""
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "acf2f0d884dd",
+   "model": "server",
+   "name": "WEB",
+   "x": 300,
+   "y": 560,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "WEB",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "192.168.1.10/24",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "192.168.1.1",
+    "dns": null,
+    "services": {
+     "dhcp": {
+      "enabled": false,
+      "pools": [],
+      "excluded": [],
+      "interfaces": null
+     },
+     "dns": {
+      "enabled": false,
+      "records": {}
+     },
+     "http": {
+      "enabled": true,
+      "pages": {
+       "index.html": "<html><body><h1>Shop</h1><p>The company's online shop.</p></body></html>"
+      }
+     },
+     "syslog": {
+      "enabled": true
+     },
+     "ntp": {
+      "enabled": true
+     },
+     "aaa": {
+      "radius": false,
+      "tacacs": false,
+      "secret": "netemu",
+      "users": {}
+     },
+     "files": {
+      "tftp": true,
+      "ftp": true,
+      "mail": false,
+      "domain": "netemu.lab",
+      "files": {},
+      "ftp_users": {
+       "cisco": "cisco"
+      },
+      "mail_users": {},
+      "mailboxes": {}
+     },
+     "iot": {
+      "enabled": false,
+      "rules": []
+     }
+    }
+   },
+   "startup": null
+  },
+  {
+   "id": "3e97b49a1c36",
+   "model": "pc",
+   "name": "CLIENT",
+   "x": 120,
+   "y": 80,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "CLIENT",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "203.0.113.10/30",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "203.0.113.9",
+    "dns": null
+   },
+   "startup": null
+  },
+  {
+   "id": "65170de01460",
+   "model": "botnet",
+   "name": "BOTNET",
+   "x": 720,
+   "y": 80,
+   "powered": true,
+   "location": "",
+   "config": {
+    "hostname": "BOTNET",
+    "interfaces": {
+     "FastEthernet0": {
+      "admin_up": true,
+      "ip": "203.0.113.14/30",
+      "description": "",
+      "ipv6": [],
+      "ipv6_enabled": true
+     }
+    },
+    "gateway": "203.0.113.13",
+    "dns": null,
+    "attacks": [
+     {
+      "kind": "udp",
+      "target": "203.0.113.2",
+      "port": 80,
+      "bots": 30000,
+      "rate": 10,
+      "size": 1250,
+      "spoof": true,
+      "reflectors": [],
+      "running": true
+     }
+    ]
+   },
+   "startup": null
+  }
+ ],
+ "links": [
+  {
+   "a": [
+    "45ffce0c725d",
+    "GigabitEthernet0/1"
+   ],
+   "b": [
+    "02cfdd51c56f",
+    "ISP0"
+   ]
+  },
+  {
+   "a": [
+    "3e97b49a1c36",
+    "FastEthernet0"
+   ],
+   "b": [
+    "02cfdd51c56f",
+    "ISP2"
+   ]
+  },
+  {
+   "a": [
+    "65170de01460",
+    "FastEthernet0"
+   ],
+   "b": [
+    "02cfdd51c56f",
+    "ISP3"
+   ]
+  },
+  {
+   "a": [
+    "45ffce0c725d",
+    "GigabitEthernet0/0"
+   ],
+   "b": [
+    "6493327d6f5a",
+    "GigabitEthernet0/1"
+   ]
+  },
+  {
+   "a": [
+    "acf2f0d884dd",
+    "FastEthernet0"
+   ],
+   "b": [
+    "6493327d6f5a",
+    "GigabitEthernet0/2"
+   ]
+  }
+ ],
+ "lab": {
+  "title": "DDoS: объёмная атака и очистка у провайдера",
+  "text": "**Объёмная атака.** Ботнет (30 000 машин) шлёт на адрес сайта 203.0.113.2 UDP-поток **3 Гбит/с** с подменёнными адресами. Канал сайта к провайдеру — 1 Гбит/с, он забит втрое: две трети любых пакетов теряются, магазин у покупателя (CLIENT) не открывается.\n\n1. Откройте «Инструменты → Нагрузка и DDoS»: найдите перегруженный кабель (он красный на схеме) и тип атаки.\n2. Попробуйте фильтр на своём маршрутизаторе EDGE (ACL `deny udp any host 203.0.113.2` на gi0/1). Убедитесь, что это **не помогает**: канал забит до EDGE, а адреса подменены, блокировать по источнику нечего.\n3. Включите защиту у провайдера: облако ISP → вкладка «Защита провайдера» → **очистка трафика** для порта ISP0. Центр очистки убирает поток атаки до вашего канала, легитимный трафик проходит.\n4. Проверьте задание и загрузку кабелей.",
+  "checks": [
+   "available CLIENT http://203.0.113.2 90 | Магазин открывается у покупателя (9 из 10 запросов)",
+   "ddos EDGE 50 | Атака не доходит до маршрутизатора EDGE (меньше 50 Мбит/с)"
+  ],
+  "translations": {
+   "en": {
+    "title": "DDoS: volumetric attack and scrubbing at the provider",
+    "text": "**Volumetric attack.** A botnet (30,000 machines) sends a **3 Gbit/s** UDP stream with spoofed sources to the site's address 203.0.113.2. The site's link to the provider is 1 Gbit/s and is overloaded three times: two thirds of all packets are lost, the shop does not open for the customer (CLIENT).\n\n1. Open Tools → Load and DDoS: find the overloaded cable (red on the canvas) and the attack kind.\n2. Try a filter on your own router EDGE (ACL `deny udp any host 203.0.113.2` on gi0/1). See that it **does not help**: the link is full before EDGE, and the sources are spoofed, there is nothing to block by source.\n3. Turn on the provider's protection: ISP cloud → Provider protection tab → **scrubbing** for port ISP0. The scrubbing centre removes the attack before your link; legitimate traffic passes.\n4. Check the lab and the cable load.",
+    "checks": [
+     "The shop opens for customers (9 of 10 requests)",
+     "The attack does not reach EDGE (below 50 Mbit/s)"
+    ]
+   }
+  },
+  "solution": "Атаку, которая забивает канал, нельзя отфильтровать на своей стороне канала: это делает провайдер (scrubbing, FlowSpec, RTBH).",
+  "script": {
+   "ISP": "@isp ISP0 scrub on"
+  }
+ }
+}

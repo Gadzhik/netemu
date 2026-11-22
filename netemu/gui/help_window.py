@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QDialog, QHBoxLayout, QListWidget, QListWidgetItem
 
 from ..i18n import language, tr
 
-TOPICS = ("guide", "cisco", "mikrotik", "juniper", "huawei", "extreme", "pc")
+TOPICS = ("guide", "cisco", "mikrotik", "juniper", "huawei", "extreme", "pc", "ddos", "malware")
 
 
 def docs_dir() -> Path:
@@ -25,6 +25,8 @@ def docs_dir() -> Path:
 def topic_for_device(dev) -> str:
     if dev.category in ("pc", "server"):
         return "pc"
+    if dev.category == "attack":
+        return "ddos"
     if dev.category in ("router", "switch") and dev.vendor in TOPICS:
         return dev.vendor
     return "guide"

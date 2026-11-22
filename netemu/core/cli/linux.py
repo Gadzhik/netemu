@@ -32,12 +32,14 @@ resolvectl resolvectl status | resolvectl dns eth0 <server>
 cat        cat /etc/resolv.conf | /etc/hostname | /etc/hosts | /proc/sys/net/ipv4/ip_forward
 echo       echo nameserver <ip> > /etc/resolv.conf   (also: ... | sudo tee /etc/resolv.conf)
 ss         ss -tuln            (also netstat -tuln, netstat -rn, netstat -i)
-sysctl     sysctl net.ipv4.ip_forward | sysctl -w net.ipv6.conf.eth0.accept_ra=0|1
+sysctl     sysctl net.ipv4.ip_forward | sysctl -w net.ipv6.conf.eth0.accept_ra=0|1 | sysctl -w net.ipv4.tcp_syncookies=1
 ethtool    ethtool eth0
 hostname   hostname [new-name] | hostnamectl [set-hostname <name>]
 snmp       snmpget|snmpwalk -v2c -c <community> <agent> [oid] | snmpset -v2c -c <c> <agent> sysName.0 s <value>
 syslog     cat /var/log/syslog   (Linux server: messages from network devices)
 ssh        ssh [-l user] [-p port] [user@]<ip>  |  telnet <ip> [port]
+security   sudo ufw deny|allow <port> | ufw status | sudo apt install clamav | sudo apt upgrade
+           sudo freshclam | clamscan -r / | sudo reboot
 wifi       nmcli dev status | nmcli dev wifi list | nmcli dev wifi connect <SSID> password <key> | iw dev wlan0 link
 sshd       sudo systemctl start|stop|enable ssh | systemctl status ssh | passwd [user]
 other      sudo, sudo -i, su, exit, logout, whoami, id, uname [-a], pwd, date, uptime, clear, help
@@ -137,7 +139,7 @@ class LinuxSession(CliSession):
 
     CMDS = ["arp", "cat", "clear", "curl", "date", "dhclient", "dig", "echo", "ethtool", "exit", "help", "host",
             "hostname", "hostnamectl", "id", "ifconfig", "ip", "logout", "netstat", "nslookup", "ping", "ping6", "pwd",
-            "iw", "nmcli", "passwd", "resolvectl", "route", "ss", "ssh", "su", "sudo", "sysctl", "systemctl", "telnet", "tracepath", "traceroute", "traceroute6", "uname", "uptime", "wget",
+            "iw", "nmcli", "passwd", "ufw", "apt", "freshclam", "clamscan", "reboot", "resolvectl", "route", "ss", "ssh", "su", "sudo", "sysctl", "systemctl", "telnet", "tracepath", "traceroute", "traceroute6", "uname", "uptime", "wget",
             "whoami"]
 
     def complete(self, line: str) -> str | None:
@@ -191,6 +193,10 @@ class LinuxSession(CliSession):
             return msg
         if "|" in line and not tee:
             pass
+        from .hostsec import NOT_MINE, linux as _sec
+        r = _sec(self, cmd, a, root)
+        if r is not NOT_MINE:
+            return r
         fn = getattr(self, "c_" + cmd.replace("-", "_"), None)
         if fn is None:
             if cmd in ("exit", "logout"):
@@ -855,6 +861,14 @@ class LinuxSession(CliSession):
         out = []
         for k in keys:
             name, _, val = k.partition("=")
+            if name == "net.ipv4.tcp_syncookies":
+                from ..security.ddos import guard
+                if val:
+                    if not root:
+                        return f"sysctl: permission denied on key \"{name}\""
+                    guard(d)["syncookies"] = val != "0"
+                out.append(f"net.ipv4.tcp_syncookies = {1 if guard(d)['syncookies'] else 0}")
+                continue
             if name == "net.ipv4.ip_forward":
                 if val and val != "0":
                     return "sysctl: NetEmu end hosts do not forward packets: use a router for routing"
@@ -940,6 +954,7 @@ class LinuxSession(CliSession):
             return None
         if a[:1] == ["flush-caches"]:
             d.dns_cache.clear()
+            d.dns_expiry.clear()
             return None
         srv = d.dns_server_list
         return ("Global\n       Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\n resolv.conf mode: stub\n\n"

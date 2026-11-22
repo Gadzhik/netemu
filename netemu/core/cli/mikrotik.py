@@ -183,6 +183,8 @@ class MikrotikSession(CliSession):
                 ("ip", "address"): {"print": ("Print values of item properties", lambda a: self.addr_print()),
                                     "add": ("Create a new item", self.addr_add),
                                     "remove": ("Remove item", self.addr_remove)},
+                ("ip", "settings"): {"set": ("Change item properties", self.ip_settings_set),
+                                     "print": ("Print values of item properties", lambda a: self.ip_settings_print())},
                 ("ip", "route"): {"print": ("Print values of item properties", lambda a: self.route_print()),
                                   "add": ("Create a new item", self.route_add),
                                   "remove": ("Remove item", self.route_remove)},
@@ -667,8 +669,38 @@ class MikrotikSession(CliSession):
                 "Columns: DST-ADDRESS, GATEWAY, DISTANCE\n"
                 + table(["#", "   ", "DST-ADDRESS", "GATEWAY", "DISTANCE"], rows, gap=1))
 
+    def ip_settings_set(self, args):
+        kv, _ = self._kv(args, {"rp-filter", "ip-forward", "tcp-syncookies"})
+        if "rp-filter" in kv:
+            mode = kv["rp-filter"]
+            if mode not in ("strict", "loose", "no"):
+                raise _MtError("invalid value for argument rp-filter")
+            for p in self.device.ports.values():
+                p.urpf = None if mode == "no" else mode
+        if "tcp-syncookies" in kv:
+            self.device.extra["mt_syncookies"] = kv["tcp-syncookies"] == "yes"
+        return None
+
+    def ip_settings_print(self):
+        modes = {p.urpf for p in self.device.ports.values() if getattr(p, "urpf", None)}
+        rows = [("ip-forward", "yes"), ("send-redirects", "yes"), ("accept-source-route", "no"),
+                ("accept-redirects", "no"), ("secure-redirects", "yes"), ("rp-filter", modes.pop() if modes else "no"),
+                ("tcp-syncookies", "yes" if self.device.extra.get("mt_syncookies") else "no")]
+        return "\n".join(f"{k:>24}: {v}" for k, v in rows)
+
     def route_add(self, args):
-        kv, _ = self._kv(args, {"dst-address", "gateway", "distance", "comment", "disabled"})
+        flags = [a for a in args if a[0] == "blackhole"]
+        args = [a for a in args if a[0] != "blackhole"]
+        kv, _ = self._kv(args, {"dst-address", "gateway", "distance", "comment", "disabled", "blackhole"})
+        if flags or kv.get("blackhole") in ("yes", "true"):
+            dst = kv.get("dst-address", "0.0.0.0/0")
+            try:
+                net = IPv4Network(dst if "/" in dst else dst + "/32", strict=False)
+            except ValueError:
+                raise _MtError("invalid value for argument dst-address")
+            self.device.add_static_route(net, None, "Null0", int(kv.get("distance", 1)))
+            self.device.routes_changed()
+            return None
         if "gateway" not in kv:
             raise _MtError("failure: gateway must be specified")
         dst = kv.get("dst-address", "0.0.0.0/0")
@@ -2225,9 +2257,15 @@ class MikrotikSession(CliSession):
             if d.static_routes:
                 lines.append("/ip route")
                 for s in d.static_routes:
-                    gw = str(s.next_hop) if s.next_hop else s.interface
                     extra = f" distance={s.distance}" if s.distance != 1 else ""
+                    if s.interface == "Null0":
+                        lines.append(f"add blackhole dst-address={s.network}{extra}")
+                        continue
+                    gw = str(s.next_hop) if s.next_hop else s.interface
                     lines.append(f"add dst-address={s.network} gateway={gw}{extra}")
+            rpf = {p.urpf for p in d.ports.values() if getattr(p, "urpf", None)}
+            if rpf:
+                lines += ["/ip settings", f"set rp-filter={rpf.pop()}"]
             tuns = [p for p in d.ports.values() if p.is_tunnel]
             if tuns:
                 lines.append("/interface gre")

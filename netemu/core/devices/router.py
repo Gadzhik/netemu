@@ -11,6 +11,26 @@ from ..stack.ipv6 import Ip6Stack, StaticRoute6
 from .base import Device
 
 
+class _NullPort:
+    """Null0 / NULL0 / discard / blackhole: packets routed here are dropped (RTBH, sinkholes)."""
+    name = short = "Null0"
+    is_up = admin_up = True
+    is_tunnel = is_loopback = is_svi = is_sub = is_channel = False
+    ip = None
+    ip2: list = []
+    vrf = None
+    device = None
+    link = peer = None
+
+
+NULL_PORT = _NullPort()
+NULL_NAMES = ("null0", "null 0", "discard", "blackhole")
+
+
+def is_null(name) -> bool:
+    return bool(name) and str(name).lower() in NULL_NAMES
+
+
 @dataclass
 class StaticRoute:
     network: IPv4Network
@@ -373,7 +393,24 @@ class Router(IpStack, Ip6Stack, Device):
         self.conntrack.add(pkt)                              # RouterOS tracks every accepted packet
         return True
 
+    def _urpf_ok(self, pkt, port, mode) -> bool:
+        """Unicast RPF (BCP 38): strict = the source must be reachable back through the arrival port;
+        loose = the source must be in the routing table (a default route does not count)."""
+        src = pkt.src
+        if src.is_unspecified or src.is_multicast or str(src) == "255.255.255.255":
+            return True
+        with self.in_vrf(getattr(port, "vrf", None)):
+            if mode == "strict":
+                r = self.route_lookup(src)
+                return r is not None and r[0] is port
+            return any(src in r.network and r.network.prefixlen > 0 and r.port is not NULL_PORT
+                       for r in self.routing_table())
+
     def ingress_filter(self, pkt, port):
+        mode = getattr(port, "urpf", None)
+        if mode and not self._urpf_ok(pkt, port, mode):
+            self.urpf_drops = getattr(self, "urpf_drops", 0) + 1
+            return None                                      # spoofed source: dropped
         if port.qos_in and port.qos_in in self.qos:
             from ..security.qos import apply
             pkt = apply(self, self.qos[port.qos_in], pkt, port, "in")
@@ -386,6 +423,14 @@ class Router(IpStack, Ip6Stack, Device):
                 if not silent:
                     self._acl_reject(pkt, port)
                 return None
+        if self.extra.get("ips"):
+            from ..security.malware import ips_inspect
+            if ips_inspect(self, pkt, port):
+                return None                                  # IPS signature match
+        icept = self.extra.get("tcp_intercept")
+        if icept and getattr(pkt, "flood", None) is not None and pkt.flood.kind == "syn" and icept in self.acls:
+            if self.acls[icept].decide(pkt)[0]:
+                return None                                  # TCP intercept answers the SYNs itself
         if self.nat is not None:
             pkt = self.nat.inbound(pkt, port)
         if self.firewall and (self.owns_ip(pkt.dst) or pkt.dst.is_multicast):
@@ -642,6 +687,11 @@ class Router(IpStack, Ip6Stack, Device):
             vr = self._vpn_route_for(pkt.dst)
             if vr is not None:
                 return self._send_vpn(pkt, vr)
+        if any(is_null(s.interface) for s in self.static_routes) and not self.owns_ip(pkt.dst):
+            r = self.route_lookup(pkt.dst)
+            if r is not None and r[0] is NULL_PORT:
+                self.null_drops = getattr(self, "null_drops", 0) + 1
+                return True                                  # null route: silently discarded
         m = getattr(self, "mpls", None)
         if m is not None and m.running and self.vrf_ctx is None and not self.owns_ip(pkt.dst) \
                 and not pkt.dst.is_multicast:
@@ -699,6 +749,8 @@ class Router(IpStack, Ip6Stack, Device):
             if r.code not in ("S",):
                 return r.port, r.next_hop
             s: StaticRoute = r.static  # type: ignore[attr-defined]
+            if is_null(s.interface):
+                return NULL_PORT, None
             if s.interface:
                 p = self.get_port(s.interface)
                 if p is None or not p.is_up:
@@ -717,6 +769,9 @@ class Router(IpStack, Ip6Stack, Device):
         routes = self.connected_routes()
         for s in self.static_routes:
             if s.vrf != self.vrf_ctx:
+                continue
+            if is_null(s.interface):
+                routes.append(Route(s.network, "S", NULL_PORT, None, s.distance))
                 continue
             if s.interface:
                 p = self.get_port(s.interface)

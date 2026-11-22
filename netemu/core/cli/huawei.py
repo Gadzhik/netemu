@@ -716,6 +716,8 @@ class HuaweiSession(TreeSession):
                                     P.arg(P.IpArg(), "Destination IP address",
                                           P.arg(P.MaskOrLenArg(), "IP address mask or mask length",
                                                 nh_node(False),
+                                                P.kw("NULL0", "NULL interface (discard)",
+                                                     handler=lambda s, a, n: s.route_null(a[0], a[1], n), negatable=True),
                                                 P.arg(P.IfaceArg(), "Outbound interface", nh_node(True),
                                                       pref(True, False),
                                                       handler=route_handler(True, False, False),
@@ -736,6 +738,14 @@ class HuaweiSession(TreeSession):
                            P.arg(P.LineArg(), "Up to 242 characters",
                                  handler=lambda s, a, n: s.if_description(a[0], n)),
                            handler=lambda s, a, n: s.if_description("", n) if n else s.err_incomplete(s.prompt, 0),
+                           negatable=True),
+                      P.kw("urpf", "Unicast reverse path forwarding (anti-spoofing)",
+                           P.kw("strict", "Strict check: the source must be reachable via this interface",
+                                P.arg(P.LineArg(), "allow-default-route", handler=lambda s, a, n: s.if_urpf("strict", n)),
+                                handler=lambda s, a, n: s.if_urpf("strict", n), negatable=True),
+                           P.kw("loose", "Loose check: the source must be in the routing table",
+                                handler=lambda s, a, n: s.if_urpf("loose", n), negatable=True),
+                           handler=lambda s, a, n: s.if_urpf(None, True) if n else s.err_incomplete(s.prompt, 0),
                            negatable=True),
                       P.kw("shutdown", "Shutdown the interface",
                            handler=lambda s, a, n: s.if_shutdown(not n), negatable=True)]
@@ -2505,6 +2515,22 @@ class HuaweiSession(TreeSession):
         return secondary_cmd(self.device, self.iface, make_interface(ip, mask), negate,
                              "Error: The specified IP address conflicts with another address.")
 
+    def route_null(self, net, mask, negate):
+        try:
+            network = IPv4Network(f"{net}/{mask}")
+        except ValueError:
+            return "Error: The destination address and mask do not match."
+        if negate:
+            self.device.remove_static_route(network, None, "Null0")
+        else:
+            self.device.add_static_route(network, None, "Null0", 60)
+        self.device.routes_changed()
+        return None
+
+    def if_urpf(self, mode, negate):
+        self.iface.urpf = None if negate else mode
+        return None
+
     def route_static(self, net, mask, nh, port, pref, negate):
         try:
             network = IPv4Network(f"{net}/{mask}")
@@ -2929,6 +2955,8 @@ def render_current(device, cfg: dict) -> str:
             elif r["kind"] == "dnat" and r.get("in_iface") == name:
                 lines.append(f" nat server protocol {r['proto']} global {r['glob']} {r['global_port']} "
                              f"inside {r['local']} {r['local_port']}")
+        if ic.get("urpf"):
+            lines.append(f" urpf {ic['urpf']}")
         if ic.get("acl_in"):
             lines.append(f" traffic-filter inbound acl {ic['acl_in']}")
         if ic.get("acl_out"):
@@ -2972,7 +3000,7 @@ def render_current(device, cfg: dict) -> str:
         n = IPv4Network(s["network"])
         parts = [f"ip route-static {n.network_address} {n.netmask}"]
         if s.get("interface"):
-            parts.append(s["interface"])
+            parts.append("NULL0" if s["interface"] == "Null0" else s["interface"])
         if s.get("next_hop"):
             parts.append(s["next_hop"])
         if int(s.get("distance", HUAWEI_STATIC_PREF)) != HUAWEI_STATIC_PREF:

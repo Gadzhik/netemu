@@ -170,8 +170,9 @@ class HostSession(WindowsExtras, CliSession):
         return HELP
 
     def complete(self, line: str) -> str | None:
-        cmds = ["arp", "cls", "curl", "date", "echo", "exit", "getmac", "help", "hostname", "ipconfig", "netsh",
-                "netstat", "nslookup", "pathping", "ping", "route", "ssh", "telnet", "time", "tracert", "ver", "whoami"]
+        cmds = ["arp", "cls", "curl", "date", "echo", "exit", "getmac", "help", "hostname", "ipconfig", "mpcmdrun",
+                "netsh", "netstat", "nslookup", "pathping", "ping", "route", "sc", "shutdown", "ssh", "telnet", "time",
+                "tracert", "ver", "wbadmin", "whoami", "wmic", "wusa"]
         if " " in line:
             return None
         m = [c for c in cmds if c.startswith(line.lower())]
@@ -185,8 +186,13 @@ class HostSession(WindowsExtras, CliSession):
         if cmd.endswith(".exe"):
             cmd = cmd[:-4]
         d = self.device
+        from .hostsec import NOT_MINE, windows as _sec
+        r = _sec(self, cmd, args, line)
+        if r is not NOT_MINE:
+            return r
         if cmd in ("help", "?"):
-            return HELP
+            from .hostsec import WIN_HELP
+            return HELP + "\n" + WIN_HELP
         if cmd == "cls":
             self.wants_clear = True
             return None

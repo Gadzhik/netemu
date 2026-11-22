@@ -391,6 +391,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete interfaces <interface_name> vlan-tagging` | Enable 802.1q VLAN tagging |
 | `delete interfaces <interface_name> unit <interface_unit_number>` | Interface unit number |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet` | IPv4 parameters |
+| `delete interfaces <interface_name> unit <interface_unit_number> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `delete interfaces <interface_name> unit <interface_unit_number> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet address` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet address <name>` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet filter input` | Name of filter applied to received packets |
@@ -404,6 +406,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id` | Virtual LAN identifier value for 802.1q VLAN tags |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id>` | VLAN ID |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet` | IPv4 parameters |
+| `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet address` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet address <name>` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet filter input` | Name of filter applied to received packets |
@@ -433,6 +437,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete routing-options rib inet6.0 static route X:X:X:X::X/<0-128>` | Destination prefix |
 | `delete routing-options static` | Static routing information |
 | `delete routing-options static route <destination>` | Destination prefix |
+| `delete routing-options static route <destination> discard` | Drop packets to destination; send no ICMP unreachables |
 | `delete routing-options static route <destination> next-hop <next-hop>` | Next hop to destination |
 | `delete routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `delete routing-options router-id` | Router identifier |
@@ -472,6 +477,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set interfaces <interface_name> description <description>` | Text description of interface |
 | `set interfaces <interface_name> disable` | Disable this interface |
 | `set interfaces <interface_name> vlan-tagging` | Enable 802.1q VLAN tagging |
+| `set interfaces <interface_name> unit <interface_unit_number> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `set interfaces <interface_name> unit <interface_unit_number> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet address <name>` | Interface address/destination prefix |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet address <name> vrrp-group <group_id> virtual-address A / priority N / preempt / no-preempt` | VRRP group identifier |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet filter input <filter-name>` | Filter name |
@@ -480,6 +487,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set interfaces <interface_name> unit <interface_unit_number> family iso` | OSI ISO protocol parameters |
 | `set interfaces <interface_name> unit <interface_unit_number> family iso address <address>` | NET, e.g. 49.0001.0000.0000.0001.00 |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id>` | VLAN ID |
+| `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet address <name>` | Interface address/destination prefix |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet filter input <filter-name>` | Filter name |
 | `set interfaces <interface_name> unit <interface_unit_number> vlan-id <vlan-id> family inet filter output <filter-name>` | Filter name |
@@ -503,6 +512,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set protocols ospf3 area <area_id> interface <interface_name>` | Interface name |
 | `set protocols ripng group <group_name> neighbor <interface_name>` | Interface name |
 | `set routing-options rib inet6.0 static route X:X:X:X::X/<0-128> next-hop X:X:X:X::X` | Next hop |
+| `set routing-options static route <destination> discard` | Drop packets to destination; send no ICMP unreachables |
 | `set routing-options static route <destination> next-hop <next-hop>` | Next hop to destination |
 | `set routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `set routing-options static route <destination> qualified-next-hop <next-hop> preference <preference>` | Preference of this next hop |
@@ -612,6 +622,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete interfaces <interface_name> native-vlan-id` | Virtual LAN identifier for untagged frames |
 | `delete interfaces <interface_name> unit <interface_unit_number>` | Interface unit number |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet` | IPv4 parameters |
+| `delete interfaces <interface_name> unit <interface_unit_number> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `delete interfaces <interface_name> unit <interface_unit_number> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet address` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> family inet address <name>` | Interface address/destination prefix |
 | `delete interfaces <interface_name> unit <interface_unit_number> family ethernet-switching` | Ethernet switching parameters |
@@ -650,6 +662,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `delete routing-options rib inet6.0 static route X:X:X:X::X/<0-128>` | Destination prefix |
 | `delete routing-options static` | Static routing information |
 | `delete routing-options static route <destination>` | Destination prefix |
+| `delete routing-options static route <destination> discard` | Drop packets to destination; send no ICMP unreachables |
 | `delete routing-options static route <destination> next-hop <next-hop>` | Next hop to destination |
 | `delete routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `delete routing-options router-id` | Router identifier |
@@ -684,6 +697,8 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set interfaces <interface_name> description <description>` | Text description of interface |
 | `set interfaces <interface_name> disable` | Disable this interface |
 | `set interfaces <interface_name> native-vlan-id <vlan-id>` | VLAN ID |
+| `set interfaces <interface_name> unit <interface_unit_number> family inet rpf-check` | Reverse-path-forwarding checks (anti-spoofing) |
+| `set interfaces <interface_name> unit <interface_unit_number> family inet rpf-check mode loose` | Reverse-path-forwarding loose mode |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet address <name>` | Interface address/destination prefix |
 | `set interfaces <interface_name> unit <interface_unit_number> family inet address <name> vrrp-group <group_id> virtual-address A / priority N / preempt / no-preempt` | VRRP group identifier |
 | `set interfaces <interface_name> unit <interface_unit_number> family ethernet-switching` | Ethernet switching parameters |
@@ -716,6 +731,7 @@ Check: `show ntp status`, `show ntp associations`, `show log messages`, `show os
 | `set protocols ospf3 area <area_id> interface <interface_name>` | Interface name |
 | `set protocols ripng group <group_name> neighbor <interface_name>` | Interface name |
 | `set routing-options rib inet6.0 static route X:X:X:X::X/<0-128> next-hop X:X:X:X::X` | Next hop |
+| `set routing-options static route <destination> discard` | Drop packets to destination; send no ICMP unreachables |
 | `set routing-options static route <destination> next-hop <next-hop>` | Next hop to destination |
 | `set routing-options static route <destination> qualified-next-hop <next-hop>` | Next hop with qualifiers |
 | `set routing-options static route <destination> qualified-next-hop <next-hop> preference <preference>` | Preference of this next hop |

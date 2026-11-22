@@ -110,6 +110,19 @@ class DeviceItem(QGraphicsItem):
         p.drawRoundedRect(QRectF(-tw / 2, r.top(), tw, p.fontMetrics().height() + 1), 3, 3)
         p.setPen(theme.color("label"))
         p.drawText(r, Qt.AlignHCenter | Qt.AlignTop, self.device.name)
+        inf = getattr(self.device, "infection", None)
+        enc = (getattr(self.device, "hostsec", None) or {}).get("encrypted")
+        if inf or enc:                                   # malware training: a badge in the upper right corner
+            dormant = inf and inf.get("state") == "dormant"
+            colour = QColor("#8d6e63") if dormant else QColor("#c62828") if inf else QColor("#ef6c00")
+            c = QPointF(ICON_W / 2 - 5, -ICON_H / 2 + 5)
+            p.setPen(QPen(QColor("white"), 1.5))
+            p.setBrush(colour)
+            p.drawEllipse(c, 7.5, 7.5)
+            f = QFont(self._font)
+            f.setBold(True)
+            p.setFont(f)
+            p.drawText(QRectF(c.x() - 7.5, c.y() - 7.5, 15, 15), Qt.AlignCenter, "!" if inf else "$")
 
     def apply_scale(self) -> None:
         self.prepareGeometryChange()
@@ -190,7 +203,18 @@ class LinkItem(QGraphicsItem):
         color = theme.color("cable_sel") if self.isSelected() else theme.color("cable")
         if getattr(self.link, "too_long", False):
             color = QColor("#e53935")                     # copper longer than 100 m: the link stays down
-        pen = QPen(color, 2.4 if self.isSelected() else 1.6)
+        width = 2.4 if self.isSelected() else 1.6
+        topo = getattr(self.link.engine, "topology", None)
+        mon = getattr(topo, "ddos", None) if topo is not None else None
+        if mon is not None:                               # DDoS: busy cables turn orange, saturated ones red
+            u = max(mon.utilization(self.link, self.link.a), mon.utilization(self.link, self.link.b))
+            if u > 1.0:
+                color, width = QColor("#d50000"), 5.0
+            elif u > 0.7:
+                color, width = QColor("#ff8f00"), 3.5
+            elif u > 0.05:
+                color, width = QColor("#fbc02d"), 2.6
+        pen = QPen(color, width)
         if getattr(self.link, "wireless", False):
             pen.setStyle(Qt.DashLine)
             pen.setColor(QColor("#1e88e5") if self.isSelected() else QColor("#5c6bc0"))

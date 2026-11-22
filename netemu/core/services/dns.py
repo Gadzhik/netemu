@@ -20,6 +20,7 @@ class DnsMessage:
     response: bool = False
     answer: IPv4Address | None = None
     rcode: str = "NOERROR"            # NOERROR | NXDOMAIN
+    ttl: int | None = None            # seconds; None: a static record (shown as 86400, not cached by clients)
     label = "DNS"
 
     def summary(self) -> str:
@@ -35,7 +36,7 @@ class DnsMessage:
         if self.response:
             lines.append(f"Reply code: {self.rcode}")
             if self.answer is not None:
-                lines.append(f"Answer: {self.qname} A {self.answer} (TTL 86400)")
+                lines.append(f"Answer: {self.qname} A {self.answer} (TTL {self.ttl or 86400})")
         return lines
 
 
@@ -51,6 +52,9 @@ class DnsServer:
         ip = self.records.get(name)
         return IPv4Address(ip) if ip else None
 
+    def ttl_of(self, name: str) -> int | None:
+        return None
+
     def handle(self, pkt, port) -> None:
         if not self.enabled:
             return
@@ -59,7 +63,8 @@ class DnsServer:
             return
         self.queries += 1
         ans = self.lookup(q.qname)
-        resp = DnsMessage(q.ident, q.qname, True, ans, "NOERROR" if ans else "NXDOMAIN")
+        resp = DnsMessage(q.ident, q.qname, True, ans, "NOERROR" if ans else "NXDOMAIN",
+                          self.ttl_of(q.qname) if ans else None)
         self.dev.send_udp(pkt.src, DNS_PORT, pkt.payload.sport, resp, src=pkt.dst)
 
 
@@ -92,6 +97,10 @@ class Resolve(Job):
             except ValueError:
                 self._done(None, f"bad address {self.name}")
             return self
+        hit = cached(h, self.name)
+        if hit is not None:                          # still valid by the record's TTL
+            self._done(hit, "")
+            return self
         if self.server is None:
             self.server = getattr(h, "dns", None)
         if self.server is None:
@@ -119,6 +128,10 @@ class Resolve(Job):
             return
         if m.answer and hasattr(self.host, "dns_cache"):
             self.host.dns_cache[self.name] = (m.answer, self.host.engine.now)
+            if m.ttl:                                # records with a TTL are reused until it expires
+                expiry = getattr(self.host, "dns_expiry", None)
+                if expiry is not None:
+                    expiry[self.name] = self.host.engine.now + m.ttl * 1000.0
         self._done(m.answer, "" if m.answer else f"*** {self.server} can't find {self.name}: Non-existent domain")
 
     def _done(self, ip, err) -> None:
@@ -135,3 +148,16 @@ class Resolve(Job):
             self._timer.cancelled = True
         self.host.unbind_udp(self.sport)
         super().cancel()
+
+
+def cached(host, name: str):
+    """The cached address of *name* while its TTL lasts (like the Windows/Linux resolver cache), else None."""
+    name = name.rstrip(".").lower()
+    exp = getattr(host, "dns_expiry", None)
+    cache = getattr(host, "dns_cache", None)
+    if not exp or cache is None or name not in exp or name not in cache:
+        return None
+    if host.engine.now >= exp[name]:
+        exp.pop(name, None)
+        return None
+    return cache[name][0]

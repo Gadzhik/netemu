@@ -64,6 +64,7 @@ class SimController(QObject):
         self._subs = [
             ("frame_delivered", self._on_frame_delivered),
             ("link_state", self.linkStateChanged.emit),
+            ("ddos_tick", lambda m: self.linkStateChanged.emit(None)),    # cable load colours
             ("device_changed", self.deviceChanged.emit),
             ("device_added", self.deviceAdded.emit),
             ("device_removed", self.deviceRemoved.emit),

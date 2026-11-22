@@ -36,6 +36,7 @@ class Port:
         self.admin_up = admin_up
         self.ip: IPv4Interface | None = None
         self.ip2: list = []                      # secondary IPv4 addresses (routers)
+        self.urpf: str | None = None             # unicast RPF: strict | loose (routers)
         self.description = ""
         self.tx_frames = 0
         self.rx_frames = 0
@@ -307,6 +308,19 @@ class Link:
 
     def transmit(self, frame: EthernetFrame, from_port: Port) -> bool:
         to_port = self.other(from_port)
+        topo = getattr(self.engine, "topology", None)
+        mon = getattr(topo, "ddos", None) if topo is not None else None
+        if mon is not None and not self.wireless:
+            tag = getattr(frame.payload, "flood", None)
+            if tag is not None:                         # an attack flow never exceeds the cable's bandwidth
+                from .security.ddos import capacity_bps
+                mon.offer(self, from_port, tag)
+                cap = capacity_bps(from_port)
+                if tag.bps > cap:
+                    frame = replace(frame, payload=replace(frame.payload, flood=tag.capped_bps(cap)))
+            elif mon.legit_drop(self, from_port):
+                return True                             # lost on a saturated cable
+
         if frame.uid == 0:
             object.__setattr__(frame, "uid", self.engine.next_frame_uid())
         self.engine.schedule(self.delay, to_port.deliver, frame, kind=KIND_FRAME,

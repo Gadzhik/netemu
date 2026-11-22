@@ -407,6 +407,13 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip service print` | Print values of item properties |
 | `/ip service set` | Change item properties |
 
+**`/ip settings`**
+
+| Команда | Описание |
+|---|---|
+| `/ip settings print` | Print values of item properties |
+| `/ip settings set` | Change item properties |
+
 **`/ipv6 address`**
 
 | Команда | Описание |
@@ -836,6 +843,13 @@ RIPng: `/routing rip instance add name=rng afi=ipv6` и `/routing rip interface-
 | `/ip service enable` | Enable items |
 | `/ip service print` | Print values of item properties |
 | `/ip service set` | Change item properties |
+
+**`/ip settings`**
+
+| Команда | Описание |
+|---|---|
+| `/ip settings print` | Print values of item properties |
+| `/ip settings set` | Change item properties |
 
 **`/ipv6 address`**
 

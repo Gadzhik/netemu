@@ -443,7 +443,9 @@ def build(fn):
     lab_obj = Lab(title, text, parse_checks(checks)[0], notes, script, faults, "troubleshoot" if faults else "lab")
     from labs_en import EN
     from labs_more import EN as EN2
-    en = EN.get(fname) or EN2[fname]
+    from labs_ddos import EN as EN3
+    from labs_malware import EN as EN4
+    en = EN.get(fname) or EN2.get(fname) or EN3.get(fname) or EN4[fname]
     assert len(en["checks"]) == len(lab_obj.checks), f"{fname}: English check list does not match"
     lab_obj.translations = {"en": en}
     before = [ok for _, ok, _ in evaluate(t, lab_obj)]
@@ -464,9 +466,11 @@ def build(fn):
 
 if __name__ == "__main__":
     from labs_more import LABS as MORE
+    from labs_ddos import LABS as DDOS
+    from labs_malware import LABS as MALWARE
     OUT.mkdir(parents=True, exist_ok=True)
     only = sys.argv[1:]
-    for fn in LABS + MORE:
+    for fn in LABS + MORE + DDOS + MALWARE:
         if only and not any(o in fn.__name__ for o in only):
             continue
         name, n = build(fn)

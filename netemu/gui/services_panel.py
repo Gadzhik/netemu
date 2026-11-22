@@ -146,10 +146,13 @@ class ServicesPanel(QWidget):
         eng.subscribe("device_changed", fn)
         self.destroyed.connect(lambda *_: eng.unsubscribe("device_changed", fn))
 
+        from .ddos_panel import ServerGuard
+        self.guard = ServerGuard(self.dev)
+        lay.addWidget(self.guard)
         btns = QHBoxLayout()
         btns.addStretch(1)
         self.apply_btn = QPushButton(tr("Применить"))
-        self.apply_btn.clicked.connect(self.apply)
+        self.apply_btn.clicked.connect(lambda _c=False: self.apply())
         btns.addWidget(self.apply_btn)
         lay.addLayout(btns)
         self.load()
@@ -244,6 +247,7 @@ class ServicesPanel(QWidget):
             self._load_records()
 
     def apply(self) -> bool:
+        self.guard.apply()
         from ipaddress import IPv4Address
         d = self.dev
         cfg = d.dhcp_server.cfg

@@ -407,6 +407,13 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip service print` | Print values of item properties |
 | `/ip service set` | Change item properties |
 
+**`/ip settings`**
+
+| Command | Description |
+|---|---|
+| `/ip settings print` | Print values of item properties |
+| `/ip settings set` | Change item properties |
+
 **`/ipv6 address`**
 
 | Command | Description |
@@ -836,6 +843,13 @@ Check: `/interface gre print`, `/system ntp client print`, `/snmp community prin
 | `/ip service enable` | Enable items |
 | `/ip service print` | Print values of item properties |
 | `/ip service set` | Change item properties |
+
+**`/ip settings`**
+
+| Command | Description |
+|---|---|
+| `/ip settings print` | Print values of item properties |
+| `/ip settings set` | Change item properties |
 
 **`/ipv6 address`**
 

@@ -215,6 +215,8 @@ class Device:
             if getattr(p, "tmode", "gre") != "gre":
                 d.update(tunnel_mode=p.tmode, te={k: (list(map(list, v)) if k == "options" else v)
                                                  for k, v in p.te.items()})
+        if getattr(p, "urpf", None):
+            d["urpf"] = p.urpf
         if p.channel_group is not None:
             d.update(channel_group=p.channel_group, channel_mode=p.channel_mode)
         if p.psec is not None:
@@ -304,6 +306,7 @@ class Device:
             p.ip = IPv4Interface(icfg["ip"]) if icfg.get("ip") else None
             p.ip2 = [IPv4Interface(a) for a in icfg.get("ip2", [])]
             p.description = icfg.get("description", "")
+            p.urpf = icfg.get("urpf")
             if p.is_sub:
                 p.vlan = icfg.get("vlan")
                 p.native = bool(icfg.get("native", False))
